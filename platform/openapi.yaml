@@ -1,0 +1,86 @@
+# Generated with protoc-gen-openapi
+# https://github.com/google/gnostic/tree/master/cmd/protoc-gen-openapi
+
+openapi: 3.0.3
+info:
+    title: User API
+    version: 0.0.1
+paths:
+    /api/v1/login:
+        post:
+            tags:
+                - User
+            operationId: User_Login
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.LoginRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.LoginResponse'
+    /api/v1/register:
+        post:
+            tags:
+                - User
+            operationId: User_Register
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.RegisterRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.RegisterResponse'
+components:
+    schemas:
+        v1.LoginRequest:
+            type: object
+            properties:
+                userName:
+                    type: string
+                password:
+                    type: string
+        v1.LoginResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                token:
+                    type: string
+        v1.RegisterRequest:
+            type: object
+            properties:
+                userName:
+                    type: string
+                nickName:
+                    type: string
+                password:
+                    type: string
+                phone:
+                    type: string
+                email:
+                    type: string
+        v1.RegisterResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+tags:
+    - name: User
