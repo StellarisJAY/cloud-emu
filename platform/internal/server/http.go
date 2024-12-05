@@ -1,7 +1,7 @@
 package server
 
 import (
-	user "github.com/StellrisJAY/cloud-emu/platform/api/v1"
+	v1 "github.com/StellrisJAY/cloud-emu/platform/api/v1"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/conf"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
@@ -9,7 +9,7 @@ import (
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, userSrv user.UserServer, logger log.Logger) *http.Server {
+func NewHTTPServer(c *conf.Server, userSrv v1.UserServer, roomSrv v1.RoomServer, logger log.Logger) *http.Server {
 	var opts = []http.ServerOption{
 		http.Middleware(
 			recovery.Recovery(),
@@ -25,6 +25,7 @@ func NewHTTPServer(c *conf.Server, userSrv user.UserServer, logger log.Logger) *
 		opts = append(opts, http.Timeout(c.Http.Timeout.AsDuration()))
 	}
 	srv := http.NewServer(opts...)
-	user.RegisterUserHTTPServer(srv, userSrv)
+	v1.RegisterUserHTTPServer(srv, userSrv)
+	v1.RegisterRoomHTTPServer(srv, roomSrv)
 	return srv
 }

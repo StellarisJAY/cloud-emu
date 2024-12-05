@@ -1,7 +1,7 @@
 package server
 
 import (
-	user "github.com/StellrisJAY/cloud-emu/platform/api/v1"
+	v1 "github.com/StellrisJAY/cloud-emu/platform/api/v1"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/conf"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
@@ -9,7 +9,7 @@ import (
 )
 
 // NewGRPCServer new a gRPC server.
-func NewGRPCServer(c *conf.Server, userSrv user.UserServer, logger log.Logger) *grpc.Server {
+func NewGRPCServer(c *conf.Server, userSrv v1.UserServer, roomSrv v1.RoomServer, logger log.Logger) *grpc.Server {
 	var opts = []grpc.ServerOption{
 		grpc.Middleware(
 			recovery.Recovery(),
@@ -25,6 +25,7 @@ func NewGRPCServer(c *conf.Server, userSrv user.UserServer, logger log.Logger) *
 		opts = append(opts, grpc.Timeout(c.Grpc.Timeout.AsDuration()))
 	}
 	srv := grpc.NewServer(opts...)
-	user.RegisterUserServer(srv, userSrv)
+	v1.RegisterUserServer(srv, userSrv)
+	v1.RegisterRoomServer(srv, roomSrv)
 	return srv
 }

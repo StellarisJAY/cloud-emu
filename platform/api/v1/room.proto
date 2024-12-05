@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "platform/api/v1;v1";
+
+service Room {
+  rpc ListMyRooms(ListRoomRequest) returns (ListRoomResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/rooms/joined"
+    };
+  }
+  rpc ListAllRooms(ListRoomRequest) returns (ListRoomResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/rooms"
+    };
+  }
+  rpc CreateRoom(CreateRoomRequest) returns (CreateRoomResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/room"
+      body: "*"
+    };
+  }
+  rpc GetRoom(GetRoomRequest) returns (GetRoomResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/room/{id}"
+    };
+  }
+}
+
+message RoomDto {
+  int64 roomId = 1;
+  string roomName = 2;
+  int64 hostId = 3;
+  string hostName = 4;
+  int32 joinType = 5;
+  int32 memberCount = 6;
+  int32 memberLimit = 7;
+  int64 addTime = 8;
+  string password = 9;
+  int64 emulatorId = 10;
+}
+
+message ListRoomRequest {
+  int32 page = 1;
+  int32 pageSize = 2;
+}
+
+message ListRoomResponse {
+  repeated RoomDto rooms = 1;
+  int32 total = 2;
+}
+
+message CreateRoomRequest {
+  string name = 1;
+  bool private = 2;
+  string emulatorType = 3;
+}
+
+message CreateRoomResponse {
+  int64 id = 1;
+  string name = 2;
+  int64 host = 3;
+  bool private = 4;
+  string password = 5;
+  int32 memberLimit = 6;
+}
+
+message GetRoomRequest {
+  int64 id = 1;
+}
+
+message GetRoomResponse {
+  int64 id = 1;
+  string name = 2;
+  bool private = 3;
+  int64 host = 4;
+  string hostName = 5;
+  int32 memberCount = 6;
+  int32 memberLimit = 7;
+  int64 createTime = 8;
+  string password = 9;
+  string emulatorType = 10;
+}

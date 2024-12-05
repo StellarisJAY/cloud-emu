@@ -33,8 +33,11 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	node := util.NewSnowflakeGenerator(confServer)
 	userUseCase := biz.NewUserUseCase(userRepo, node)
 	userServer := service.NewUserService(userUseCase)
-	grpcServer := server.NewGRPCServer(confServer, userServer, logger)
-	httpServer := server.NewHTTPServer(confServer, userServer, logger)
+	roomRepo := data.NewRoomRepo(dataData)
+	roomUseCase := biz.NewRoomUseCase(roomRepo, node)
+	roomServer := service.NewRoomService(roomUseCase)
+	grpcServer := server.NewGRPCServer(confServer, userServer, roomServer, logger)
+	httpServer := server.NewHTTPServer(confServer, userServer, roomServer, logger)
 	app := newApp(logger, grpcServer, httpServer)
 	return app, func() {
 		cleanup()

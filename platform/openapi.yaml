@@ -3,7 +3,7 @@
 
 openapi: 3.0.3
 info:
-    title: User API
+    title: ""
     version: 0.0.1
 paths:
     /api/v1/login:
@@ -42,8 +42,150 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.RegisterResponse'
+    /api/v1/room:
+        post:
+            tags:
+                - Room
+            operationId: Room_CreateRoom
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.CreateRoomRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.CreateRoomResponse'
+    /api/v1/room/{id}:
+        get:
+            tags:
+                - Room
+            operationId: Room_GetRoom
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.GetRoomResponse'
+    /api/v1/rooms:
+        get:
+            tags:
+                - Room
+            operationId: Room_ListAllRooms
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.ListRoomResponse'
+    /api/v1/rooms/joined:
+        get:
+            tags:
+                - Room
+            operationId: Room_ListMyRooms
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.ListRoomResponse'
 components:
     schemas:
+        v1.CreateRoomRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+                private:
+                    type: boolean
+                emulatorType:
+                    type: string
+        v1.CreateRoomResponse:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                host:
+                    type: string
+                private:
+                    type: boolean
+                password:
+                    type: string
+                memberLimit:
+                    type: integer
+                    format: int32
+        v1.GetRoomResponse:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                private:
+                    type: boolean
+                host:
+                    type: string
+                hostName:
+                    type: string
+                memberCount:
+                    type: integer
+                    format: int32
+                memberLimit:
+                    type: integer
+                    format: int32
+                createTime:
+                    type: string
+                password:
+                    type: string
+                emulatorType:
+                    type: string
+        v1.ListRoomResponse:
+            type: object
+            properties:
+                rooms:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/v1.RoomDto'
+                total:
+                    type: integer
+                    format: int32
         v1.LoginRequest:
             type: object
             properties:
@@ -82,5 +224,32 @@ components:
                     format: int32
                 message:
                     type: string
+        v1.RoomDto:
+            type: object
+            properties:
+                roomId:
+                    type: string
+                roomName:
+                    type: string
+                hostId:
+                    type: string
+                hostName:
+                    type: string
+                joinType:
+                    type: integer
+                    format: int32
+                memberCount:
+                    type: integer
+                    format: int32
+                memberLimit:
+                    type: integer
+                    format: int32
+                addTime:
+                    type: string
+                password:
+                    type: string
+                emulatorId:
+                    type: string
 tags:
+    - name: Room
     - name: User
