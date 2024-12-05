@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/gob"
 	"encoding/json"
-	"github.com/stellarisJAY/nesgo/nes/bus"
-	"github.com/stellarisJAY/nesgo/nes/cartridge"
-	"github.com/stellarisJAY/nesgo/nes/cpu"
-	"github.com/stellarisJAY/nesgo/nes/ppu"
+	"github.com/StellrisJAY/cloud-emu/emulator/nes/bus"
+	"github.com/StellrisJAY/cloud-emu/emulator/nes/cartridge"
+	"github.com/StellrisJAY/cloud-emu/emulator/nes/cpu"
+	"github.com/StellrisJAY/cloud-emu/emulator/nes/ppu"
 	"time"
 )
 

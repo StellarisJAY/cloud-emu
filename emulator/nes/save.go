@@ -5,7 +5,7 @@ import (
 	_ "crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"github.com/stellarisJAY/nesgo/nes/cartridge"
+	"github.com/StellrisJAY/cloud-emu/emulator/nes/cartridge"
 	"log"
 	"os"
 	"path/filepath"
