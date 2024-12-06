@@ -33,12 +33,13 @@ func (u *UserService) Register(ctx context.Context, request *v1.RegisterRequest)
 }
 
 func (u *UserService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.LoginResponse, error) {
-	err := u.uuc.Login(ctx, request.UserName, request.Password)
+	token, err := u.uuc.Login(ctx, request.UserName, request.Password)
 	if err != nil {
 		return nil, err
 	}
 	return &v1.LoginResponse{
 		Code:    200,
 		Message: "login success",
+		Token:   token,
 	}, nil
 }

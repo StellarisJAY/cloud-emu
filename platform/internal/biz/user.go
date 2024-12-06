@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"github.com/bwmarrin/snowflake"
 	"github.com/go-kratos/kratos/v2/errors"
+	"github.com/golang-jwt/jwt/v5"
 	"time"
 )
 
@@ -23,6 +24,7 @@ type User struct {
 
 type UserUseCase struct {
 	repo        UserRepo
+	ar          AuthRepo
 	snowflakeId *snowflake.Node
 }
 
@@ -33,8 +35,19 @@ type UserRepo interface {
 	GetByUsername(ctx context.Context, userName string) (*User, error)
 }
 
-func NewUserUseCase(repo UserRepo, snowflakeId *snowflake.Node) *UserUseCase {
-	return &UserUseCase{repo: repo, snowflakeId: snowflakeId}
+type AuthRepo interface {
+	CreateToken(ctx context.Context, claims *LoginClaims) (string, error)
+}
+
+type LoginClaims struct {
+	jwt.RegisteredClaims
+	UserId  int64
+	AppId   string
+	LoginIp string
+}
+
+func NewUserUseCase(repo UserRepo, ar AuthRepo, snowflakeId *snowflake.Node) *UserUseCase {
+	return &UserUseCase{repo: repo, snowflakeId: snowflakeId, ar: ar}
 }
 
 func (uc *UserUseCase) Register(ctx context.Context, user *User) error {
@@ -50,15 +63,19 @@ func (uc *UserUseCase) GetById(ctx context.Context, id int64) (*User, error) {
 	return uc.repo.GetById(ctx, id)
 }
 
-func (uc *UserUseCase) Login(ctx context.Context, userName, password string) error {
+func (uc *UserUseCase) Login(ctx context.Context, userName, password string) (string, error) {
 	user, err := uc.repo.GetByUsername(ctx, userName)
 	if err != nil {
-		return err
+		return "", err
 	}
 	hash := sha256.Sum256([]byte(password))
 	password = hex.EncodeToString(hash[:])
 	if password != user.Password {
-		return errors.New(401, "wrong password", "password error")
+		return "", errors.New(401, "wrong password", "password error")
 	}
-	return nil
+	token, err := uc.ar.CreateToken(ctx, &LoginClaims{UserId: user.UserId})
+	if err != nil {
+		return "", err
+	}
+	return token, nil
 }

@@ -38,9 +38,10 @@ message RoomDto {
   int32 joinType = 5;
   int32 memberCount = 6;
   int32 memberLimit = 7;
-  int64 addTime = 8;
+  string addTime = 8;
   string password = 9;
   int64 emulatorId = 10;
+  string emulatorName = 11;
 }
 
 message ListRoomRequest {
@@ -55,17 +56,15 @@ message ListRoomResponse {
 
 message CreateRoomRequest {
   string name = 1;
-  bool private = 2;
-  string emulatorType = 3;
+  int32 joinType = 2;
+  string description = 3;
+  int64 hostId = 4;
+  int32 memberLimit = 5;
+  string password = 6;
 }
 
 message CreateRoomResponse {
   int64 id = 1;
-  string name = 2;
-  int64 host = 3;
-  bool private = 4;
-  string password = 5;
-  int32 memberLimit = 6;
 }
 
 message GetRoomRequest {

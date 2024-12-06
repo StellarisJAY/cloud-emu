@@ -4,6 +4,8 @@ import (
 	"context"
 	v1 "github.com/StellrisJAY/cloud-emu/platform/api/v1"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/biz"
+	"github.com/StellrisJAY/cloud-emu/util"
+	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
 )
 
 type RoomService struct {
@@ -16,7 +18,14 @@ func NewRoomService(ruc *biz.RoomUseCase) v1.RoomServer {
 }
 
 func (r *RoomService) ListMyRooms(ctx context.Context, request *v1.ListRoomRequest) (*v1.ListRoomResponse, error) {
-	rooms, err := r.ruc.ListMyRooms(ctx, 1864580034254077952)
+	c, _ := jwt.FromContext(ctx)
+	claims := c.(*biz.LoginClaims)
+	query := biz.RoomQuery{}
+	page := &util.Pagination{
+		Page:     request.Page,
+		PageSize: request.PageSize,
+	}
+	rooms, err := r.ruc.ListMyRooms(ctx, claims.UserId, query, page)
 	if err != nil {
 		return nil, err
 	}
@@ -28,12 +37,13 @@ func (r *RoomService) ListMyRooms(ctx context.Context, request *v1.ListRoomReque
 			HostId:      room.HostId,
 			HostName:    room.HostName,
 			MemberLimit: room.MemberLimit,
-			AddTime:     room.AddTime.UnixMilli(),
+			AddTime:     room.AddTime.Format("2006-01-02 15:04:05"),
+			EmulatorId:  room.EmulatorId,
 		})
 	}
 	return &v1.ListRoomResponse{
 		Rooms: result,
-		Total: int32(len(result)),
+		Total: page.Total,
 	}, nil
 }
 
@@ -43,8 +53,21 @@ func (r *RoomService) ListAllRooms(ctx context.Context, request *v1.ListRoomRequ
 }
 
 func (r *RoomService) CreateRoom(ctx context.Context, request *v1.CreateRoomRequest) (*v1.CreateRoomResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	c, _ := jwt.FromContext(ctx)
+	claims := c.(*biz.LoginClaims)
+	room := &biz.Room{
+		RoomName:    request.Name,
+		Description: request.Description,
+		HostId:      claims.UserId,
+		MemberLimit: request.MemberLimit,
+		Password:    request.Password,
+		JoinType:    request.JoinType,
+	}
+	err := r.ruc.Create(ctx, room)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.CreateRoomResponse{Id: room.RoomId}, nil
 }
 
 func (r *RoomService) GetRoom(ctx context.Context, request *v1.GetRoomRequest) (*v1.GetRoomResponse, error) {

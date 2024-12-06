@@ -60,6 +60,50 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.CreateRoomResponse'
+    /api/v1/room/instance:
+        get:
+            tags:
+                - RoomInstance
+            operationId: RoomInstance_GetRoomInstance
+            parameters:
+                - name: roomId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.GetRoomInstanceResponse'
+    /api/v1/room/instance/history:
+        get:
+            tags:
+                - RoomInstance
+            operationId: RoomInstance_ListGameHistory
+            parameters:
+                - name: roomId
+                  in: query
+                  schema:
+                    type: string
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.ListGameHistoryResponse'
     /api/v1/room/{id}:
         get:
             tags:
@@ -131,26 +175,33 @@ components:
             properties:
                 name:
                     type: string
-                private:
-                    type: boolean
-                emulatorType:
+                joinType:
+                    type: integer
+                    format: int32
+                description:
+                    type: string
+                hostId:
+                    type: string
+                memberLimit:
+                    type: integer
+                    format: int32
+                password:
                     type: string
         v1.CreateRoomResponse:
             type: object
             properties:
                 id:
                     type: string
-                name:
-                    type: string
-                host:
-                    type: string
-                private:
-                    type: boolean
-                password:
-                    type: string
-                memberLimit:
+        v1.GetRoomInstanceResponse:
+            type: object
+            properties:
+                code:
                     type: integer
                     format: int32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/v1.RoomInstanceDto'
         v1.GetRoomResponse:
             type: object
             properties:
@@ -176,6 +227,21 @@ components:
                     type: string
                 emulatorType:
                     type: string
+        v1.ListGameHistoryResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/v1.RoomInstanceDto'
+                total:
+                    type: integer
+                    format: int32
         v1.ListRoomResponse:
             type: object
             properties:
@@ -250,6 +316,22 @@ components:
                     type: string
                 emulatorId:
                     type: string
+                emulatorName:
+                    type: string
+        v1.RoomInstanceDto:
+            type: object
+            properties:
+                roomInstanceId:
+                    type: string
+                roomId:
+                    type: string
+                emulatorId:
+                    type: string
+                emulatorName:
+                    type: string
+                serverUrl:
+                    type: string
 tags:
     - name: Room
+    - name: RoomInstance
     - name: User

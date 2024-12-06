@@ -9,7 +9,7 @@ import (
 )
 
 // NewGRPCServer new a gRPC server.
-func NewGRPCServer(c *conf.Server, userSrv v1.UserServer, roomSrv v1.RoomServer, logger log.Logger) *grpc.Server {
+func NewGRPCServer(c *conf.Server, userSrv v1.UserServer, roomSrv v1.RoomServer, roomInstanceSrv v1.RoomInstanceServer, logger log.Logger) *grpc.Server {
 	var opts = []grpc.ServerOption{
 		grpc.Middleware(
 			recovery.Recovery(),
@@ -27,5 +27,6 @@ func NewGRPCServer(c *conf.Server, userSrv v1.UserServer, roomSrv v1.RoomServer,
 	srv := grpc.NewServer(opts...)
 	v1.RegisterUserServer(srv, userSrv)
 	v1.RegisterRoomServer(srv, roomSrv)
+	v1.RegisterRoomInstanceServer(srv, roomInstanceSrv)
 	return srv
 }

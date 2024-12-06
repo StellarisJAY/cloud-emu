@@ -6,10 +6,11 @@ import (
 	"github.com/google/wire"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	logger2 "gorm.io/gorm/logger"
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewUserRepo, NewRoomRepo)
+var ProviderSet = wire.NewSet(NewData, NewUserRepo, NewRoomRepo, NewRoomInstanceRepo, NewAuthRepo)
 
 // Data .
 type Data struct {
@@ -22,7 +23,9 @@ func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
 	}
-	db, err := gorm.Open(mysql.Open(c.Database.Source), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(c.Database.Source), &gorm.Config{
+		Logger: logger2.Default.LogMode(logger2.Info),
+	})
 	if err != nil {
 		return nil, cleanup, err
 	}

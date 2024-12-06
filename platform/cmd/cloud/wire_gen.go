@@ -24,20 +24,24 @@ import (
 // Injectors from wire.go:
 
 // wireApp init kratos application.
-func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*kratos.App, func(), error) {
+func wireApp(confServer *conf.Server, confData *conf.Data, auth *conf.Auth, logger log.Logger) (*kratos.App, func(), error) {
 	dataData, cleanup, err := data.NewData(confData, logger)
 	if err != nil {
 		return nil, nil, err
 	}
 	userRepo := data.NewUserRepo(dataData)
+	authRepo := data.NewAuthRepo(auth)
 	node := util.NewSnowflakeGenerator(confServer)
-	userUseCase := biz.NewUserUseCase(userRepo, node)
+	userUseCase := biz.NewUserUseCase(userRepo, authRepo, node)
 	userServer := service.NewUserService(userUseCase)
-	roomRepo := data.NewRoomRepo(dataData)
+	roomRepo := data.NewRoomRepo(dataData, node)
 	roomUseCase := biz.NewRoomUseCase(roomRepo, node)
 	roomServer := service.NewRoomService(roomUseCase)
-	grpcServer := server.NewGRPCServer(confServer, userServer, roomServer, logger)
-	httpServer := server.NewHTTPServer(confServer, userServer, roomServer, logger)
+	roomInstanceRepo := data.NewRoomInstanceRepo(dataData)
+	roomInstanceUseCase := biz.NewRoomInstanceUseCase(roomInstanceRepo, node)
+	roomInstanceServer := service.NewRoomInstanceService(roomInstanceUseCase)
+	grpcServer := server.NewGRPCServer(confServer, userServer, roomServer, roomInstanceServer, logger)
+	httpServer := server.NewHTTPServer(confServer, auth, userServer, roomServer, roomInstanceServer, logger)
 	app := newApp(logger, grpcServer, httpServer)
 	return app, func() {
 		cleanup()
