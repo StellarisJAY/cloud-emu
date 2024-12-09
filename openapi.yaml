@@ -1,0 +1,347 @@
+# Generated with protoc-gen-openapi
+# https://github.com/google/gnostic/tree/master/cmd/protoc-gen-openapi
+
+openapi: 3.0.3
+info:
+    title: ""
+    version: 0.0.1
+paths:
+    /api/v1/login:
+        post:
+            tags:
+                - User
+            operationId: User_Login
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.LoginRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.LoginResponse'
+    /api/v1/register:
+        post:
+            tags:
+                - User
+            operationId: User_Register
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.RegisterRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.RegisterResponse'
+    /api/v1/room:
+        post:
+            tags:
+                - Room
+            operationId: Room_CreateRoom
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.CreateRoomRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.CreateRoomResponse'
+    /api/v1/room-instance:
+        get:
+            tags:
+                - RoomInstance
+            operationId: RoomInstance_GetRoomInstance
+            parameters:
+                - name: roomId
+                  in: query
+                  schema:
+                    type: string
+                - name: emulatorId
+                  in: query
+                  schema:
+                    type: string
+                - name: gameFile
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.GetRoomInstanceResponse'
+    /api/v1/room-instance/history:
+        get:
+            tags:
+                - RoomInstance
+            operationId: RoomInstance_ListGameHistory
+            parameters:
+                - name: roomId
+                  in: query
+                  schema:
+                    type: string
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.ListGameHistoryResponse'
+    /api/v1/room/{id}:
+        get:
+            tags:
+                - Room
+            operationId: Room_GetRoom
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.GetRoomResponse'
+    /api/v1/rooms:
+        get:
+            tags:
+                - Room
+            operationId: Room_ListAllRooms
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.ListRoomResponse'
+    /api/v1/rooms/joined:
+        get:
+            tags:
+                - Room
+            operationId: Room_ListMyRooms
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.ListRoomResponse'
+components:
+    schemas:
+        v1.CreateRoomRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+                joinType:
+                    type: integer
+                    format: int32
+                description:
+                    type: string
+                hostId:
+                    type: string
+                memberLimit:
+                    type: integer
+                    format: int32
+                password:
+                    type: string
+        v1.CreateRoomResponse:
+            type: object
+            properties:
+                id:
+                    type: string
+        v1.GetRoomInstanceResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/v1.RoomInstanceDto'
+                accessToken:
+                    type: string
+        v1.GetRoomResponse:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                private:
+                    type: boolean
+                host:
+                    type: string
+                hostName:
+                    type: string
+                memberCount:
+                    type: integer
+                    format: int32
+                memberLimit:
+                    type: integer
+                    format: int32
+                createTime:
+                    type: string
+                password:
+                    type: string
+                emulatorType:
+                    type: string
+        v1.ListGameHistoryResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/v1.RoomInstanceDto'
+                total:
+                    type: integer
+                    format: int32
+        v1.ListRoomResponse:
+            type: object
+            properties:
+                rooms:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/v1.RoomDto'
+                total:
+                    type: integer
+                    format: int32
+        v1.LoginRequest:
+            type: object
+            properties:
+                userName:
+                    type: string
+                password:
+                    type: string
+        v1.LoginResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                token:
+                    type: string
+        v1.RegisterRequest:
+            type: object
+            properties:
+                userName:
+                    type: string
+                nickName:
+                    type: string
+                password:
+                    type: string
+                phone:
+                    type: string
+                email:
+                    type: string
+        v1.RegisterResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+        v1.RoomDto:
+            type: object
+            properties:
+                roomId:
+                    type: string
+                roomName:
+                    type: string
+                hostId:
+                    type: string
+                hostName:
+                    type: string
+                joinType:
+                    type: integer
+                    format: int32
+                memberCount:
+                    type: integer
+                    format: int32
+                memberLimit:
+                    type: integer
+                    format: int32
+                addTime:
+                    type: string
+                password:
+                    type: string
+                emulatorId:
+                    type: string
+                emulatorName:
+                    type: string
+        v1.RoomInstanceDto:
+            type: object
+            properties:
+                roomInstanceId:
+                    type: string
+                roomId:
+                    type: string
+                emulatorId:
+                    type: string
+                emulatorName:
+                    type: string
+                serverUrl:
+                    type: string
+tags:
+    - name: Room
+    - name: RoomInstance
+    - name: User
