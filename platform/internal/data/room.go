@@ -2,8 +2,8 @@ package data
 
 import (
 	"context"
+	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/biz"
-	"github.com/StellrisJAY/cloud-emu/util"
 	"github.com/bwmarrin/snowflake"
 	"gorm.io/gorm"
 	"time"
@@ -68,7 +68,7 @@ func (r *RoomRepo) Update(ctx context.Context, room *biz.Room) error {
 	panic("implement me")
 }
 
-func (r *RoomRepo) ListRooms(ctx context.Context, query biz.RoomQuery, page *util.Pagination) ([]*biz.Room, error) {
+func (r *RoomRepo) ListRooms(ctx context.Context, query biz.RoomQuery, page *common.Pagination) ([]*biz.Room, error) {
 	var rooms []*biz.Room
 	db := r.data.db.Table(RoomTableName + " sr").
 		Joins("LEFT JOIN room_member rm ON sr.room_id = rm.room_id ").
@@ -89,7 +89,7 @@ func (r *RoomRepo) ListRooms(ctx context.Context, query biz.RoomQuery, page *uti
 	if query.JoinType != 0 {
 		db = db.Where("join_type = ?", query.JoinType)
 	}
-	err := db.Scopes(util.WithPagination(page)).WithContext(ctx).Scan(&rooms).Error
+	err := db.Scopes(common.WithPagination(page)).WithContext(ctx).Scan(&rooms).Error
 	if err != nil {
 		return nil, err
 	}

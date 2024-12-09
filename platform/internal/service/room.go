@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-	v1 "github.com/StellrisJAY/cloud-emu/platform/api/v1"
+	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
+	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/biz"
-	"github.com/StellrisJAY/cloud-emu/util"
 	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
 )
 
@@ -21,7 +21,7 @@ func (r *RoomService) ListMyRooms(ctx context.Context, request *v1.ListRoomReque
 	c, _ := jwt.FromContext(ctx)
 	claims := c.(*biz.LoginClaims)
 	query := biz.RoomQuery{}
-	page := &util.Pagination{
+	page := &common.Pagination{
 		Page:     request.Page,
 		PageSize: request.PageSize,
 	}

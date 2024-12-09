@@ -2,7 +2,7 @@ package server
 
 import (
 	"context"
-	v1 "github.com/StellrisJAY/cloud-emu/platform/api/v1"
+	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/biz"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/conf"
 	"github.com/go-kratos/kratos/v2/log"

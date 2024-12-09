@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"github.com/StellrisJAY/cloud-emu/util"
+	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/bwmarrin/snowflake"
 	"time"
 )
@@ -46,7 +46,7 @@ type RoomRepo interface {
 	Create(ctx context.Context, room *Room) error
 	GetById(ctx context.Context, id int64) (*Room, error)
 	Update(ctx context.Context, room *Room) error
-	ListRooms(ctx context.Context, query RoomQuery, page *util.Pagination) ([]*Room, error)
+	ListRooms(ctx context.Context, query RoomQuery, page *common.Pagination) ([]*Room, error)
 }
 
 func NewRoomUseCase(repo RoomRepo, snowflakeId *snowflake.Node) *RoomUseCase {
@@ -63,7 +63,7 @@ func (uc *RoomUseCase) Create(ctx context.Context, room *Room) error {
 	return uc.repo.Create(ctx, room)
 }
 
-func (uc *RoomUseCase) ListMyRooms(ctx context.Context, userId int64, query RoomQuery, page *util.Pagination) ([]*Room, error) {
+func (uc *RoomUseCase) ListMyRooms(ctx context.Context, userId int64, query RoomQuery, page *common.Pagination) ([]*Room, error) {
 	query.MemberId = userId
 	query.HostId = 0
 	rooms, err := uc.repo.ListRooms(ctx, query, page)

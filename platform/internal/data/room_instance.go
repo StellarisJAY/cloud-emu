@@ -2,8 +2,10 @@ package data
 
 import (
 	"context"
+	"errors"
+	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/biz"
-	"github.com/StellrisJAY/cloud-emu/util"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -42,27 +44,30 @@ func (r *RoomInstanceRepo) Update(ctx context.Context, roomInstance *biz.RoomIns
 }
 
 func (r *RoomInstanceRepo) GetActiveInstanceByRoomId(ctx context.Context, roomId int64) (*biz.RoomInstance, error) {
-	result := &biz.RoomInstance{}
+	var result *biz.RoomInstance
 	err := r.data.db.Table(RoomInstanceTableName+" ri").
 		Select("ri.*, e.emulator_name").
 		Joins("LEFT JOIN emulator e ON ri.emulator_id = e.emulator_id").
 		Where("ri.room_id = ?", roomId).
 		Where("ri.status = ?", biz.RoomInstanceStatusActive).
 		Scan(&result).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func (r *RoomInstanceRepo) ListInstanceByRoomId(ctx context.Context, roomId int64, p *util.Pagination) ([]*biz.RoomInstance, error) {
+func (r *RoomInstanceRepo) ListInstanceByRoomId(ctx context.Context, roomId int64, p *common.Pagination) ([]*biz.RoomInstance, error) {
 	var result []*biz.RoomInstance
 	err := r.data.db.Table(RoomInstanceTableName+" ri").
 		Select("ri.*", "emulator_name").
 		Joins("LEFT JOIN emulator e ON ri.emulator_id = e.emulator_id").
 		Where("ri.room_id = ?", roomId).
 		Where("ri.status = ?", biz.RoomInstanceStatusActive).
-		Scopes(util.WithPagination(p)).Debug().
+		Scopes(common.WithPagination(p)).Debug().
 		Scan(&result).Error
 	if err != nil {
 		return nil, err

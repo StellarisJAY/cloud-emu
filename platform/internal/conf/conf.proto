@@ -9,6 +9,7 @@ message Bootstrap {
   Server server = 1;
   Data data = 2;
   Auth auth = 3;
+  Registry registry = 4;
 }
 
 message Server {
@@ -44,4 +45,12 @@ message Data {
 
 message Auth {
   string jwtSecret = 1;
+}
+
+message Registry {
+  string serverIp = 1;
+  int32 port = 2;
+  string userName = 3;
+  string password = 4;
+  string namespaceId = 5;
 }

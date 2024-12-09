@@ -1,4 +1,4 @@
-package util
+package common
 
 import "gorm.io/gorm"
 

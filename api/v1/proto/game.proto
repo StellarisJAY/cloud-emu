@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "gamesrv/api/v1;v1";
+
+service Game {
+  rpc OpenGameInstance(OpenGameInstanceRequest) returns (OpenGameInstanceResponse) {}
+  rpc GetRoomInstanceAccessToken(GetRoomInstanceAccessTokenRequest) returns (GetRoomInstanceAccessTokenResponse) {}
+}
+
+message OpenGameInstanceRequest {
+  int64 roomId = 1;
+  int64 emulatorId = 2;
+  int64 gameId = 3;
+  string gameName = 4;
+  string gameFile = 5;
+  int64 userId = 6;
+}
+
+message OpenGameInstanceResponse {
+  string accessToken = 1;
+}
+
+message GetRoomInstanceAccessTokenRequest {
+  int64 roomId = 1;
+  int64 userId = 2;
+}
+
+message GetRoomInstanceAccessTokenResponse {
+  string accessToken = 1;
+}

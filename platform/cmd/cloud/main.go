@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/conf"
+	"github.com/go-kratos/kratos/v2/registry"
 	"os"
 
 	"github.com/go-kratos/kratos/v2"
@@ -19,9 +20,9 @@ import (
 // go build -ldflags "-X main.Version=x.y.z"
 var (
 	// Name is the name of the compiled software.
-	Name string
+	Name string = "cloudemu-platform"
 	// Version is the version of the compiled software.
-	Version string
+	Version string = "1.0.0"
 	// flagconf is the config flag.
 	flagconf string
 
@@ -32,7 +33,7 @@ func init() {
 	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
 }
 
-func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server) *kratos.App {
+func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server, r registry.Registrar) *kratos.App {
 	return kratos.New(
 		kratos.ID(id),
 		kratos.Name(Name),
@@ -43,6 +44,7 @@ func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server) *kratos.App {
 			gs,
 			hs,
 		),
+		kratos.Registrar(r),
 	)
 }
 
@@ -73,7 +75,7 @@ func main() {
 		panic(err)
 	}
 
-	app, cleanup, err := wireApp(bc.Server, bc.Data, bc.Auth, logger)
+	app, cleanup, err := wireApp(bc.Server, bc.Data, bc.Auth, bc.Registry, logger)
 	if err != nil {
 		panic(err)
 	}

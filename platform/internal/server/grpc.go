@@ -1,7 +1,7 @@
 package server
 
 import (
-	v1 "github.com/StellrisJAY/cloud-emu/platform/api/v1"
+	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/conf"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"

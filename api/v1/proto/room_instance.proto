@@ -9,13 +9,13 @@ option go_package = "platform/api/v1;v1";
 service RoomInstance {
   rpc GetRoomInstance(GetRoomInstanceRequest) returns (GetRoomInstanceResponse) {
     option (google.api.http) = {
-      get: "/api/v1/room/instance"
+      get: "/api/v1/room-instance"
     };
   }
 
   rpc ListGameHistory(ListGameHistoryRequest) returns (ListGameHistoryResponse) {
     option (google.api.http) = {
-      get: "/api/v1/room/instance/history"
+      get: "/api/v1/room-instance/history"
     };
   }
 }
@@ -30,12 +30,15 @@ message RoomInstanceDto {
 
 message GetRoomInstanceRequest {
   int64 roomId = 1;
+  int64 emulatorId = 2;
+  string gameFile = 3;
 }
 
 message GetRoomInstanceResponse {
   int32 code = 1;
   string message = 2;
   RoomInstanceDto data = 3;
+  string accessToken = 4;
 }
 
 message ListGameHistoryRequest {
