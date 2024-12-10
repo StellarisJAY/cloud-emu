@@ -4,8 +4,8 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/bwmarrin/snowflake"
-	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/golang-jwt/jwt/v5"
 	"time"
 )
@@ -66,16 +66,16 @@ func (uc *UserUseCase) GetById(ctx context.Context, id int64) (*User, error) {
 func (uc *UserUseCase) Login(ctx context.Context, userName, password string) (string, error) {
 	user, err := uc.repo.GetByUsername(ctx, userName)
 	if err != nil {
-		return "", err
+		return "", v1.ErrorLoginFailed("login failed: %w", err)
 	}
 	hash := sha256.Sum256([]byte(password))
 	password = hex.EncodeToString(hash[:])
 	if password != user.Password {
-		return "", errors.New(401, "wrong password", "password error")
+		return "", v1.ErrorLoginFailed("login failed")
 	}
 	token, err := uc.ar.CreateToken(ctx, &LoginClaims{UserId: user.UserId})
 	if err != nil {
-		return "", err
+		return "", v1.ErrorLoginFailed("login failed: %w", err)
 	}
 	return token, nil
 }

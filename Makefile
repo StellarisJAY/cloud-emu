@@ -25,5 +25,12 @@ api:
  	       --go_out=paths=source_relative:api/v1 \
  	       --go-http_out=paths=source_relative:api/v1 \
  	       --go-grpc_out=paths=source_relative:api/v1 \
+ 	       --go-errors_out=paths=source_relative:api/v1 \
 	       --openapi_out=fq_schema_naming=true,default_response=false:. \
 	       $(API_PROTO_FILES)
+
+.PHONY: error
+error:
+	protoc --proto_path=./api/v1/proto \
+             --proto_path=./third_party \
+             $(API_PROTO_FILES)

@@ -1,10 +1,13 @@
 package server
 
 import (
+	"fmt"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/conf"
+	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
 	"github.com/go-kratos/kratos/contrib/registry/nacos/v2"
 	"github.com/go-kratos/kratos/v2/registry"
 	"github.com/google/wire"
+	"github.com/hashicorp/consul/api"
 	"github.com/nacos-group/nacos-sdk-go/clients"
 	"github.com/nacos-group/nacos-sdk-go/clients/naming_client"
 	"github.com/nacos-group/nacos-sdk-go/common/constant"
@@ -12,9 +15,9 @@ import (
 )
 
 // ProviderSet is server providers.
-var ProviderSet = wire.NewSet(NewGRPCServer, NewHTTPServer, NewNacosClient, NewDiscovery, NewRegistrar)
+var ProviderSet = wire.NewSet(NewGRPCServer, NewHTTPServer, NewDiscovery, NewRegistrar)
 
-func NewNacosClient(c *conf.Registry) naming_client.INamingClient {
+func newNacosClient(c *conf.Registry) naming_client.INamingClient {
 	cliConfig := constant.ClientConfig{
 		Username:    c.UserName,
 		Password:    c.Password,
@@ -38,10 +41,34 @@ func NewNacosClient(c *conf.Registry) naming_client.INamingClient {
 	return client
 }
 
-func NewRegistrar(cli naming_client.INamingClient) registry.Registrar {
-	return nacos.New(cli, nacos.WithPrefix(""))
+func newConsulClient(c *conf.Registry) *api.Client {
+	client, err := api.NewClient(&api.Config{
+		Address: fmt.Sprintf("%s:%d", c.ServerIp, c.Port),
+	})
+	if err != nil {
+		panic(err)
+	}
+	return client
 }
 
-func NewDiscovery(cli naming_client.INamingClient) registry.Discovery {
-	return nacos.New(cli, nacos.WithPrefix(""))
+func NewRegistrar(c *conf.Registry) registry.Registrar {
+	switch c.Scheme {
+	case "nacos":
+		return nacos.New(newNacosClient(c), nacos.WithPrefix(""))
+	case "consul":
+		return consul.New(newConsulClient(c), consul.WithHeartbeat(true), consul.WithHealthCheck(true))
+	default:
+		panic("unsupported scheme: " + c.Scheme)
+	}
+}
+
+func NewDiscovery(c *conf.Registry) registry.Discovery {
+	switch c.Scheme {
+	case "nacos":
+		return nacos.New(newNacosClient(c), nacos.WithPrefix(""))
+	case "consul":
+		return consul.New(newConsulClient(c), consul.WithHeartbeat(true), consul.WithHealthCheck(true))
+	default:
+		panic("unsupported scheme: " + c.Scheme)
+	}
 }

@@ -24,9 +24,8 @@ import (
 func wireApp(confServer *conf.Server, data *conf.Data, registry *conf.Registry, logger log.Logger) (*kratos.App, func(), error) {
 	gameServer := service.NewGameService()
 	grpcServer := server.NewGRPCServer(confServer, gameServer, logger)
-	iNamingClient := server.NewNacosClient(registry)
-	registrar := server.NewRegistrar(iNamingClient)
-	app := newApp(logger, grpcServer, registrar)
+	registrar := server.NewRegistrar(registry)
+	app := newApp(logger, confServer, grpcServer, registrar)
 	return app, func() {
 	}, nil
 }

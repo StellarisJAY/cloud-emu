@@ -48,4 +48,5 @@ message Registry {
   string userName = 3;
   string password = 4;
   string namespaceId = 5;
+  string scheme = 6;
 }

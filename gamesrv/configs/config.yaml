@@ -5,6 +5,7 @@ server:
   grpc:
     addr: 0.0.0.0:9020
     timeout: 1s
+  nodeId: 1020
 data:
   database:
     driver: mysql
@@ -14,8 +15,9 @@ data:
     read_timeout: 0.2s
     write_timeout: 0.2s
 registry:
+  scheme: consul
   serverIp: 127.0.0.1
-  port: 8848
-  userName: nacos
-  password: nacos
+  port: 8500
+  userName: helloworld
+  password: helloworld
   namespaceId: public
