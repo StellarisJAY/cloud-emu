@@ -47,8 +47,11 @@ func wireApp(confServer *conf.Server, confData *conf.Data, auth *conf.Auth, regi
 	gameServerRepo := data.NewGameServerRepo(dataData, discovery)
 	roomInstanceUseCase := biz.NewRoomInstanceUseCase(roomInstanceRepo, node, redsync, gameServerRepo, roomRepo, roomMemberRepo)
 	roomInstanceServer := service.NewRoomInstanceService(roomInstanceUseCase)
-	grpcServer := server.NewGRPCServer(confServer, userServer, roomServer, roomInstanceServer, logger)
-	httpServer := server.NewHTTPServer(confServer, auth, userServer, roomServer, roomInstanceServer, logger)
+	notificationRepo := data.NewNotificationRepo(dataData)
+	notificationUseCase := biz.NewNotificationUseCase(notificationRepo)
+	notificationServer := service.NewNotificationService(notificationUseCase)
+	grpcServer := server.NewGRPCServer(confServer, userServer, roomServer, roomInstanceServer, notificationServer, logger)
+	httpServer := server.NewHTTPServer(confServer, auth, userServer, roomServer, roomInstanceServer, notificationServer, logger)
 	registrar := server.NewRegistrar(registry)
 	app := newApp(logger, confServer, grpcServer, httpServer, registrar)
 	return app, func() {

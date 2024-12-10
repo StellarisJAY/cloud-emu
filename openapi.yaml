@@ -6,6 +6,29 @@ info:
     title: ""
     version: 0.0.1
 paths:
+    /api/v1/inbox/notifications:
+        get:
+            tags:
+                - Notification
+            operationId: Notification_ListInboxNotifications
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.ListInboxNotificationResponse'
     /api/v1/login:
         post:
             tags:
@@ -259,6 +282,16 @@ components:
                 total:
                     type: integer
                     format: int32
+        v1.ListInboxNotificationResponse:
+            type: object
+            properties:
+                notificationList:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/v1.NotificationDto'
+                total:
+                    type: integer
+                    format: int32
         v1.ListRoomMemberResponse:
             type: object
             properties:
@@ -295,6 +328,24 @@ components:
                 message:
                     type: string
                 token:
+                    type: string
+        v1.NotificationDto:
+            type: object
+            properties:
+                notificationId:
+                    type: string
+                type:
+                    type: integer
+                    format: int32
+                senderId:
+                    type: string
+                senderUserName:
+                    type: string
+                senderNickName:
+                    type: string
+                content:
+                    type: string
+                addTime:
                     type: string
         v1.RegisterRequest:
             type: object
@@ -381,6 +432,7 @@ components:
                 customData:
                     type: string
 tags:
+    - name: Notification
     - name: Room
     - name: RoomInstance
     - name: User

@@ -28,7 +28,8 @@ func NewWhiteListMatcher() selector.MatchFunc {
 }
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, ac *conf.Auth, userSrv v1.UserServer, roomSrv v1.RoomServer, roomInstanceSrv v1.RoomInstanceServer, logger log.Logger) *http.Server {
+func NewHTTPServer(c *conf.Server, ac *conf.Auth, userSrv v1.UserServer, roomSrv v1.RoomServer,
+	roomInstanceSrv v1.RoomInstanceServer, notificationServer v1.NotificationServer, logger log.Logger) *http.Server {
 	var opts = []http.ServerOption{
 		http.Middleware(
 			recovery.Recovery(),
@@ -60,5 +61,6 @@ func NewHTTPServer(c *conf.Server, ac *conf.Auth, userSrv v1.UserServer, roomSrv
 	v1.RegisterUserHTTPServer(srv, userSrv)
 	v1.RegisterRoomHTTPServer(srv, roomSrv)
 	v1.RegisterRoomInstanceHTTPServer(srv, roomInstanceSrv)
+	v1.RegisterNotificationHTTPServer(srv, notificationServer)
 	return srv
 }
