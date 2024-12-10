@@ -19,10 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Room_ListMyRooms_FullMethodName  = "/v1.Room/ListMyRooms"
-	Room_ListAllRooms_FullMethodName = "/v1.Room/ListAllRooms"
-	Room_CreateRoom_FullMethodName   = "/v1.Room/CreateRoom"
-	Room_GetRoom_FullMethodName      = "/v1.Room/GetRoom"
+	Room_ListMyRooms_FullMethodName    = "/v1.Room/ListMyRooms"
+	Room_ListAllRooms_FullMethodName   = "/v1.Room/ListAllRooms"
+	Room_CreateRoom_FullMethodName     = "/v1.Room/CreateRoom"
+	Room_GetRoom_FullMethodName        = "/v1.Room/GetRoom"
+	Room_ListRoomMember_FullMethodName = "/v1.Room/ListRoomMember"
 )
 
 // RoomClient is the client API for Room service.
@@ -33,6 +34,7 @@ type RoomClient interface {
 	ListAllRooms(ctx context.Context, in *ListRoomRequest, opts ...grpc.CallOption) (*ListRoomResponse, error)
 	CreateRoom(ctx context.Context, in *CreateRoomRequest, opts ...grpc.CallOption) (*CreateRoomResponse, error)
 	GetRoom(ctx context.Context, in *GetRoomRequest, opts ...grpc.CallOption) (*GetRoomResponse, error)
+	ListRoomMember(ctx context.Context, in *ListRoomMemberRequest, opts ...grpc.CallOption) (*ListRoomMemberResponse, error)
 }
 
 type roomClient struct {
@@ -83,6 +85,16 @@ func (c *roomClient) GetRoom(ctx context.Context, in *GetRoomRequest, opts ...gr
 	return out, nil
 }
 
+func (c *roomClient) ListRoomMember(ctx context.Context, in *ListRoomMemberRequest, opts ...grpc.CallOption) (*ListRoomMemberResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListRoomMemberResponse)
+	err := c.cc.Invoke(ctx, Room_ListRoomMember_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RoomServer is the server API for Room service.
 // All implementations must embed UnimplementedRoomServer
 // for forward compatibility.
@@ -91,6 +103,7 @@ type RoomServer interface {
 	ListAllRooms(context.Context, *ListRoomRequest) (*ListRoomResponse, error)
 	CreateRoom(context.Context, *CreateRoomRequest) (*CreateRoomResponse, error)
 	GetRoom(context.Context, *GetRoomRequest) (*GetRoomResponse, error)
+	ListRoomMember(context.Context, *ListRoomMemberRequest) (*ListRoomMemberResponse, error)
 	mustEmbedUnimplementedRoomServer()
 }
 
@@ -112,6 +125,9 @@ func (UnimplementedRoomServer) CreateRoom(context.Context, *CreateRoomRequest) (
 }
 func (UnimplementedRoomServer) GetRoom(context.Context, *GetRoomRequest) (*GetRoomResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRoom not implemented")
+}
+func (UnimplementedRoomServer) ListRoomMember(context.Context, *ListRoomMemberRequest) (*ListRoomMemberResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListRoomMember not implemented")
 }
 func (UnimplementedRoomServer) mustEmbedUnimplementedRoomServer() {}
 func (UnimplementedRoomServer) testEmbeddedByValue()              {}
@@ -206,6 +222,24 @@ func _Room_GetRoom_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Room_ListRoomMember_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListRoomMemberRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomServer).ListRoomMember(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Room_ListRoomMember_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomServer).ListRoomMember(ctx, req.(*ListRoomMemberRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Room_ServiceDesc is the grpc.ServiceDesc for Room service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -228,6 +262,10 @@ var Room_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetRoom",
 			Handler:    _Room_GetRoom_Handler,
+		},
+		{
+			MethodName: "ListRoomMember",
+			Handler:    _Room_ListRoomMember_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

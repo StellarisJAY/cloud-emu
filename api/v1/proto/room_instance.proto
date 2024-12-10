@@ -35,10 +35,8 @@ message GetRoomInstanceRequest {
 }
 
 message GetRoomInstanceResponse {
-  int32 code = 1;
-  string message = 2;
-  RoomInstanceDto data = 3;
-  string accessToken = 4;
+  RoomInstanceDto roomInstance = 1;
+  string accessToken = 2;
 }
 
 message ListGameHistoryRequest {
@@ -48,8 +46,6 @@ message ListGameHistoryRequest {
 }
 
 message ListGameHistoryResponse {
-  int32 code = 1;
-  string message = 2;
-  repeated RoomInstanceDto data = 3;
-  int32 total = 4;
+  repeated RoomInstanceDto roomInstanceList = 1;
+  int32 total = 2;
 }

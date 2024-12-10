@@ -112,6 +112,23 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.ListGameHistoryResponse'
+    /api/v1/room-members:
+        get:
+            tags:
+                - Room
+            operationId: Room_ListRoomMember
+            parameters:
+                - name: roomId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.ListRoomMemberResponse'
     /api/v1/room/{id}:
         get:
             tags:
@@ -203,12 +220,7 @@ components:
         v1.GetRoomInstanceResponse:
             type: object
             properties:
-                code:
-                    type: integer
-                    format: int32
-                message:
-                    type: string
-                data:
+                roomInstance:
                     $ref: '#/components/schemas/v1.RoomInstanceDto'
                 accessToken:
                     type: string
@@ -240,15 +252,20 @@ components:
         v1.ListGameHistoryResponse:
             type: object
             properties:
-                code:
-                    type: integer
-                    format: int32
-                message:
-                    type: string
-                data:
+                roomInstanceList:
                     type: array
                     items:
                         $ref: '#/components/schemas/v1.RoomInstanceDto'
+                total:
+                    type: integer
+                    format: int32
+        v1.ListRoomMemberResponse:
+            type: object
+            properties:
+                roomMemberList:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/v1.RoomMemberDto'
                 total:
                     type: integer
                     format: int32
@@ -340,6 +357,28 @@ components:
                 emulatorName:
                     type: string
                 serverUrl:
+                    type: string
+        v1.RoomMemberDto:
+            type: object
+            properties:
+                roomMemberId:
+                    type: string
+                roomId:
+                    type: string
+                userId:
+                    type: string
+                userName:
+                    type: string
+                nickName:
+                    type: string
+                role:
+                    type: integer
+                    format: int32
+                addTime:
+                    type: string
+                online:
+                    type: boolean
+                customData:
                     type: string
 tags:
     - name: Room

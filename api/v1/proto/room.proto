@@ -28,6 +28,11 @@ service Room {
       get: "/api/v1/room/{id}"
     };
   }
+  rpc ListRoomMember(ListRoomMemberRequest) returns (ListRoomMemberResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/room-members"
+    };
+  }
 }
 
 message RoomDto {
@@ -82,4 +87,25 @@ message GetRoomResponse {
   int64 createTime = 8;
   string password = 9;
   string emulatorType = 10;
+}
+
+message RoomMemberDto {
+  int64 roomMemberId = 1;
+  int64 roomId = 2;
+  int64 userId = 3;
+  string userName = 4;
+  string nickName = 5;
+  int32 role = 6;
+  string addTime = 7;
+  bool online = 8;
+  string customData = 9;
+}
+
+message ListRoomMemberRequest {
+  int64 roomId = 1;
+}
+
+message ListRoomMemberResponse {
+  repeated RoomMemberDto roomMemberList = 1;
+  int32 total = 2;
 }

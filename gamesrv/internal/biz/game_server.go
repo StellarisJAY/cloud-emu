@@ -17,15 +17,6 @@ type GameSave struct {
 	CreateTime int64  `json:"createTime"`
 	ExitSave   bool   `json:"exitSave"`
 }
-
-type GameFileMetadata struct {
-	Name       string `json:"name"`
-	Mapper     string `json:"mapper"`
-	Mirroring  string `json:"mirroring"`
-	Size       int32  `json:"size"`
-	UploadTime int64  `json:"uploadTime"`
-}
-
 type GameInstanceStats struct {
 	RoomId            int64         `json:"roomId"`
 	Connections       int           `json:"connections"`
@@ -34,26 +25,10 @@ type GameInstanceStats struct {
 	Uptime            time.Duration `json:"uptime"`
 }
 
-type EndpointStats struct {
-	EmulatorCount int32 `json:"emulatorCount"`
-	CpuUsage      int32 `json:"cpuUsage"`
-	MemoryUsed    int64 `json:"memoryUsed"`
-	MemoryTotal   int64 `json:"memoryTotal"`
-	Uptime        int64 `json:"uptime"`
-}
-
 type GraphicOptions struct {
 	HighResOpen  bool `json:"highResOpen"`
 	ReverseColor bool `json:"reverseColor"`
 	Grayscale    bool `json:"grayscale"`
-}
-
-type SupportedEmulator struct {
-	Name                  string `json:"name"`
-	SupportSaving         bool   `json:"saving"`
-	SupportGraphicSetting bool   `json:"supportGraphicSetting"`
-	Provider              string `json:"provider"`
-	Games                 int32  `json:"games"`
 }
 
 type GameFileRepo interface {
@@ -63,4 +38,31 @@ type GameFileRepo interface {
 	ListSaves(ctx context.Context, roomId int64, page, pageSize int32) ([]*GameSave, int32, error)
 	DeleteSave(ctx context.Context, saveId int64) error
 	GetExitSave(ctx context.Context, roomId int64) (*GameSave, error)
+}
+
+type GameServerUseCase struct {
+	gameFileRepo   GameFileRepo
+	memberAuthRepo MemberAuthRepo
+}
+
+type CreateRoomInstanceParams struct {
+	RoomId     int64
+	EmulatorId int64
+	GameFile   string
+	Auth       *MemberAuthInfo
+}
+
+func NewGameServerUseCase(gameFileRepo GameFileRepo, memberAuthRepo MemberAuthRepo) *GameServerUseCase {
+	return &GameServerUseCase{
+		gameFileRepo:   gameFileRepo,
+		memberAuthRepo: memberAuthRepo,
+	}
+}
+
+func (uc *GameServerUseCase) CreateRoomInstance(ctx context.Context, params CreateRoomInstanceParams) error {
+	panic("not implemented")
+}
+
+func (uc *GameServerUseCase) GetRoomInstanceToken(ctx context.Context, roomId int64, auth *MemberAuthInfo) (string, error) {
+	panic("not implemented")
 }

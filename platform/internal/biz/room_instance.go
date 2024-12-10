@@ -26,6 +26,7 @@ type RoomInstanceRepo interface {
 	Update(ctx context.Context, roomInstance *RoomInstance) error
 	GetActiveInstanceByRoomId(ctx context.Context, roomId int64) (*RoomInstance, error)
 	ListInstanceByRoomId(ctx context.Context, roomId int64, p *common.Pagination) ([]*RoomInstance, error)
+	ListOnlineRoomMembers(ctx context.Context, roomInstance *RoomInstance) ([]*RoomMember, error)
 }
 
 type RoomInstance struct {
@@ -78,14 +79,15 @@ func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int6
 	}
 	mutexName := openRoomInstanceMutexName(roomId)
 	mutex := uc.redsync.NewMutex(mutexName, redsync.WithExpiry(OpenRoomInstanceMutexExpire))
-	// distribute lock
+	// 分布式锁，防止同时创建房间实例
 	if err := mutex.Lock(); err != nil {
 		return nil, err
 	}
 	defer mutex.Unlock()
-	// active room instance exist
+	// 房间实例已经存在
 	instance, err := uc.repo.GetActiveInstanceByRoomId(ctx, roomId)
 	if instance != nil {
+		// 获取连接token
 		token, err := uc.gameServerRepo.GetRoomInstanceToken(ctx, instance, roomId, userId)
 		if err != nil {
 			return nil, err
@@ -99,11 +101,11 @@ func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int6
 		return nil, err
 	}
 
-	// observer can't open a new room instance
+	// 观战角色无法创建房间实例
 	if member.Role == RoomMemberRoleObserver {
 		return nil, errors.New("no authority")
 	}
-	// select a game server
+	// 获取所有可用的游戏服务器
 	servers, err := uc.gameServerRepo.ListActiveGameServers(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list active game servers: %w", err)
@@ -111,7 +113,7 @@ func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int6
 	if len(servers) == 0 {
 		return nil, fmt.Errorf("no active game servers available")
 	}
-	// TODO better select strategy
+	// TODO 游戏服务器负载均衡选择策略
 	slices.SortStableFunc(servers, func(a, b *GameServer) int {
 		return cmp.Compare(a.Weight, b.Weight)
 	})
@@ -123,7 +125,7 @@ func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int6
 		EndTime:   time.Now(),
 	}
 
-	// open a room instance in game server
+	// 在游戏服务器创建房间实例，并获取连接token
 	token, err := uc.gameServerRepo.OpenRoomInstance(ctx, instance)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open room instance on target server: %w", err)

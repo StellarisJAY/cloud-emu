@@ -3,14 +3,18 @@ package service
 import (
 	"context"
 	"github.com/StellrisJAY/cloud-emu/api/v1"
+	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/biz"
 )
 
 type GameService struct {
 	v1.UnimplementedGameServer
+	uc *biz.GameServerUseCase
 }
 
-func NewGameService() v1.GameServer {
-	return &GameService{}
+func NewGameService(uc *biz.GameServerUseCase) v1.GameServer {
+	return &GameService{
+		uc: uc,
+	}
 }
 
 func (g *GameService) OpenGameInstance(ctx context.Context, request *v1.OpenGameInstanceRequest) (*v1.OpenGameInstanceResponse, error) {

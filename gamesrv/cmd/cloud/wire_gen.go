@@ -7,7 +7,9 @@
 package main
 
 import (
+	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/biz"
 	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/conf"
+	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/data"
 	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/server"
 	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/service"
 	"github.com/go-kratos/kratos/v2"
@@ -21,11 +23,19 @@ import (
 // Injectors from wire.go:
 
 // wireApp init kratos application.
-func wireApp(confServer *conf.Server, data *conf.Data, registry *conf.Registry, logger log.Logger) (*kratos.App, func(), error) {
-	gameServer := service.NewGameService()
+func wireApp(confServer *conf.Server, confData *conf.Data, registry *conf.Registry, logger log.Logger) (*kratos.App, func(), error) {
+	dataData, cleanup, err := data.NewData(confData, logger)
+	if err != nil {
+		return nil, nil, err
+	}
+	gameFileRepo := data.NewGameFileRepo(dataData)
+	memberAuthRepo := data.NewMemberAuthRepo(dataData)
+	gameServerUseCase := biz.NewGameServerUseCase(gameFileRepo, memberAuthRepo)
+	gameServer := service.NewGameService(gameServerUseCase)
 	grpcServer := server.NewGRPCServer(confServer, gameServer, logger)
 	registrar := server.NewRegistrar(registry)
 	app := newApp(logger, confServer, grpcServer, registrar)
 	return app, func() {
+		cleanup()
 	}, nil
 }

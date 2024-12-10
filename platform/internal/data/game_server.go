@@ -34,6 +34,7 @@ func (g *GameServerRepo) ListActiveGameServers(ctx context.Context) ([]*biz.Game
 	return gameServers, nil
 }
 
+// OpenRoomInstance 在选中的game服务器启动房间实例
 func (g *GameServerRepo) OpenRoomInstance(ctx context.Context, instance *biz.RoomInstance) (string, error) {
 	client, err := common.NewGRPCClient(instance.ServerUrl)
 	if err != nil {
@@ -54,6 +55,7 @@ func (g *GameServerRepo) OpenRoomInstance(ctx context.Context, instance *biz.Roo
 	return response.AccessToken, nil
 }
 
+// GetRoomInstanceToken 获取房间实例的访问token
 func (g *GameServerRepo) GetRoomInstanceToken(ctx context.Context, instance *biz.RoomInstance, roomId, userId int64) (string, error) {
 	client, err := common.NewGRPCClient(instance.ServerUrl)
 	if err != nil {

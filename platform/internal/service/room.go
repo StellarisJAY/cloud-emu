@@ -10,11 +10,12 @@ import (
 
 type RoomService struct {
 	v1.UnimplementedRoomServer
-	ruc *biz.RoomUseCase
+	roomUC       *biz.RoomUseCase
+	roomMemberUC *biz.RoomMemberUseCase
 }
 
-func NewRoomService(ruc *biz.RoomUseCase) v1.RoomServer {
-	return &RoomService{ruc: ruc}
+func NewRoomService(roomUC *biz.RoomUseCase, roomMemberUC *biz.RoomMemberUseCase) v1.RoomServer {
+	return &RoomService{roomUC: roomUC, roomMemberUC: roomMemberUC}
 }
 
 func (r *RoomService) ListMyRooms(ctx context.Context, request *v1.ListRoomRequest) (*v1.ListRoomResponse, error) {
@@ -25,7 +26,7 @@ func (r *RoomService) ListMyRooms(ctx context.Context, request *v1.ListRoomReque
 		Page:     request.Page,
 		PageSize: request.PageSize,
 	}
-	rooms, err := r.ruc.ListMyRooms(ctx, claims.UserId, query, page)
+	rooms, err := r.roomUC.ListMyRooms(ctx, claims.UserId, query, page)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +64,7 @@ func (r *RoomService) CreateRoom(ctx context.Context, request *v1.CreateRoomRequ
 		Password:    request.Password,
 		JoinType:    request.JoinType,
 	}
-	err := r.ruc.Create(ctx, room)
+	err := r.roomUC.Create(ctx, room)
 	if err != nil {
 		return nil, err
 	}
@@ -73,4 +74,27 @@ func (r *RoomService) CreateRoom(ctx context.Context, request *v1.CreateRoomRequ
 func (r *RoomService) GetRoom(ctx context.Context, request *v1.GetRoomRequest) (*v1.GetRoomResponse, error) {
 	//TODO implement me
 	panic("implement me")
+}
+
+func (r *RoomService) ListRoomMember(ctx context.Context, request *v1.ListRoomMemberRequest) (*v1.ListRoomMemberResponse, error) {
+	members, err := r.roomMemberUC.ListRoomMembers(ctx, request.RoomId)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*v1.RoomMemberDto, 0, len(members))
+	for _, member := range members {
+		result = append(result, &v1.RoomMemberDto{
+			RoomId:       member.RoomId,
+			UserId:       member.UserId,
+			RoomMemberId: member.RoomMemberId,
+			UserName:     member.UserName,
+			NickName:     member.NickName,
+			Role:         member.Role,
+			AddTime:      member.AddTime.Format("2006-01-02 15:04:05"),
+		})
+	}
+	return &v1.ListRoomMemberResponse{
+		RoomMemberList: result,
+		Total:          int32(len(result)),
+	}, nil
 }

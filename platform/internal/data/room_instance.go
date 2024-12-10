@@ -75,6 +75,11 @@ func (r *RoomInstanceRepo) ListInstanceByRoomId(ctx context.Context, roomId int6
 	return result, nil
 }
 
+func (r *RoomInstanceRepo) ListOnlineRoomMembers(ctx context.Context, roomInstance *biz.RoomInstance) ([]*biz.RoomMember, error) {
+	// TODO 从游戏服务器获取房间实例在线成员
+	return nil, nil
+}
+
 func convertRoomInstanceBizToEntity(dto *biz.RoomInstance) *RoomInstanceEntity {
 	return &RoomInstanceEntity{
 		RoomInstanceId: dto.RoomInstanceId,

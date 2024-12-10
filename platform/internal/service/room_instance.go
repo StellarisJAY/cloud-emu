@@ -25,9 +25,7 @@ func (r *RoomInstanceService) GetRoomInstance(ctx context.Context, request *v1.G
 		return nil, err
 	}
 	return &v1.GetRoomInstanceResponse{
-		Code:    200,
-		Message: "SUCCESS",
-		Data: &v1.RoomInstanceDto{
+		RoomInstance: &v1.RoomInstanceDto{
 			RoomInstanceId: result.RoomInstanceId,
 			RoomId:         result.RoomId,
 			ServerUrl:      result.ServerUrl,
@@ -55,8 +53,7 @@ func (r *RoomInstanceService) ListGameHistory(ctx context.Context, request *v1.L
 		})
 	}
 	return &v1.ListGameHistoryResponse{
-		Code:  200,
-		Data:  result,
-		Total: page.Total,
+		RoomInstanceList: result,
+		Total:            page.Total,
 	}, nil
 }

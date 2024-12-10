@@ -89,6 +89,10 @@ type GameInstance struct {
 	grayscaleOpen        bool
 }
 
+func makeGameInstance(emulatorId int64, gameName string, gameData []byte) (*GameInstance, error) {
+	panic("not implemented")
+}
+
 func (g *GameInstance) enhanceFrame(frame emulator.IFrame) emulator.IFrame {
 	if g.enhancedFrame == nil {
 		g.enhancedFrame = image.NewYCbCr(image.Rect(0, 0, frame.Width()*EnhanceFrameScale, frame.Height()*EnhanceFrameScale), image.YCbCrSubsampleRatio420)
