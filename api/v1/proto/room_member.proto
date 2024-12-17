@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "platform/api/v1;v1";
+
+service RoomMember {
+  rpc ListRoomMember(ListRoomMemberRequest) returns (ListRoomMemberResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/room-member"
+    };
+  }
+  rpc InviteRoomMember(InviteRoomMemberRequest) returns (InviteRoomMemberResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/room-member/invite"
+      body: "*"
+    };
+  }
+}
+
+message RoomMemberDto {
+  int64 roomMemberId = 1;
+  int64 roomId = 2;
+  int64 userId = 3;
+  string userName = 4;
+  string nickName = 5;
+  int32 role = 6;
+  string addTime = 7;
+  bool online = 8;
+  string customData = 9;
+}
+
+message ListRoomMemberRequest {
+  int64 roomId = 1;
+}
+
+message ListRoomMemberResponse {
+  int32 code = 1;
+  string message = 2;
+  repeated RoomMemberDto data = 3;
+  int32 total = 4;
+}
+
+message InviteRoomMemberRequest {
+  int64 userId = 1;
+  int64 roomId = 2;
+}
+
+message InviteRoomMemberResponse {
+  int32 code = 1;
+  string message = 2;
+}
+

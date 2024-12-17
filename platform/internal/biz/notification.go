@@ -14,6 +14,7 @@ type Notification struct {
 	SenderNickName string
 	Content        string
 	AddTime        time.Time
+	ReceiverId     int64
 }
 
 type NotificationRepo interface {
@@ -24,6 +25,11 @@ type NotificationRepo interface {
 type NotificationUseCase struct {
 	notificationRepo NotificationRepo
 }
+
+const (
+	NotificationTypeSystem int32 = iota + 1
+	NotificationTypeInvitation
+)
 
 func NewNotificationUseCase(notificationRepo NotificationRepo) *NotificationUseCase {
 	return &NotificationUseCase{notificationRepo: notificationRepo}

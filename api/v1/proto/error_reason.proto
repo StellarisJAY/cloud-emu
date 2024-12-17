@@ -10,5 +10,6 @@ enum ErrorReason {
   option (errors.default_code) = 500;
   NOT_FOUND = 0 [(errors.code) = 404];
   ACCESS_DENIED = 1 [(errors.code) = 403];
-  LOGIN_FAILED = 2 [(errors.code) = 501];
+  LOGIN_FAILED = 2 [(errors.code) = 400];
+  ACTIVATION_FAILED = 3[(errors.code) = 403];
 }

@@ -10,7 +10,8 @@ import (
 
 // NewGRPCServer new a gRPC server.
 func NewGRPCServer(c *conf.Server, userSrv v1.UserServer, roomSrv v1.RoomServer,
-	roomInstanceSrv v1.RoomInstanceServer, notificationServer v1.NotificationServer, logger log.Logger) *grpc.Server {
+	roomInstanceSrv v1.RoomInstanceServer, notificationServer v1.NotificationServer, roomMemberServer v1.RoomMemberServer,
+	emulatorServer v1.EmulatorServer, logger log.Logger) *grpc.Server {
 	var opts = []grpc.ServerOption{
 		grpc.Middleware(
 			recovery.Recovery(),
@@ -30,5 +31,7 @@ func NewGRPCServer(c *conf.Server, userSrv v1.UserServer, roomSrv v1.RoomServer,
 	v1.RegisterRoomServer(srv, roomSrv)
 	v1.RegisterRoomInstanceServer(srv, roomInstanceSrv)
 	v1.RegisterNotificationServer(srv, notificationServer)
+	v1.RegisterRoomMemberServer(srv, roomMemberServer)
+	v1.RegisterEmulatorServer(srv, emulatorServer)
 	return srv
 }

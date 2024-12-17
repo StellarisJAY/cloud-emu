@@ -29,7 +29,8 @@ func NewWhiteListMatcher() selector.MatchFunc {
 
 // NewHTTPServer new an HTTP server.
 func NewHTTPServer(c *conf.Server, ac *conf.Auth, userSrv v1.UserServer, roomSrv v1.RoomServer,
-	roomInstanceSrv v1.RoomInstanceServer, notificationServer v1.NotificationServer, logger log.Logger) *http.Server {
+	roomInstanceSrv v1.RoomInstanceServer, notificationServer v1.NotificationServer, roomMemberServer v1.RoomMemberServer,
+	emulatorServer v1.EmulatorServer, emulatorGameUC *biz.EmulatorGameUseCase, logger log.Logger) *http.Server {
 	var opts = []http.ServerOption{
 		http.Middleware(
 			recovery.Recovery(),
@@ -46,6 +47,7 @@ func NewHTTPServer(c *conf.Server, ac *conf.Auth, userSrv v1.UserServer, roomSrv
 			handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}),
 			handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"}),
 			handlers.AllowedOrigins([]string{"*"}),
+			handlers.ExposedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}),
 		)),
 	}
 	if c.Http.Network != "" {
@@ -58,9 +60,13 @@ func NewHTTPServer(c *conf.Server, ac *conf.Auth, userSrv v1.UserServer, roomSrv
 		opts = append(opts, http.Timeout(c.Http.Timeout.AsDuration()))
 	}
 	srv := http.NewServer(opts...)
+	route := srv.Route("/api/v1")
+	route.POST("/game/upload", emulatorGameUC.Upload)
 	v1.RegisterUserHTTPServer(srv, userSrv)
 	v1.RegisterRoomHTTPServer(srv, roomSrv)
 	v1.RegisterRoomInstanceHTTPServer(srv, roomInstanceSrv)
 	v1.RegisterNotificationHTTPServer(srv, notificationServer)
+	v1.RegisterRoomMemberHTTPServer(srv, roomMemberServer)
+	v1.RegisterEmulatorHTTPServer(srv, emulatorServer)
 	return srv
 }

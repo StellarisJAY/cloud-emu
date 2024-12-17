@@ -27,17 +27,18 @@ func NewRoomMemberRepo(data *Data) biz.RoomMemberRepo {
 }
 
 func (r *RoomMemberRepo) Create(ctx context.Context, member *biz.RoomMember) error {
-	return r.data.db.Table(RoomMemberTableName).WithContext(ctx).Create(member).Error
+	return r.data.DB(ctx).Table(RoomMemberTableName).WithContext(ctx).Create(convertRoomMemberBizToEntity(member)).Error
 }
 
 func (r *RoomMemberRepo) Update(ctx context.Context, member *biz.RoomMember) error {
-	return r.data.db.Table(RoomMemberTableName).Where("room_member_id=?", member.RoomMemberId).WithContext(ctx).Updates(member).Error
+	return r.data.DB(ctx).Table(RoomMemberTableName).Where("room_member_id=?", member.RoomMemberId).WithContext(ctx).Updates(convertRoomMemberBizToEntity(member)).Error
 }
 
 func (r *RoomMemberRepo) List(ctx context.Context, roomId int64) ([]*biz.RoomMember, error) {
 	var members []*biz.RoomMember
-	err := r.data.db.Table(RoomMemberTableName+" rm").
+	err := r.data.DB(ctx).Table(RoomMemberTableName+" rm").
 		Joins("INNER JOIN "+UserTableName+" su ON su.user_id = rm.user_id").
+		Select("rm.*, su.user_name, su.nick_name").
 		Where("rm.room_id=?", roomId).
 		WithContext(ctx).
 		Scan(&members).Error
@@ -49,8 +50,9 @@ func (r *RoomMemberRepo) List(ctx context.Context, roomId int64) ([]*biz.RoomMem
 
 func (r *RoomMemberRepo) GetByRoomAndUser(ctx context.Context, roomId, userId int64) (*biz.RoomMember, error) {
 	var member *biz.RoomMember
-	err := r.data.db.Table(RoomMemberTableName+" rm").
+	err := r.data.DB(ctx).Table(RoomMemberTableName+" rm").
 		Joins("INNER JOIN "+UserTableName+" su ON su.user_id = rm.user_id").
+		Select("rm.*, su.user_name, su.nick_name").
 		Where("rm.room_id=?", roomId).
 		Where("rm.user_id=?", userId).
 		WithContext(ctx).
@@ -62,4 +64,27 @@ func (r *RoomMemberRepo) GetByRoomAndUser(ctx context.Context, roomId, userId in
 		return nil, err
 	}
 	return member, nil
+}
+
+func convertRoomMemberBizToEntity(member *biz.RoomMember) *RoomMemberEntity {
+	return &RoomMemberEntity{
+		RoomMemberId: member.RoomMemberId,
+		RoomId:       member.RoomId,
+		UserId:       member.UserId,
+		AddTime:      time.Now(),
+		Role:         member.Role,
+	}
+}
+
+func (r *RoomMemberRepo) CountRoomMember(ctx context.Context, roomId int64) (int32, error) {
+	var count int64 = 0
+	err := r.data.DB(ctx).Table(RoomMemberTableName).
+		Where("room_id = ?", roomId).
+		WithContext(ctx).
+		Count(&count).
+		Error
+	if err != nil {
+		return 0, err
+	}
+	return int32(count), nil
 }

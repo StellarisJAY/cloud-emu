@@ -52,7 +52,7 @@ func (g *GameServerRepo) OpenRoomInstance(ctx context.Context, instance *biz.Roo
 	if err != nil {
 		return "", err
 	}
-	return response.AccessToken, nil
+	return response.Data.Token, nil
 }
 
 // GetRoomInstanceToken 获取房间实例的访问token
@@ -70,5 +70,5 @@ func (g *GameServerRepo) GetRoomInstanceToken(ctx context.Context, instance *biz
 	if err != nil {
 		return "", err
 	}
-	return response.AccessToken, nil
+	return response.Data.Token, nil
 }

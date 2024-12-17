@@ -28,9 +28,9 @@ service Room {
       get: "/api/v1/room/{id}"
     };
   }
-  rpc ListRoomMember(ListRoomMemberRequest) returns (ListRoomMemberResponse) {
+  rpc DeleteRoom(DeleteRoomRequest) returns (DeleteRoomResponse) {
     option (google.api.http) = {
-      get: "/api/v1/room-members"
+      delete: "/api/v1/room/{roomId}"
     };
   }
 }
@@ -52,11 +52,17 @@ message RoomDto {
 message ListRoomRequest {
   int32 page = 1;
   int32 pageSize = 2;
+  string roomName = 3;
+  string hostName = 4;
+  int32 joinType = 5;
+  int64 emulatorId = 6;
 }
 
 message ListRoomResponse {
-  repeated RoomDto rooms = 1;
-  int32 total = 2;
+  int32 code = 1;
+  string message = 2;
+  repeated RoomDto data = 3;
+  int32 total = 4;
 }
 
 message CreateRoomRequest {
@@ -69,7 +75,8 @@ message CreateRoomRequest {
 }
 
 message CreateRoomResponse {
-  int64 id = 1;
+  int32 code = 1;
+  string message = 2;
 }
 
 message GetRoomRequest {
@@ -77,35 +84,17 @@ message GetRoomRequest {
 }
 
 message GetRoomResponse {
-  int64 id = 1;
-  string name = 2;
-  bool private = 3;
-  int64 host = 4;
-  string hostName = 5;
-  int32 memberCount = 6;
-  int32 memberLimit = 7;
-  int64 createTime = 8;
-  string password = 9;
-  string emulatorType = 10;
+  int32 code = 1;
+  string message = 2;
+  RoomDto data = 3;
 }
 
-message RoomMemberDto {
-  int64 roomMemberId = 1;
-  int64 roomId = 2;
-  int64 userId = 3;
-  string userName = 4;
-  string nickName = 5;
-  int32 role = 6;
-  string addTime = 7;
-  bool online = 8;
-  string customData = 9;
-}
-
-message ListRoomMemberRequest {
+message DeleteRoomRequest {
   int64 roomId = 1;
+  bool forceShutdown = 2;
 }
 
-message ListRoomMemberResponse {
-  repeated RoomMemberDto roomMemberList = 1;
-  int32 total = 2;
+message DeleteRoomResponse {
+  int32 code = 1;
+  string message = 2;
 }

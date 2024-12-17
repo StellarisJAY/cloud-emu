@@ -30,7 +30,9 @@ message ListInboxNotificationRequest {
 }
 
 message ListInboxNotificationResponse {
-  repeated NotificationDto notificationList = 1;
-  int32 total = 2;
+  int32 code = 1;
+  string message = 2;
+  repeated NotificationDto data = 3;
+  int32 total = 4;
 }
 

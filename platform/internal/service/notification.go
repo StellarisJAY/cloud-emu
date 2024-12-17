@@ -5,7 +5,9 @@ import (
 	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/biz"
+	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
+	"time"
 )
 
 type NotificationService struct {
@@ -26,7 +28,11 @@ func (n *NotificationService) ListInboxNotifications(ctx context.Context, reques
 	}
 	notifications, err := n.notificationUC.ListInbox(ctx, claims.UserId, page)
 	if err != nil {
-		return nil, err
+		e := errors.FromError(err)
+		return &v1.ListInboxNotificationResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
 	}
 	result := make([]*v1.NotificationDto, len(notifications))
 	for i, notification := range notifications {
@@ -35,13 +41,15 @@ func (n *NotificationService) ListInboxNotifications(ctx context.Context, reques
 			SenderId:       notification.SenderId,
 			SenderNickName: notification.SenderNickName,
 			SenderUserName: notification.SenderUserName,
-			AddTime:        notification.AddTime.Format("2006-01-02 15:04:05"),
+			AddTime:        notification.AddTime.Format(time.DateTime),
 			Content:        notification.Content,
 			Type:           notification.Type,
 		}
 	}
 	return &v1.ListInboxNotificationResponse{
-		NotificationList: result,
-		Total:            page.Total,
+		Code:    200,
+		Message: "查询成功",
+		Data:    result,
+		Total:   page.Total,
 	}, nil
 }

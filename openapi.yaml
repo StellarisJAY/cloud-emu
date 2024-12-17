@@ -6,6 +6,84 @@ info:
     title: ""
     version: 0.0.1
 paths:
+    /api/v1/account/activate:
+        post:
+            tags:
+                - User
+            operationId: User_ActivateAccount
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.ActivateAccountRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.ActivateAccountResponse'
+    /api/v1/emulator:
+        get:
+            tags:
+                - Emulator
+            operationId: Emulator_ListEmulator
+            parameters:
+                - name: emulatorName
+                  in: query
+                  schema:
+                    type: string
+                - name: provider
+                  in: query
+                  schema:
+                    type: string
+                - name: supportSave
+                  in: query
+                  schema:
+                    type: boolean
+                - name: supportGraphicSetting
+                  in: query
+                  schema:
+                    type: boolean
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.ListEmulatorResponse'
+    /api/v1/game:
+        get:
+            tags:
+                - Emulator
+            operationId: Emulator_ListGame
+            parameters:
+                - name: emulatorId
+                  in: query
+                  schema:
+                    type: string
+                - name: gameName
+                  in: query
+                  schema:
+                    type: string
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.ListGameResponse'
     /api/v1/inbox/notifications:
         get:
             tags:
@@ -135,11 +213,11 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.ListGameHistoryResponse'
-    /api/v1/room-members:
+    /api/v1/room-member:
         get:
             tags:
-                - Room
-            operationId: Room_ListRoomMember
+                - RoomMember
+            operationId: RoomMember_ListRoomMember
             parameters:
                 - name: roomId
                   in: query
@@ -152,6 +230,24 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.ListRoomMemberResponse'
+    /api/v1/room-member/invite:
+        post:
+            tags:
+                - RoomMember
+            operationId: RoomMember_InviteRoomMember
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.InviteRoomMemberRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.InviteRoomMemberResponse'
     /api/v1/room/{id}:
         get:
             tags:
@@ -170,6 +266,28 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.GetRoomResponse'
+    /api/v1/room/{roomId}:
+        delete:
+            tags:
+                - Room
+            operationId: Room_DeleteRoom
+            parameters:
+                - name: roomId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                - name: forceShutdown
+                  in: query
+                  schema:
+                    type: boolean
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.DeleteRoomResponse'
     /api/v1/rooms:
         get:
             tags:
@@ -186,6 +304,23 @@ paths:
                   schema:
                     type: integer
                     format: int32
+                - name: roomName
+                  in: query
+                  schema:
+                    type: string
+                - name: hostName
+                  in: query
+                  schema:
+                    type: string
+                - name: joinType
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: emulatorId
+                  in: query
+                  schema:
+                    type: string
             responses:
                 "200":
                     description: OK
@@ -209,6 +344,23 @@ paths:
                   schema:
                     type: integer
                     format: int32
+                - name: roomName
+                  in: query
+                  schema:
+                    type: string
+                - name: hostName
+                  in: query
+                  schema:
+                    type: string
+                - name: joinType
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: emulatorId
+                  in: query
+                  schema:
+                    type: string
             responses:
                 "200":
                     description: OK
@@ -216,8 +368,57 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.ListRoomResponse'
+    /api/v1/user:
+        get:
+            tags:
+                - User
+            operationId: User_ListUser
+            parameters:
+                - name: userName
+                  in: query
+                  schema:
+                    type: string
+                - name: nickName
+                  in: query
+                  schema:
+                    type: string
+                - name: status
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.ListUserResponse'
 components:
     schemas:
+        v1.ActivateAccountRequest:
+            type: object
+            properties:
+                code:
+                    type: string
+        v1.ActivateAccountResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
         v1.CreateRoomRequest:
             type: object
             properties:
@@ -238,9 +439,61 @@ components:
         v1.CreateRoomResponse:
             type: object
             properties:
-                id:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+        v1.DeleteRoomResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+        v1.EmulatorDto:
+            type: object
+            properties:
+                emulatorId:
+                    type: string
+                emulatorName:
+                    type: string
+                description:
+                    type: string
+                provider:
+                    type: string
+                supportSave:
+                    type: boolean
+                supportGraphicSetting:
+                    type: boolean
+        v1.GameDto:
+            type: object
+            properties:
+                gameId:
+                    type: string
+                emulatorId:
+                    type: string
+                gameName:
+                    type: string
+                size:
+                    type: integer
+                    format: int32
+                addTime:
+                    type: string
+                customData:
                     type: string
         v1.GetRoomInstanceResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/v1.GetRoomInstanceResult'
+        v1.GetRoomInstanceResult:
             type: object
             properties:
                 roomInstance:
@@ -250,42 +503,79 @@ components:
         v1.GetRoomResponse:
             type: object
             properties:
-                id:
-                    type: string
-                name:
-                    type: string
-                private:
-                    type: boolean
-                host:
-                    type: string
-                hostName:
-                    type: string
-                memberCount:
+                code:
                     type: integer
                     format: int32
-                memberLimit:
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/v1.RoomDto'
+        v1.InviteRoomMemberRequest:
+            type: object
+            properties:
+                userId:
+                    type: string
+                roomId:
+                    type: string
+        v1.InviteRoomMemberResponse:
+            type: object
+            properties:
+                code:
                     type: integer
                     format: int32
-                createTime:
+                message:
                     type: string
-                password:
+        v1.ListEmulatorResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
                     type: string
-                emulatorType:
-                    type: string
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/v1.EmulatorDto'
         v1.ListGameHistoryResponse:
             type: object
             properties:
-                roomInstanceList:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
                     type: array
                     items:
                         $ref: '#/components/schemas/v1.RoomInstanceDto'
                 total:
                     type: integer
                     format: int32
+        v1.ListGameResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/v1.GameDto'
+                total:
+                    type: integer
+                    format: int32
         v1.ListInboxNotificationResponse:
             type: object
             properties:
-                notificationList:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
                     type: array
                     items:
                         $ref: '#/components/schemas/v1.NotificationDto'
@@ -295,7 +585,12 @@ components:
         v1.ListRoomMemberResponse:
             type: object
             properties:
-                roomMemberList:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
                     type: array
                     items:
                         $ref: '#/components/schemas/v1.RoomMemberDto'
@@ -305,10 +600,30 @@ components:
         v1.ListRoomResponse:
             type: object
             properties:
-                rooms:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
                     type: array
                     items:
                         $ref: '#/components/schemas/v1.RoomDto'
+                total:
+                    type: integer
+                    format: int32
+        v1.ListUserResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/v1.UserDto'
                 total:
                     type: integer
                     format: int32
@@ -327,7 +642,7 @@ components:
                     format: int32
                 message:
                     type: string
-                token:
+                data:
                     type: string
         v1.NotificationDto:
             type: object
@@ -431,8 +746,24 @@ components:
                     type: boolean
                 customData:
                     type: string
+        v1.UserDto:
+            type: object
+            properties:
+                userId:
+                    type: string
+                userName:
+                    type: string
+                nickName:
+                    type: string
+                addTime:
+                    type: string
+                status:
+                    type: integer
+                    format: int32
 tags:
+    - name: Emulator
     - name: Notification
     - name: Room
     - name: RoomInstance
+    - name: RoomMember
     - name: User

@@ -5,6 +5,7 @@ import (
 	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/biz"
+	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
 )
 
@@ -22,15 +23,23 @@ func (r *RoomInstanceService) GetRoomInstance(ctx context.Context, request *v1.G
 	claims := c.(*biz.LoginClaims)
 	result, err := r.uc.OpenRoomInstance(ctx, request.RoomId, claims.UserId)
 	if err != nil {
-		return nil, err
+		e := errors.FromError(err)
+		return &v1.GetRoomInstanceResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
 	}
 	return &v1.GetRoomInstanceResponse{
-		RoomInstance: &v1.RoomInstanceDto{
-			RoomInstanceId: result.RoomInstanceId,
-			RoomId:         result.RoomId,
-			ServerUrl:      result.ServerUrl,
+		Code:    200,
+		Message: "操作成功",
+		Data: &v1.GetRoomInstanceResult{
+			RoomInstance: &v1.RoomInstanceDto{
+				RoomInstanceId: result.RoomInstanceId,
+				RoomId:         result.RoomId,
+				ServerUrl:      result.ServerUrl,
+			},
+			AccessToken: result.AccessToken,
 		},
-		AccessToken: result.AccessToken,
 	}, nil
 }
 
@@ -41,7 +50,11 @@ func (r *RoomInstanceService) ListGameHistory(ctx context.Context, request *v1.L
 	}
 	instances, err := r.uc.ListRoomGameHistory(ctx, request.RoomId, &page)
 	if err != nil {
-		return nil, err
+		e := errors.FromError(err)
+		return &v1.ListGameHistoryResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
 	}
 	result := make([]*v1.RoomInstanceDto, 0, len(instances))
 	for _, instance := range instances {
@@ -53,7 +66,9 @@ func (r *RoomInstanceService) ListGameHistory(ctx context.Context, request *v1.L
 		})
 	}
 	return &v1.ListGameHistoryResponse{
-		RoomInstanceList: result,
-		Total:            page.Total,
+		Code:    200,
+		Message: "查询成功",
+		Data:    result,
+		Total:   page.Total,
 	}, nil
 }

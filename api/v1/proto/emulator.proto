@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "platform/api/v1;v1";
+
+service Emulator {
+  rpc ListEmulator(ListEmulatorRequest) returns (ListEmulatorResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/emulator"
+    };
+  }
+
+  rpc ListGame(ListGameRequest) returns (ListGameResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/game"
+    };
+  }
+}
+
+message EmulatorDto {
+  int64 emulatorId = 1;
+  string emulatorName = 2;
+  string description = 3;
+  string provider = 4;
+  bool supportSave = 5;
+  bool supportGraphicSetting = 6;
+}
+
+message GameDto {
+  int64 gameId = 1;
+  int64 emulatorId = 2;
+  string gameName = 3;
+  int32 size = 4;
+  string addTime = 5;
+  string customData = 6;
+}
+
+message ListEmulatorRequest {
+  string emulatorName = 1;
+  string provider = 2;
+  bool supportSave = 3;
+  bool supportGraphicSetting = 4;
+}
+
+message ListEmulatorResponse {
+  int32 code = 1;
+  string message = 2;
+  repeated EmulatorDto data = 3;
+}
+
+message ListGameRequest {
+  int64 emulatorId = 1;
+  string gameName = 2;
+  int32 page = 3;
+  int32 pageSize = 4;
+}
+
+message ListGameResponse {
+  int32 code = 1;
+  string message = 2;
+  repeated GameDto data = 3;
+  int32 total = 4;
+}
+

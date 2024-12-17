@@ -30,13 +30,13 @@ type RoomInstanceEntity struct {
 }
 
 func (r *RoomInstanceRepo) Create(ctx context.Context, roomInstance *biz.RoomInstance) error {
-	return r.data.db.Table(RoomInstanceTableName).
+	return r.data.DB(ctx).Table(RoomInstanceTableName).
 		Create(convertRoomInstanceBizToEntity(roomInstance)).
 		WithContext(ctx).Error
 }
 
 func (r *RoomInstanceRepo) Update(ctx context.Context, roomInstance *biz.RoomInstance) error {
-	return r.data.db.Table(RoomInstanceTableName).
+	return r.data.DB(ctx).Table(RoomInstanceTableName).
 		Where("room_instance_id=?", roomInstance.RoomInstanceId).
 		UpdateColumns(convertRoomInstanceBizToEntity(roomInstance)).
 		WithContext(ctx).
@@ -45,7 +45,7 @@ func (r *RoomInstanceRepo) Update(ctx context.Context, roomInstance *biz.RoomIns
 
 func (r *RoomInstanceRepo) GetActiveInstanceByRoomId(ctx context.Context, roomId int64) (*biz.RoomInstance, error) {
 	var result *biz.RoomInstance
-	err := r.data.db.Table(RoomInstanceTableName+" ri").
+	err := r.data.DB(ctx).Table(RoomInstanceTableName+" ri").
 		Select("ri.*, e.emulator_name").
 		Joins("LEFT JOIN emulator e ON ri.emulator_id = e.emulator_id").
 		Where("ri.room_id = ?", roomId).
@@ -62,7 +62,7 @@ func (r *RoomInstanceRepo) GetActiveInstanceByRoomId(ctx context.Context, roomId
 
 func (r *RoomInstanceRepo) ListInstanceByRoomId(ctx context.Context, roomId int64, p *common.Pagination) ([]*biz.RoomInstance, error) {
 	var result []*biz.RoomInstance
-	err := r.data.db.Table(RoomInstanceTableName+" ri").
+	err := r.data.DB(ctx).Table(RoomInstanceTableName+" ri").
 		Select("ri.*", "emulator_name").
 		Joins("LEFT JOIN emulator e ON ri.emulator_id = e.emulator_id").
 		Where("ri.room_id = ?", roomId).

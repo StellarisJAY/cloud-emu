@@ -5,7 +5,9 @@ import (
 	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/biz"
+	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
+	"time"
 )
 
 type RoomService struct {
@@ -21,14 +23,23 @@ func NewRoomService(roomUC *biz.RoomUseCase, roomMemberUC *biz.RoomMemberUseCase
 func (r *RoomService) ListMyRooms(ctx context.Context, request *v1.ListRoomRequest) (*v1.ListRoomResponse, error) {
 	c, _ := jwt.FromContext(ctx)
 	claims := c.(*biz.LoginClaims)
-	query := biz.RoomQuery{}
+	query := biz.RoomQuery{
+		RoomName:   request.RoomName,
+		HostName:   request.HostName,
+		JoinType:   request.JoinType,
+		EmulatorId: request.EmulatorId,
+	}
 	page := &common.Pagination{
 		Page:     request.Page,
 		PageSize: request.PageSize,
 	}
 	rooms, err := r.roomUC.ListMyRooms(ctx, claims.UserId, query, page)
 	if err != nil {
-		return nil, err
+		e := errors.FromError(err)
+		return &v1.ListRoomResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
 	}
 	result := make([]*v1.RoomDto, 0, len(rooms))
 	for _, room := range rooms {
@@ -37,14 +48,18 @@ func (r *RoomService) ListMyRooms(ctx context.Context, request *v1.ListRoomReque
 			RoomName:    room.RoomName,
 			HostId:      room.HostId,
 			HostName:    room.HostName,
+			MemberCount: room.MemberCount,
 			MemberLimit: room.MemberLimit,
-			AddTime:     room.AddTime.Format("2006-01-02 15:04:05"),
+			AddTime:     room.AddTime.Format(time.DateTime),
 			EmulatorId:  room.EmulatorId,
+			JoinType:    room.JoinType,
 		})
 	}
 	return &v1.ListRoomResponse{
-		Rooms: result,
-		Total: page.Total,
+		Code:    200,
+		Message: "查询成功",
+		Data:    result,
+		Total:   page.Total,
 	}, nil
 }
 
@@ -66,35 +81,19 @@ func (r *RoomService) CreateRoom(ctx context.Context, request *v1.CreateRoomRequ
 	}
 	err := r.roomUC.Create(ctx, room)
 	if err != nil {
-		return nil, err
+		e := errors.FromError(err)
+		return &v1.CreateRoomResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
 	}
-	return &v1.CreateRoomResponse{Id: room.RoomId}, nil
+	return &v1.CreateRoomResponse{
+		Code:    200,
+		Message: "创建成功",
+	}, nil
 }
 
 func (r *RoomService) GetRoom(ctx context.Context, request *v1.GetRoomRequest) (*v1.GetRoomResponse, error) {
 	//TODO implement me
 	panic("implement me")
-}
-
-func (r *RoomService) ListRoomMember(ctx context.Context, request *v1.ListRoomMemberRequest) (*v1.ListRoomMemberResponse, error) {
-	members, err := r.roomMemberUC.ListRoomMembers(ctx, request.RoomId)
-	if err != nil {
-		return nil, err
-	}
-	result := make([]*v1.RoomMemberDto, 0, len(members))
-	for _, member := range members {
-		result = append(result, &v1.RoomMemberDto{
-			RoomId:       member.RoomId,
-			UserId:       member.UserId,
-			RoomMemberId: member.RoomMemberId,
-			UserName:     member.UserName,
-			NickName:     member.NickName,
-			Role:         member.Role,
-			AddTime:      member.AddTime.Format("2006-01-02 15:04:05"),
-		})
-	}
-	return &v1.ListRoomMemberResponse{
-		RoomMemberList: result,
-		Total:          int32(len(result)),
-	}, nil
 }

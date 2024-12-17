@@ -9,6 +9,11 @@ option go_package = "gamesrv/api/v1;v1";
 service Game {
   rpc OpenGameInstance(OpenGameInstanceRequest) returns (OpenGameInstanceResponse) {}
   rpc GetRoomInstanceAccessToken(GetRoomInstanceAccessTokenRequest) returns (GetRoomInstanceAccessTokenResponse) {}
+  rpc ShutdownRoomInstance(ShutdownRoomInstanceRequest) returns (ShutdownRoomInstanceResponse) {}
+}
+
+message GetGameInstanceResult {
+  string token = 1;
 }
 
 message OpenGameInstanceRequest {
@@ -21,7 +26,9 @@ message OpenGameInstanceRequest {
 }
 
 message OpenGameInstanceResponse {
-  string accessToken = 1;
+  int32 code = 1;
+  string message = 2;
+  GetGameInstanceResult data = 3;
 }
 
 message GetRoomInstanceAccessTokenRequest {
@@ -30,5 +37,17 @@ message GetRoomInstanceAccessTokenRequest {
 }
 
 message GetRoomInstanceAccessTokenResponse {
-  string accessToken = 1;
+  int32 code = 1;
+  string message = 2;
+  GetGameInstanceResult data = 3;
+}
+
+message ShutdownRoomInstanceRequest {
+  int64 roomId = 1;
+  bool force = 2;
+}
+
+message ShutdownRoomInstanceResponse {
+  int32 code = 1;
+  string message = 2;
 }

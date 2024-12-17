@@ -28,6 +28,11 @@ message RoomInstanceDto {
   string serverUrl = 5;
 }
 
+message GetRoomInstanceResult {
+  RoomInstanceDto roomInstance = 1;
+  string accessToken = 2;
+}
+
 message GetRoomInstanceRequest {
   int64 roomId = 1;
   int64 emulatorId = 2;
@@ -35,8 +40,9 @@ message GetRoomInstanceRequest {
 }
 
 message GetRoomInstanceResponse {
-  RoomInstanceDto roomInstance = 1;
-  string accessToken = 2;
+  int32 code = 1;
+  string message = 2;
+  GetRoomInstanceResult data = 3;
 }
 
 message ListGameHistoryRequest {
@@ -46,6 +52,8 @@ message ListGameHistoryRequest {
 }
 
 message ListGameHistoryResponse {
-  repeated RoomInstanceDto roomInstanceList = 1;
-  int32 total = 2;
+  int32 code = 1;
+  string message = 2;
+  repeated RoomInstanceDto data = 3;
+  int32 total = 4;
 }

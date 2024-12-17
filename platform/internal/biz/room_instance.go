@@ -19,6 +19,7 @@ type RoomInstanceUseCase struct {
 	gameServerRepo GameServerRepo
 	roomRepo       RoomRepo
 	roomMemberRepo RoomMemberRepo
+	tm             Transaction
 }
 
 type RoomInstanceRepo interface {
@@ -53,7 +54,7 @@ const (
 )
 
 func NewRoomInstanceUseCase(repo RoomInstanceRepo, snowflakeId *snowflake.Node, redsync *redsync.Redsync,
-	gameServerRepo GameServerRepo, roomRepo RoomRepo, roomMemberRepo RoomMemberRepo) *RoomInstanceUseCase {
+	gameServerRepo GameServerRepo, roomRepo RoomRepo, roomMemberRepo RoomMemberRepo, tm Transaction) *RoomInstanceUseCase {
 	return &RoomInstanceUseCase{
 		repo:           repo,
 		snowflakeId:    snowflakeId,
@@ -61,6 +62,7 @@ func NewRoomInstanceUseCase(repo RoomInstanceRepo, snowflakeId *snowflake.Node, 
 		gameServerRepo: gameServerRepo,
 		roomRepo:       roomRepo,
 		roomMemberRepo: roomMemberRepo,
+		tm:             tm,
 	}
 }
 
@@ -70,75 +72,80 @@ type OpenRoomInstanceResult struct {
 }
 
 func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int64, userId int64) (*OpenRoomInstanceResult, error) {
-	member, err := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId)
-	if err != nil {
-		return nil, err
-	}
-	if member == nil {
-		return nil, errors.New("not member of this room")
-	}
-	mutexName := openRoomInstanceMutexName(roomId)
-	mutex := uc.redsync.NewMutex(mutexName, redsync.WithExpiry(OpenRoomInstanceMutexExpire))
-	// 分布式锁，防止同时创建房间实例
-	if err := mutex.Lock(); err != nil {
-		return nil, err
-	}
-	defer mutex.Unlock()
-	// 房间实例已经存在
-	instance, err := uc.repo.GetActiveInstanceByRoomId(ctx, roomId)
-	if instance != nil {
-		// 获取连接token
-		token, err := uc.gameServerRepo.GetRoomInstanceToken(ctx, instance, roomId, userId)
+	result := &OpenRoomInstanceResult{}
+	err := uc.tm.Tx(ctx, func(ctx context.Context) error {
+		member, err := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		return &OpenRoomInstanceResult{
-			RoomInstance: *instance,
-			AccessToken:  token,
-		}, nil
-	}
+		if member == nil {
+			return errors.New("not member of this room")
+		}
+		mutexName := openRoomInstanceMutexName(roomId)
+		mutex := uc.redsync.NewMutex(mutexName, redsync.WithExpiry(OpenRoomInstanceMutexExpire))
+		// 分布式锁，防止同时创建房间实例
+		if err := mutex.Lock(); err != nil {
+			return err
+		}
+		defer mutex.Unlock()
+		// 房间实例已经存在
+		instance, err := uc.repo.GetActiveInstanceByRoomId(ctx, roomId)
+		if instance != nil {
+			// 获取连接token
+			token, err := uc.gameServerRepo.GetRoomInstanceToken(ctx, instance, roomId, userId)
+			if err != nil {
+				return err
+			}
+			result.RoomInstance = *instance
+			result.AccessToken = token
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+
+		// 观战角色无法创建房间实例
+		if member.Role == RoomMemberRoleObserver {
+			return errors.New("no authority")
+		}
+		// 获取所有可用的游戏服务器
+		servers, err := uc.gameServerRepo.ListActiveGameServers(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to list active game servers: %w", err)
+		}
+		if len(servers) == 0 {
+			return fmt.Errorf("no active game servers available")
+		}
+		// TODO 游戏服务器负载均衡选择策略
+		slices.SortStableFunc(servers, func(a, b *GameServer) int {
+			return cmp.Compare(a.Weight, b.Weight)
+		})
+		instance = &RoomInstance{
+			ServerUrl: servers[0].Address,
+			RoomId:    roomId,
+			AddTime:   time.Now(),
+			Status:    RoomInstanceStatusActive,
+			EndTime:   time.Now(),
+		}
+
+		// 在游戏服务器创建房间实例，并获取连接token
+		token, err := uc.gameServerRepo.OpenRoomInstance(ctx, instance)
+		if err != nil {
+			return fmt.Errorf("failed to open room instance on target server: %w", err)
+		}
+		err = uc.repo.Create(ctx, instance)
+		if err != nil {
+			return fmt.Errorf("failed to create room instance: %w", err)
+		}
+
+		result.RoomInstance = *instance
+		result.AccessToken = token
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	// 观战角色无法创建房间实例
-	if member.Role == RoomMemberRoleObserver {
-		return nil, errors.New("no authority")
-	}
-	// 获取所有可用的游戏服务器
-	servers, err := uc.gameServerRepo.ListActiveGameServers(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list active game servers: %w", err)
-	}
-	if len(servers) == 0 {
-		return nil, fmt.Errorf("no active game servers available")
-	}
-	// TODO 游戏服务器负载均衡选择策略
-	slices.SortStableFunc(servers, func(a, b *GameServer) int {
-		return cmp.Compare(a.Weight, b.Weight)
-	})
-	instance = &RoomInstance{
-		ServerUrl: servers[0].Address,
-		RoomId:    roomId,
-		AddTime:   time.Now(),
-		Status:    RoomInstanceStatusActive,
-		EndTime:   time.Now(),
-	}
-
-	// 在游戏服务器创建房间实例，并获取连接token
-	token, err := uc.gameServerRepo.OpenRoomInstance(ctx, instance)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open room instance on target server: %w", err)
-	}
-	err = uc.repo.Create(ctx, instance)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create room instance: %w", err)
-	}
-
-	return &OpenRoomInstanceResult{
-		RoomInstance: *instance,
-		AccessToken:  token,
-	}, nil
+	return result, nil
 }
 
 func (uc *RoomInstanceUseCase) ListRoomGameHistory(ctx context.Context, roomId int64, p *common.Pagination) ([]*RoomInstance, error) {

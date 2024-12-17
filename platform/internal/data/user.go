@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/biz"
 	"time"
 )
@@ -29,12 +30,12 @@ func NewUserRepo(data *Data) biz.UserRepo {
 }
 
 func (u *UserRepo) Create(ctx context.Context, user *biz.User) error {
-	return u.data.db.Table(UserTableName).Create(user).Error
+	return u.data.DB(ctx).Table(UserTableName).Create(user).Error
 }
 
 func (u *UserRepo) GetById(ctx context.Context, id int64) (*biz.User, error) {
 	model := &UserModel{}
-	err := u.data.db.Table(UserTableName).Where("user_id = ?", id).WithContext(ctx).First(model).Error
+	err := u.data.DB(ctx).Table(UserTableName).Where("user_id = ?", id).WithContext(ctx).First(model).Error
 	if err != nil {
 		return nil, err
 	}
@@ -43,17 +44,36 @@ func (u *UserRepo) GetById(ctx context.Context, id int64) (*biz.User, error) {
 
 func (u *UserRepo) Update(ctx context.Context, user *biz.User) error {
 	model := convertBizToModel(user)
-	err := u.data.db.Table(UserTableName).Where("user_id = ?", user.UserId).Updates(model).Error
+	err := u.data.DB(ctx).Table(UserTableName).Where("user_id = ?", user.UserId).Updates(model).Error
 	return err
 }
 
 func (u *UserRepo) GetByUsername(ctx context.Context, userName string) (*biz.User, error) {
 	model := &UserModel{}
-	err := u.data.db.Table(UserTableName).Where("user_name = ?", userName).WithContext(ctx).First(model).Error
+	err := u.data.DB(ctx).Table(UserTableName).Where("user_name = ?", userName).WithContext(ctx).First(model).Error
 	if err != nil {
 		return nil, err
 	}
 	return convertModelToBiz(model), nil
+}
+
+func (u *UserRepo) ListUser(ctx context.Context, query biz.UserQuery, p *common.Pagination) ([]*biz.User, error) {
+	var result []*biz.User
+	d := u.data.DB(ctx).Table(UserTableName)
+	if query.UserName != "" {
+		d = d.Where("user_name LIKE ?", "%"+query.UserName+"%")
+	}
+	if query.UserId != 0 {
+		d = d.Where("user_id = ?", query.UserId)
+	}
+	if query.NickName != "" {
+		d = d.Where("nick_name LIKE ?", "%"+query.NickName+"%")
+	}
+	if query.Status != 0 {
+		d = d.Where("status = ?", query.Status)
+	}
+	err := d.WithContext(ctx).Scopes(common.WithPagination(p)).Scan(&result).Error
+	return result, err
 }
 
 func convertModelToBiz(model *UserModel) *biz.User {

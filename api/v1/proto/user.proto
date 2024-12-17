@@ -20,6 +20,19 @@ service User {
       body: "*"
     };
   }
+
+  rpc ActivateAccount(ActivateAccountRequest) returns (ActivateAccountResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/account/activate"
+      body: "*"
+    };
+  }
+
+  rpc ListUser(ListUserRequest) returns (ListUserResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/user"
+    };
+  }
 }
 
 message RegisterRequest {
@@ -43,5 +56,37 @@ message LoginRequest {
 message LoginResponse {
   int32 code = 1;
   string message = 2;
-  string token = 3;
+  string data = 3;
+}
+
+message ActivateAccountRequest {
+  string code = 1;
+}
+
+message ActivateAccountResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message UserDto {
+  int64 userId = 1;
+  string userName = 2;
+  string nickName = 3;
+  string addTime = 4;
+  int32 status = 5;
+}
+
+message ListUserRequest {
+  string userName = 1;
+  string nickName = 2;
+  int32 status = 3;
+  int32 page = 4;
+  int32 pageSize = 5;
+}
+
+message ListUserResponse {
+  int32 code = 1;
+  string message = 2;
+  repeated UserDto data = 3;
+  int32 total = 4;
 }

@@ -40,9 +40,21 @@ func IsLoginFailed(err error) bool {
 		return false
 	}
 	e := errors.FromError(err)
-	return e.Reason == ErrorReason_LOGIN_FAILED.String() && e.Code == 501
+	return e.Reason == ErrorReason_LOGIN_FAILED.String() && e.Code == 400
 }
 
 func ErrorLoginFailed(format string, args ...interface{}) *errors.Error {
-	return errors.New(501, ErrorReason_LOGIN_FAILED.String(), fmt.Sprintf(format, args...))
+	return errors.New(400, ErrorReason_LOGIN_FAILED.String(), fmt.Sprintf(format, args...))
+}
+
+func IsActivationFailed(err error) bool {
+	if err == nil {
+		return false
+	}
+	e := errors.FromError(err)
+	return e.Reason == ErrorReason_ACTIVATION_FAILED.String() && e.Code == 403
+}
+
+func ErrorActivationFailed(format string, args ...interface{}) *errors.Error {
+	return errors.New(403, ErrorReason_ACTIVATION_FAILED.String(), fmt.Sprintf(format, args...))
 }

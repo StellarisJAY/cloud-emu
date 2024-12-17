@@ -4,7 +4,17 @@ import (
 	"context"
 	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/biz"
+	"time"
 )
+
+type Notification struct {
+	NotificationId int64
+	Type           int32
+	SenderId       int64
+	Content        string
+	AddTime        time.Time
+	ReceiverId     int64
+}
 
 type NotificationRepo struct {
 	data *Data
@@ -17,12 +27,12 @@ func NewNotificationRepo(data *Data) biz.NotificationRepo {
 }
 
 func (nr *NotificationRepo) Create(ctx context.Context, n *biz.Notification) error {
-	return nr.data.db.Table(NotificationTableName).Create(n).WithContext(ctx).Error
+	return nr.data.DB(ctx).Table(NotificationTableName).Create(convertNotificationBizToEntity(n)).WithContext(ctx).Error
 }
 
 func (nr *NotificationRepo) ListInbox(ctx context.Context, userId int64, p *common.Pagination) ([]*biz.Notification, error) {
 	var result []*biz.Notification
-	err := nr.data.db.Table(NotificationTableName+" n").
+	err := nr.data.DB(ctx).Table(NotificationTableName+" n").
 		Joins("LEFT JOIN sys_user su ON su.user_id = n.sender_id").
 		Select("n.*, su.user_name AS 'sender_user_name', su.nick_name AS 'sender_nick_name'").
 		Where("receiver_id = ?", userId).
@@ -33,4 +43,15 @@ func (nr *NotificationRepo) ListInbox(ctx context.Context, userId int64, p *comm
 		return nil, err
 	}
 	return result, nil
+}
+
+func convertNotificationBizToEntity(notification *biz.Notification) *Notification {
+	return &Notification{
+		NotificationId: notification.NotificationId,
+		Type:           notification.Type,
+		SenderId:       notification.SenderId,
+		Content:        notification.Content,
+		AddTime:        notification.AddTime,
+		ReceiverId:     notification.ReceiverId,
+	}
 }

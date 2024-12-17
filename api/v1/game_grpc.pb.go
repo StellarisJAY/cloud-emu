@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	Game_OpenGameInstance_FullMethodName           = "/v1.Game/OpenGameInstance"
 	Game_GetRoomInstanceAccessToken_FullMethodName = "/v1.Game/GetRoomInstanceAccessToken"
+	Game_ShutdownRoomInstance_FullMethodName       = "/v1.Game/ShutdownRoomInstance"
 )
 
 // GameClient is the client API for Game service.
@@ -29,6 +30,7 @@ const (
 type GameClient interface {
 	OpenGameInstance(ctx context.Context, in *OpenGameInstanceRequest, opts ...grpc.CallOption) (*OpenGameInstanceResponse, error)
 	GetRoomInstanceAccessToken(ctx context.Context, in *GetRoomInstanceAccessTokenRequest, opts ...grpc.CallOption) (*GetRoomInstanceAccessTokenResponse, error)
+	ShutdownRoomInstance(ctx context.Context, in *ShutdownRoomInstanceRequest, opts ...grpc.CallOption) (*ShutdownRoomInstanceResponse, error)
 }
 
 type gameClient struct {
@@ -59,12 +61,23 @@ func (c *gameClient) GetRoomInstanceAccessToken(ctx context.Context, in *GetRoom
 	return out, nil
 }
 
+func (c *gameClient) ShutdownRoomInstance(ctx context.Context, in *ShutdownRoomInstanceRequest, opts ...grpc.CallOption) (*ShutdownRoomInstanceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ShutdownRoomInstanceResponse)
+	err := c.cc.Invoke(ctx, Game_ShutdownRoomInstance_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GameServer is the server API for Game service.
 // All implementations must embed UnimplementedGameServer
 // for forward compatibility.
 type GameServer interface {
 	OpenGameInstance(context.Context, *OpenGameInstanceRequest) (*OpenGameInstanceResponse, error)
 	GetRoomInstanceAccessToken(context.Context, *GetRoomInstanceAccessTokenRequest) (*GetRoomInstanceAccessTokenResponse, error)
+	ShutdownRoomInstance(context.Context, *ShutdownRoomInstanceRequest) (*ShutdownRoomInstanceResponse, error)
 	mustEmbedUnimplementedGameServer()
 }
 
@@ -80,6 +93,9 @@ func (UnimplementedGameServer) OpenGameInstance(context.Context, *OpenGameInstan
 }
 func (UnimplementedGameServer) GetRoomInstanceAccessToken(context.Context, *GetRoomInstanceAccessTokenRequest) (*GetRoomInstanceAccessTokenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRoomInstanceAccessToken not implemented")
+}
+func (UnimplementedGameServer) ShutdownRoomInstance(context.Context, *ShutdownRoomInstanceRequest) (*ShutdownRoomInstanceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ShutdownRoomInstance not implemented")
 }
 func (UnimplementedGameServer) mustEmbedUnimplementedGameServer() {}
 func (UnimplementedGameServer) testEmbeddedByValue()              {}
@@ -138,6 +154,24 @@ func _Game_GetRoomInstanceAccessToken_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Game_ShutdownRoomInstance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ShutdownRoomInstanceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameServer).ShutdownRoomInstance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Game_ShutdownRoomInstance_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServer).ShutdownRoomInstance(ctx, req.(*ShutdownRoomInstanceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Game_ServiceDesc is the grpc.ServiceDesc for Game service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +186,10 @@ var Game_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetRoomInstanceAccessToken",
 			Handler:    _Game_GetRoomInstanceAccessToken_Handler,
+		},
+		{
+			MethodName: "ShutdownRoomInstance",
+			Handler:    _Game_ShutdownRoomInstance_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
