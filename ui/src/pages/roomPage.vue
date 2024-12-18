@@ -100,7 +100,7 @@ const tourSteps = [
           </a-col>
         </a-row>
         <a-row style="height: 80%">
-          <video id="video" playsinline webkit-playsinline="true"></video>
+          <video id="video" playsinline></video>
         </a-row>
         <a-row>
           <a-col :span="6">
@@ -108,18 +108,12 @@ const tourSteps = [
               :disabled="connectBtnDisabled">连接</a-button>
           </a-col>
           <a-col :span="6">
-            <a-button ref="refRestart" style="width: 90%;" type="primary" :disabled="restartBtnDisabled"
-              @click="restart">重启</a-button>
+            <a-button ref="refRestart" style="width: 90%;" type="primary"
+              @click="openEmulatorInfoDrawer">模拟器/游戏</a-button>
           </a-col>
           <a-col :span="6"></a-col>
           <a-col :span="6">
             <a-button ref="refSettingBtn" style="width: 90%" type="primary" @click="openSettingDrawer">设置</a-button>
-          </a-col>
-        </a-row>
-        <a-row>
-          <a-col :span="24">
-            <a-select ref="refSelector" v-model:value="selectedGame" :options="configs.existingGames"
-              style="width: 100%"></a-select>
           </a-col>
         </a-row>
       </a-card>
@@ -144,7 +138,7 @@ const tourSteps = [
       </a-row>
     </a-col>
     <!--room member list-->
-    <a-drawer v-model:open="membersDrawerOpen" placement="right" title="房间信息" size="default">
+    <a-drawer v-model:open="membersDrawerOpen" placement="right" size="default" title="房间详情">
       <RoomInfoDrawer :member-self="memberSelf" :rtc-session="rtcSession" :full-room-info="fullRoomInfo"
         :room-id="roomId"></RoomInfoDrawer>
     </a-drawer>
@@ -183,14 +177,10 @@ const tourSteps = [
       </a-form>
     </a-drawer>
     <a-tour :steps="tourSteps" :open="tourOpen" @close="_ => { tourOpen = false }"></a-tour>
-
-    <a-modal title="输入房间密码" v-model:open="joinRoomModalOpen" :closable="false" :mask-closable="false" :keyboard="false">
-      <template #footer>
-        <a-button @click="joinRoomModalCancel">取消</a-button>
-        <a-button type="primary" @click="joinRoom">确认</a-button>
-      </template>
-      <a-input-password v-model:value="joinRoomFormState.password"></a-input-password>
-    </a-modal>
+    <!--模拟器，游戏选项-->
+    <a-drawer v-model:open="emulatorInfoDrawerOpen" placement="right" title="模拟器/游戏" size="large">
+      <emulator-info-drawer :room-id="roomId"></emulator-info-drawer>
+    </a-drawer>
 
   </a-row>
   <p id="stats" v-if="configs.showStats">RTT:{{ stats.rtt }}ms FPS:{{ stats.fps }} D:{{formatBytes(stats.bytesPerSecond)}}/s</p>
@@ -210,6 +200,7 @@ import RoomInfoDrawer from "../components/roomInfoDrawer.vue";
 import SaveList from "../components/saveList.vue";
 import KeyboardSetting from "../components/keyboardSetting.vue";
 import platform from "../util/platform.js";
+import EmulatorInfoDrawer from "../components/emulatorInfoDrawer.vue";
 
 const MessageGameButtonPressed = 0
 const MessageGameButtonReleased = 1
@@ -243,6 +234,7 @@ export default {
     SaveList,
     KeyboardSetting,
     ASlider: Slider,
+    EmulatorInfoDrawer,
   },
   data() {
     return {
@@ -311,6 +303,7 @@ export default {
         2.0: "2.0x"
       },
       emulatorSpeedSliderDisabled: true,
+      emulatorInfoDrawerOpen: false,
     }
   },
   created() {
@@ -319,10 +312,10 @@ export default {
       message.info("请使用横屏全屏来获取最佳游戏体验");
     }
     this.roomId = this.$route["params"]["roomId"];
-    this.getMemberSelf().catch(_=>{
-      this.tryJoinRoom();
-    });
-    this.listGames();
+    // this.getMemberSelf().catch(_=>{
+    //   this.tryJoinRoom();
+    // });
+    // this.listGames();
   },
   unmounted() {
     if (this.rtcSession && this.rtcSession.pc) {
@@ -336,51 +329,9 @@ export default {
       dispatchEvent(new Event("memberDrawerOpen"));
     },
 
-    getMemberSelf: async function () {
-      const resp = await api.get("/member/" + this.roomId);
-      const member = resp["member"];
-      this.memberSelf = member;
-      if (member.role === RoleNameHost) {
-        this.fullRoomInfo = await api.get("/room/" + this.roomId);
-      }
-      this.tourOpen = true;
-    },
-
-    tryJoinRoom: async function() {
-      const resp = await api.get("/room/" + this.roomId);
-      if (resp['private'] === false) {
-        await api.post("/room/" + this.roomId + "/join");
-        this.tourOpen = true;
-        return;
-      }
-      this.joinRoomModalOpen = true;
-    },
-
-    joinRoom: function() {
-      api.post("/room/" + this.roomId + "/join", {
-        "password": this.joinRoomFormState.password,
-      }).then(_=>{
-        message.info("加入成功");
-        this.tourOpen = true;
-        this.joinRoomModalOpen = false;
-      }).catch(_=>{
-        message.warn("无法加入房间");
-      })
-    },
-
-    joinRoomModalCancel: function() {
-      router.push("/home");
-    },
-
-    listGames: async function () {
-      const resp = await api.get("/games");
-      this.games = resp["games"];
-      const existingGames = [];
-      this.games.forEach(game => {
-        existingGames.push({ "label": game["name"], "value": game["name"] });
-      });
-      this.configs.existingGames = existingGames;
-      this.selectedGame = existingGames[0].value;
+    openEmulatorInfoDrawer() {
+      this.emulatorInfoDrawerOpen = true;
+      dispatchEvent(new Event("emulatorInfoDrawerOpen"));
     },
 
     connect() {
@@ -389,20 +340,19 @@ export default {
     },
 
     openConnection: async function () {
-      const _this = this;
       const roomId = this.roomId;
-      let data;
       try {
-        data = await api.post("/game/connection", {
+        const resp = await api.post("/game/connection", {
           "roomId": roomId,
-          "game": this.selectedGame,
         });
+        console.log(resp);
+        await this.createWebRTCPeerConnection(resp.data);
       } catch (errResp) {
         message.warn("连接失败，请重试");
         this.connectBtnDisabled = false;
-        return;
       }
-
+    },
+    createWebRTCPeerConnection: async function (data) {
       const pc = new RTCPeerConnection({
         iceServers: [
           {
@@ -429,14 +379,14 @@ export default {
       // 发送answer之前的candidate，避免远端没有收到answer导致无法这是candidate
       pc.onicecandidate = ev => {
         if (ev.candidate) {
-          _this.iceCandidates.push(ev.candidate);
+          this.iceCandidates.push(ev.candidate);
         }
       };
 
       pc.onconnectionstatechange = ev => this.onPeerConnStateChange(ev);
 
       const rtcSession = {
-        roomId: roomId,
+        roomId: this.roomId,
         pc: pc,
         dataChannel: null,
       }
@@ -448,7 +398,7 @@ export default {
       await pc.setLocalDescription(answer);
       try {
         await api.post("/game/sdp", {
-          "roomId": roomId,
+          "roomId": this.roomId,
           "sdpAnswer": answer.sdp,
         });
       } catch (errResp) {
@@ -461,7 +411,7 @@ export default {
       this.iceCandidates.forEach(candidate => {
         const s = JSON.stringify(candidate);
         api.post("/game/ice", {
-          "roomId": roomId,
+          "roomId": this.roomId,
           "candidate": s,
         });
       });
@@ -470,7 +420,7 @@ export default {
         if (ev.candidate) {
           const s = JSON.stringify(ev.candidate);
           api.post("/game/ice", {
-            "roomId": roomId,
+            "roomId": this.roomId,
             "candidate": s,
           }).then(_ => {
             return api.get("/ice/candidates?roomId=" + this.roomId);
@@ -486,9 +436,9 @@ export default {
       // data channel
       pc.ondatachannel = ev => {
         rtcSession.dataChannel = ev.channel;
-        ev.channel.onopen = _ => _this.onDataChannelOpen();
-        ev.channel.onmessage = msg => _this.onDataChannelMsg(msg);
-        ev.channel.onclose = _ => _this.onDataChannelClose();
+        ev.channel.onopen = _ => this.onDataChannelOpen();
+        ev.channel.onmessage = msg => this.onDataChannelMsg(msg);
+        ev.channel.onclose = _ => this.onDataChannelClose();
       };
       this.rtcSession = rtcSession;
     },

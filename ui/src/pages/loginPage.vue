@@ -5,7 +5,7 @@
             <a-card :bordered="false">
                 <a-row>
                     <a-col :offset="4" :span="16">
-                        <h1>NESGO</h1>
+                        <h1>CloudEmu</h1>
                     </a-col>
                 </a-row>
                 <a-form layout="vertical" :model="formState" name="basic" :label-col="{ span: 4 }" autocomplete="off"
@@ -38,7 +38,6 @@
 import { Col, Row, Card } from 'ant-design-vue';
 import { Button, Form, Input } from 'ant-design-vue';
 import api from '../api/request';
-import tokenStorage from '../api/token';
 import { message } from 'ant-design-vue';
 import router from '../router';
 import { RouterLink } from "vue-router";
@@ -64,7 +63,7 @@ export default {
         }
     },
     methods: {
-        onFinish(ev) {
+        onFinish(_) {
             api.post("/login", this.formState)
                 .then(_ => {
                     message.success("登录成功")

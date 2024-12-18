@@ -9,7 +9,7 @@ const v1 = axios.create({
 
 v1.interceptors.request.use(config => {
     const token = tokenStorage.getToken()
-    if (token && token !== undefined) {
+    if (token) {
         config.headers.set("Authorization", "Bearer " + token)
     }
     return config

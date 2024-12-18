@@ -171,14 +171,6 @@ paths:
                   in: query
                   schema:
                     type: string
-                - name: emulatorId
-                  in: query
-                  schema:
-                    type: string
-                - name: gameFile
-                  in: query
-                  schema:
-                    type: string
             responses:
                 "200":
                     description: OK
@@ -248,6 +240,23 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.InviteRoomMemberResponse'
+    /api/v1/room-member/user:
+        get:
+            tags:
+                - RoomMember
+            operationId: RoomMember_GetUserRoomMember
+            parameters:
+                - name: roomId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.GetUserRoomMemberResponse'
     /api/v1/room/{id}:
         get:
             tags:
@@ -404,6 +413,24 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.ListUserResponse'
+    /api/v1/user/{userId}:
+        get:
+            tags:
+                - User
+            operationId: User_GetUserDetail
+            parameters:
+                - name: userId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.GetUserDetailResponse'
 components:
     schemas:
         v1.ActivateAccountRequest:
@@ -510,6 +537,26 @@ components:
                     type: string
                 data:
                     $ref: '#/components/schemas/v1.RoomDto'
+        v1.GetUserDetailResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/v1.UserDetailDto'
+        v1.GetUserRoomMemberResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/v1.UserRoomMember'
         v1.InviteRoomMemberRequest:
             type: object
             properties:
@@ -711,6 +758,10 @@ components:
                     type: string
                 emulatorName:
                     type: string
+                gameId:
+                    type: string
+                gameName:
+                    type: string
         v1.RoomInstanceDto:
             type: object
             properties:
@@ -722,7 +773,11 @@ components:
                     type: string
                 emulatorName:
                     type: string
-                serverUrl:
+                serverIp:
+                    type: string
+                gameId:
+                    type: string
+                gameName:
                     type: string
         v1.RoomMemberDto:
             type: object
@@ -746,6 +801,27 @@ components:
                     type: boolean
                 customData:
                     type: string
+        v1.UserDetailDto:
+            type: object
+            properties:
+                userId:
+                    type: string
+                userName:
+                    type: string
+                nickName:
+                    type: string
+                addTime:
+                    type: string
+                status:
+                    type: integer
+                    format: int32
+                email:
+                    type: string
+                phone:
+                    type: string
+                role:
+                    type: integer
+                    format: int32
         v1.UserDto:
             type: object
             properties:
@@ -760,6 +836,20 @@ components:
                 status:
                     type: integer
                     format: int32
+        v1.UserRoomMember:
+            type: object
+            properties:
+                roomMemberId:
+                    type: string
+                roomId:
+                    type: string
+                userId:
+                    type: string
+                role:
+                    type: integer
+                    format: int32
+                addTime:
+                    type: string
 tags:
     - name: Emulator
     - name: Notification

@@ -10,16 +10,22 @@
                 </a-row>
                 <a-form layout="vertical" :model="formState" name="basic" :label-col="{ span: 4 }" autocomplete="off"
                     @finish="onFinish" @finishFailed="onFinishFailed">
-                    <a-form-item label="用户名" name="name" :rules="[{ required: true, message: '请输入用户名' }]">
-                        <a-input v-model:value="formState.name" />
+                    <a-form-item label="用户名" name="userName" :rules="[{ required: true, message: '请输入用户名' }]">
+                        <a-input v-model:value="formState.userName" />
                     </a-form-item>
-
+                    <a-form-item label="昵称" name="nickName">
+                      <a-input v-model:value="formState.nickName" />
+                    </a-form-item>
                     <a-form-item label="密码" name="password" :rules="rules.pass">
                         <a-input-password v-model:value="formState.password" />
                     </a-form-item>
 
                     <a-form-item label="确认密码" name="confirm" :rules="rules.confirmPass">
                         <a-input-password v-model:value="formState.confirmPassword" />
+                    </a-form-item>
+
+                    <a-form-item label="邮箱" name="email">
+                        <a-input v-model:value="formState.email"></a-input>
                     </a-form-item>
                     <a-row>
                         <a-col :span="16" :offset="4" style="text-align: center">
@@ -64,6 +70,8 @@ export default {
                 name: "",
                 password: "",
                 confirmPassword: "",
+              email: "",
+              nickName: "",
             },
             rules: {
                 pass: [
@@ -80,16 +88,20 @@ export default {
                         trigger: 'change',
                     },
                 ],
+                email: [
+                  {
+                    required: true,
+                    validator: this.validateEmail,
+                    trigger: 'change',
+                  }
+                ]
             }
         }
     },
     methods: {
         onFinish(ev) {
-            api.post("/register", {
-                "name": this.formState.name,
-                "password": this.formState.password,
-            })
-                .then(data => {
+            api.post("/register", this.formState)
+                .then(_ => {
                     message.success("注册成功")
                     router.push("/login")
                 })
@@ -113,6 +125,12 @@ export default {
             }
             return Promise.resolve()
         },
+      validateEmail() {
+          if (this.formState.email === '') {
+            return Promise.reject("请输入邮箱")
+          }
+          return Promise.resolve();
+      }
     }
 
 }
