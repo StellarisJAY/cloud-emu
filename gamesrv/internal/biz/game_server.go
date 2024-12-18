@@ -2,6 +2,9 @@ package biz
 
 import (
 	"context"
+	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
+	"github.com/google/uuid"
+	"sync"
 	"time"
 )
 
@@ -43,6 +46,8 @@ type GameFileRepo interface {
 type GameServerUseCase struct {
 	gameFileRepo   GameFileRepo
 	memberAuthRepo MemberAuthRepo
+	gameInstances  map[int64]*GameInstance
+	mutex          *sync.RWMutex
 }
 
 type CreateRoomInstanceParams struct {
@@ -60,7 +65,18 @@ func NewGameServerUseCase(gameFileRepo GameFileRepo, memberAuthRepo MemberAuthRe
 }
 
 func (uc *GameServerUseCase) CreateRoomInstance(ctx context.Context, params CreateRoomInstanceParams) error {
-	panic("not implemented")
+	instance, err := makeGameInstance(params.RoomId)
+	if err != nil {
+		return v1.ErrorServiceError("创建游戏实例出错")
+	}
+	uid, _ := uuid.NewUUID()
+	if err := uc.memberAuthRepo.StoreAuthInfo(uid.String(), params.RoomId, params.Auth); err != nil {
+		return v1.ErrorServiceError("创建玩家token出错")
+	}
+	uc.mutex.Lock()
+	defer uc.mutex.Unlock()
+	uc.gameInstances[params.RoomId] = instance
+	return nil
 }
 
 func (uc *GameServerUseCase) GetRoomInstanceToken(ctx context.Context, roomId int64, auth *MemberAuthInfo) (string, error) {

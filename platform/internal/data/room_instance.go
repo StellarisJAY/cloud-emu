@@ -23,10 +23,11 @@ type RoomInstanceEntity struct {
 	RoomInstanceId int64
 	RoomId         int64
 	AddTime        time.Time
-	ServerUrl      string
+	ServerIp       string
 	EmulatorId     int64
 	EndTime        time.Time
 	Status         int32
+	RpcPort        int32
 }
 
 func (r *RoomInstanceRepo) Create(ctx context.Context, roomInstance *biz.RoomInstance) error {
@@ -85,9 +86,10 @@ func convertRoomInstanceBizToEntity(dto *biz.RoomInstance) *RoomInstanceEntity {
 		RoomInstanceId: dto.RoomInstanceId,
 		RoomId:         dto.RoomId,
 		AddTime:        dto.AddTime,
-		ServerUrl:      dto.ServerUrl,
+		ServerIp:       dto.ServerIp,
 		EmulatorId:     dto.EmulatorId,
 		EndTime:        dto.EndTime,
 		Status:         dto.Status,
+		RpcPort:        dto.RpcPort,
 	}
 }

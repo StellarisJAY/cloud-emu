@@ -63,3 +63,27 @@ func (r *RoomMemberService) InviteRoomMember(ctx context.Context, request *v1.In
 		Message: "操作成功",
 	}, nil
 }
+
+func (r *RoomMemberService) GetUserRoomMember(ctx context.Context, request *v1.GetUserRoomMemberRequest) (*v1.GetUserRoomMemberResponse, error) {
+	c, _ := jwt.FromContext(ctx)
+	claims := c.(*biz.LoginClaims)
+	rm, err := r.roomMemberUC.GetByRoomAndUser(ctx, request.RoomId, claims.UserId)
+	if err != nil {
+		e := errors.FromError(err)
+		return &v1.GetUserRoomMemberResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
+	}
+	return &v1.GetUserRoomMemberResponse{
+		Code:    200,
+		Message: "查询成功",
+		Data: &v1.UserRoomMember{
+			RoomMemberId: rm.RoomMemberId,
+			RoomId:       rm.RoomId,
+			UserId:       rm.UserId,
+			Role:         rm.Role,
+			AddTime:      rm.AddTime.Format(time.DateTime),
+		},
+	}, nil
+}

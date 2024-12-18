@@ -36,7 +36,7 @@ func (r *RoomInstanceService) GetRoomInstance(ctx context.Context, request *v1.G
 			RoomInstance: &v1.RoomInstanceDto{
 				RoomInstanceId: result.RoomInstanceId,
 				RoomId:         result.RoomId,
-				ServerUrl:      result.ServerUrl,
+				ServerIp:       result.ServerIp,
 			},
 			AccessToken: result.AccessToken,
 		},

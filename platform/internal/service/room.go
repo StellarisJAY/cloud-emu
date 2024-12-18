@@ -94,6 +94,30 @@ func (r *RoomService) CreateRoom(ctx context.Context, request *v1.CreateRoomRequ
 }
 
 func (r *RoomService) GetRoom(ctx context.Context, request *v1.GetRoomRequest) (*v1.GetRoomResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	room, err := r.roomUC.GetById(ctx, request.Id)
+	if err != nil {
+		e := errors.FromError(err)
+		return &v1.GetRoomResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
+	}
+	return &v1.GetRoomResponse{
+		Code:    200,
+		Message: "查询成功",
+		Data: &v1.RoomDto{
+			RoomId:       room.RoomId,
+			RoomName:     room.RoomName,
+			HostId:       room.HostId,
+			HostName:     room.HostName,
+			JoinType:     room.JoinType,
+			MemberCount:  room.MemberCount,
+			MemberLimit:  room.MemberLimit,
+			AddTime:      room.AddTime.Format(time.DateTime),
+			EmulatorId:   room.EmulatorId,
+			EmulatorName: room.EmulatorName,
+			GameId:       room.GameId,
+			GameName:     room.GameName,
+		},
+	}, nil
 }

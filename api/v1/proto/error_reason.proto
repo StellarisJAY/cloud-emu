@@ -12,4 +12,5 @@ enum ErrorReason {
   ACCESS_DENIED = 1 [(errors.code) = 403];
   LOGIN_FAILED = 2 [(errors.code) = 400];
   ACTIVATION_FAILED = 3[(errors.code) = 403];
+  SERVICE_ERROR = 4[(errors.code)=500];
 }

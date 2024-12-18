@@ -7,6 +7,7 @@ import (
 	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/bwmarrin/snowflake"
+	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-redsync/redsync/v4"
 	"time"
 )
@@ -24,6 +25,8 @@ type Room struct {
 	JoinType     int32     `json:"joinRule"`
 	EmulatorId   int64     `json:"emulatorId"`
 	EmulatorName string    `json:"emulatorName"`
+	GameId       int64     `json:"gameId"`
+	GameName     string    `json:"gameName"`
 }
 
 type RoomUseCase struct {
@@ -111,4 +114,18 @@ func (r *RoomUseCase) buildRoomDto(ctx context.Context, room *Room) error {
 	room.MemberCount = count
 	// TODO 获取模拟器信息
 	return nil
+}
+
+func (r *RoomUseCase) GetById(ctx context.Context, id int64) (*Room, error) {
+	room, err := r.repo.GetById(ctx, id)
+	if err != nil {
+		return nil, errors.New(500, "Database Error", "查询失败")
+	}
+	if room == nil {
+		return nil, v1.ErrorNotFound("房间不存在")
+	}
+	if err := r.buildRoomDto(ctx, room); err != nil {
+		return nil, err
+	}
+	return room, nil
 }

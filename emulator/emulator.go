@@ -60,6 +60,7 @@ type IEmulatorOptions interface {
 	GameData() []byte
 	AudioSampleRate() int
 	AudioSampleChan() chan float32
+	FrameConsumer() func(frame IFrame)
 }
 
 type IEmulatorSave interface {

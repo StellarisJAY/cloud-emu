@@ -58,6 +58,10 @@ func (n *NesEmulatorOptions) Game() string {
 	return n.NesGame
 }
 
+func (n *NesEmulatorOptions) FrameConsumer() func(frame IFrame) {
+	return nil
+}
+
 // Start 启动NES模拟器，创建单独的goroutine运行CPU循环，使用context打断
 func (n *NesEmulatorAdapter) Start() error {
 	ctx, cancelFunc := context.WithCancel(context.Background())

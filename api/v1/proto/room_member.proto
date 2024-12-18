@@ -18,6 +18,11 @@ service RoomMember {
       body: "*"
     };
   }
+  rpc GetUserRoomMember(GetUserRoomMemberRequest) returns (GetUserRoomMemberResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/room-member/user"
+    };
+  }
 }
 
 message RoomMemberDto {
@@ -51,5 +56,23 @@ message InviteRoomMemberRequest {
 message InviteRoomMemberResponse {
   int32 code = 1;
   string message = 2;
+}
+
+message UserRoomMember {
+  int64 roomMemberId = 1;
+  int64 roomId = 2;
+  int64 userId = 3;
+  int32 role = 6;
+  string addTime = 7;
+}
+
+message GetUserRoomMemberRequest {
+  int64 roomId = 1;
+}
+
+message GetUserRoomMemberResponse {
+  int32 code = 1;
+  string message = 2;
+  UserRoomMember data = 3;
 }
 

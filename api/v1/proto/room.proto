@@ -47,6 +47,8 @@ message RoomDto {
   string password = 9;
   int64 emulatorId = 10;
   string emulatorName = 11;
+  int64 gameId = 12;
+  string gameName = 13;
 }
 
 message ListRoomRequest {

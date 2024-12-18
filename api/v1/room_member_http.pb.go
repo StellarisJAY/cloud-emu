@@ -19,10 +19,12 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
+const OperationRoomMemberGetUserRoomMember = "/v1.RoomMember/GetUserRoomMember"
 const OperationRoomMemberInviteRoomMember = "/v1.RoomMember/InviteRoomMember"
 const OperationRoomMemberListRoomMember = "/v1.RoomMember/ListRoomMember"
 
 type RoomMemberHTTPServer interface {
+	GetUserRoomMember(context.Context, *GetUserRoomMemberRequest) (*GetUserRoomMemberResponse, error)
 	InviteRoomMember(context.Context, *InviteRoomMemberRequest) (*InviteRoomMemberResponse, error)
 	ListRoomMember(context.Context, *ListRoomMemberRequest) (*ListRoomMemberResponse, error)
 }
@@ -31,6 +33,7 @@ func RegisterRoomMemberHTTPServer(s *http.Server, srv RoomMemberHTTPServer) {
 	r := s.Route("/")
 	r.GET("/api/v1/room-member", _RoomMember_ListRoomMember0_HTTP_Handler(srv))
 	r.POST("/api/v1/room-member/invite", _RoomMember_InviteRoomMember0_HTTP_Handler(srv))
+	r.GET("/api/v1/room-member/user", _RoomMember_GetUserRoomMember0_HTTP_Handler(srv))
 }
 
 func _RoomMember_ListRoomMember0_HTTP_Handler(srv RoomMemberHTTPServer) func(ctx http.Context) error {
@@ -74,7 +77,27 @@ func _RoomMember_InviteRoomMember0_HTTP_Handler(srv RoomMemberHTTPServer) func(c
 	}
 }
 
+func _RoomMember_GetUserRoomMember0_HTTP_Handler(srv RoomMemberHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetUserRoomMemberRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationRoomMemberGetUserRoomMember)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetUserRoomMember(ctx, req.(*GetUserRoomMemberRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetUserRoomMemberResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 type RoomMemberHTTPClient interface {
+	GetUserRoomMember(ctx context.Context, req *GetUserRoomMemberRequest, opts ...http.CallOption) (rsp *GetUserRoomMemberResponse, err error)
 	InviteRoomMember(ctx context.Context, req *InviteRoomMemberRequest, opts ...http.CallOption) (rsp *InviteRoomMemberResponse, err error)
 	ListRoomMember(ctx context.Context, req *ListRoomMemberRequest, opts ...http.CallOption) (rsp *ListRoomMemberResponse, err error)
 }
@@ -85,6 +108,19 @@ type RoomMemberHTTPClientImpl struct {
 
 func NewRoomMemberHTTPClient(client *http.Client) RoomMemberHTTPClient {
 	return &RoomMemberHTTPClientImpl{client}
+}
+
+func (c *RoomMemberHTTPClientImpl) GetUserRoomMember(ctx context.Context, in *GetUserRoomMemberRequest, opts ...http.CallOption) (*GetUserRoomMemberResponse, error) {
+	var out GetUserRoomMemberResponse
+	pattern := "/api/v1/room-member/user"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationRoomMemberGetUserRoomMember))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
 
 func (c *RoomMemberHTTPClientImpl) InviteRoomMember(ctx context.Context, in *InviteRoomMemberRequest, opts ...http.CallOption) (*InviteRoomMemberResponse, error) {

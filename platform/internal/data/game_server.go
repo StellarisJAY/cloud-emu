@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"fmt"
 	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/biz"
@@ -21,7 +22,7 @@ func NewGameServerRepo(data *Data, nc registry.Discovery) biz.GameServerRepo {
 }
 
 func (g *GameServerRepo) ListActiveGameServers(ctx context.Context) ([]*biz.GameServer, error) {
-	serviceInstances, err := g.nc.GetService(ctx, "cloudemu-gamesrv.grpc")
+	serviceInstances, err := g.nc.GetService(ctx, "cloudemu-gamesrv")
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +37,7 @@ func (g *GameServerRepo) ListActiveGameServers(ctx context.Context) ([]*biz.Game
 
 // OpenRoomInstance 在选中的game服务器启动房间实例
 func (g *GameServerRepo) OpenRoomInstance(ctx context.Context, instance *biz.RoomInstance) (string, error) {
-	client, err := common.NewGRPCClient(instance.ServerUrl)
+	client, err := common.NewGRPCClient(instance.ServerIp, int(instance.RpcPort))
 	if err != nil {
 		return "", err
 	}
@@ -52,12 +53,13 @@ func (g *GameServerRepo) OpenRoomInstance(ctx context.Context, instance *biz.Roo
 	if err != nil {
 		return "", err
 	}
+	fmt.Println(response.Data)
 	return response.Data.Token, nil
 }
 
 // GetRoomInstanceToken 获取房间实例的访问token
 func (g *GameServerRepo) GetRoomInstanceToken(ctx context.Context, instance *biz.RoomInstance, roomId, userId int64) (string, error) {
-	client, err := common.NewGRPCClient(instance.ServerUrl)
+	client, err := common.NewGRPCClient(instance.ServerIp, int(instance.RpcPort))
 	if err != nil {
 		return "", err
 	}

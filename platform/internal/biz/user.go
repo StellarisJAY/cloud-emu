@@ -8,6 +8,7 @@ import (
 	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/bwmarrin/snowflake"
+	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/golang-jwt/jwt/v5"
 	"math/rand"
 	"time"
@@ -114,7 +115,14 @@ func (uc *UserUseCase) Register(ctx context.Context, user *User) error {
 }
 
 func (uc *UserUseCase) GetById(ctx context.Context, id int64) (*User, error) {
-	return uc.repo.GetById(ctx, id)
+	user, err := uc.repo.GetById(ctx, id)
+	if err != nil {
+		return nil, errors.New(500, "Database Error", "无法获取用户详情")
+	}
+	if user == nil {
+		return nil, v1.ErrorNotFound("用户不存在")
+	}
+	return user, nil
 }
 
 func (uc *UserUseCase) Login(ctx context.Context, userName, password string) (string, error) {

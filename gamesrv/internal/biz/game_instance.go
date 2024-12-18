@@ -89,8 +89,34 @@ type GameInstance struct {
 	grayscaleOpen        bool
 }
 
-func makeGameInstance(emulatorId int64, gameName string, gameData []byte) (*GameInstance, error) {
-	panic("not implemented")
+// makeGameInstance 创建初始的游戏实例，其中运行dummy模拟器，该模拟器只输出一个提示玩家选择游戏的单帧画面（后期考虑动画）
+func makeGameInstance(roomId int64) (*GameInstance, error) {
+	instance := &GameInstance{
+		RoomId:      roomId,
+		messageChan: make(chan *Message),
+		connections: make(map[int64]*Connection),
+		mutex:       &sync.RWMutex{},
+		createTime:  time.Now(),
+	}
+	videoEncoder, err := codec.NewVideoEncoder("vp8", 256, 240)
+	if err != nil {
+		return nil, err
+	}
+	audioEncoder, err := codec.NewAudioEncoder(DefaultAudioSampleRate)
+	if err != nil {
+		return nil, err
+	}
+	instance.videoEncoder = videoEncoder
+	instance.audioEncoder = audioEncoder
+	options := emulator.MakeDummyOptions(func(frame emulator.IFrame) {
+		instance.RenderCallback(frame, log.NewHelper(log.DefaultLogger))
+	})
+	e := emulator.MakeDummyEmulator(options)
+	instance.e = e
+	if err := e.Start(); err != nil {
+		return nil, err
+	}
+	return instance, nil
 }
 
 func (g *GameInstance) enhanceFrame(frame emulator.IFrame) emulator.IFrame {

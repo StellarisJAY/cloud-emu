@@ -2,9 +2,11 @@ package data
 
 import (
 	"context"
+	"errors"
 	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/biz"
 	"github.com/bwmarrin/snowflake"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -35,14 +37,18 @@ func (r *RoomRepo) Create(ctx context.Context, room *biz.Room) error {
 }
 
 func (r *RoomRepo) GetById(ctx context.Context, id int64) (*biz.Room, error) {
-	room := &biz.Room{}
-	err := r.data.DB(ctx).Table(RoomTableName+"sr").Select("sr.*, su.user_name AS host_name").
+	var room *biz.Room
+	err := r.data.DB(ctx).Table(RoomTableName+" sr").Select("sr.*, su.user_name AS host_name, ri.game_id, eg.game_name").
 		Joins("LEFT JOIN room_member rm ON sr.room_id = rm.room_id ").
 		Joins("INNER JOIN sys_user su ON su.user_id = sr.host_id ").
 		Joins("LEFT JOIN room_instance ri ON sr.room_id = ri.room_id ").
+		Joins("LEFT JOIN emulator_game eg ON eg.game_id = ri.game_id").
 		Where("sr.room_id = ?", id).
 		WithContext(ctx).
-		Scan(room).Error
+		Scan(&room).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -50,8 +56,11 @@ func (r *RoomRepo) GetById(ctx context.Context, id int64) (*biz.Room, error) {
 }
 
 func (r *RoomRepo) Update(ctx context.Context, room *biz.Room) error {
-	//TODO implement me
-	panic("implement me")
+	return r.data.DB(ctx).Table(RoomTableName).
+		Where("room_id = ?", room.RoomId).
+		Updates(convertRoomBizToEntity(room)).
+		WithContext(ctx).
+		Error
 }
 
 func (r *RoomRepo) ListRooms(ctx context.Context, query biz.RoomQuery, page *common.Pagination) ([]*biz.Room, error) {

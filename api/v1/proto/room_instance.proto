@@ -25,7 +25,9 @@ message RoomInstanceDto {
   int64 roomId = 2;
   int64 emulatorId = 3;
   string emulatorName = 4;
-  string serverUrl = 5;
+  string serverIp = 5;
+  int64 gameId = 6;
+  string gameName = 7;
 }
 
 message GetRoomInstanceResult {
@@ -35,8 +37,6 @@ message GetRoomInstanceResult {
 
 message GetRoomInstanceRequest {
   int64 roomId = 1;
-  int64 emulatorId = 2;
-  string gameFile = 3;
 }
 
 message GetRoomInstanceResponse {

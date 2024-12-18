@@ -58,3 +58,15 @@ func IsActivationFailed(err error) bool {
 func ErrorActivationFailed(format string, args ...interface{}) *errors.Error {
 	return errors.New(403, ErrorReason_ACTIVATION_FAILED.String(), fmt.Sprintf(format, args...))
 }
+
+func IsServiceError(err error) bool {
+	if err == nil {
+		return false
+	}
+	e := errors.FromError(err)
+	return e.Reason == ErrorReason_SERVICE_ERROR.String() && e.Code == 500
+}
+
+func ErrorServiceError(format string, args ...interface{}) *errors.Error {
+	return errors.New(500, ErrorReason_SERVICE_ERROR.String(), fmt.Sprintf(format, args...))
+}

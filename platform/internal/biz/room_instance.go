@@ -3,12 +3,14 @@ package biz
 import (
 	"cmp"
 	"context"
-	"errors"
 	"fmt"
+	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/bwmarrin/snowflake"
 	"github.com/go-redsync/redsync/v4"
+	"net/url"
 	"slices"
+	"strconv"
 	"time"
 )
 
@@ -39,7 +41,8 @@ type RoomInstance struct {
 	EmulatorId     int64     `json:"emulatorId"`
 	EmulatorName   string    `json:"emulatorName"`
 	AddTime        time.Time `json:"addTime"`
-	ServerUrl      string    `json:"serverUrl"`
+	ServerIp       string    `json:"serverIp"`
+	RpcPort        int32     `json:"rpcPort"`
 	EndTime        time.Time `json:"endTime"`
 	Status         int32     `json:"status"`
 }
@@ -76,16 +79,16 @@ func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int6
 	err := uc.tm.Tx(ctx, func(ctx context.Context) error {
 		member, err := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId)
 		if err != nil {
-			return err
+			return v1.ErrorServiceError("获取房间成员出错")
 		}
 		if member == nil {
-			return errors.New("not member of this room")
+			return v1.ErrorAccessDenied("无法访问该房间")
 		}
 		mutexName := openRoomInstanceMutexName(roomId)
 		mutex := uc.redsync.NewMutex(mutexName, redsync.WithExpiry(OpenRoomInstanceMutexExpire))
 		// 分布式锁，防止同时创建房间实例
 		if err := mutex.Lock(); err != nil {
-			return err
+			return v1.ErrorServiceError("创建房间实例出错")
 		}
 		defer mutex.Unlock()
 		// 房间实例已经存在
@@ -94,48 +97,51 @@ func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int6
 			// 获取连接token
 			token, err := uc.gameServerRepo.GetRoomInstanceToken(ctx, instance, roomId, userId)
 			if err != nil {
-				return err
+				return v1.ErrorServiceError("获取房间实例出错")
 			}
 			result.RoomInstance = *instance
 			result.AccessToken = token
 			return nil
 		}
 		if err != nil {
-			return err
+			return v1.ErrorServiceError("获取房间实例出错")
 		}
 
 		// 观战角色无法创建房间实例
 		if member.Role == RoomMemberRoleObserver {
-			return errors.New("no authority")
+			return v1.ErrorAccessDenied("当前用户无法获取房间实例，请等待房主开始游戏")
 		}
 		// 获取所有可用的游戏服务器
 		servers, err := uc.gameServerRepo.ListActiveGameServers(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to list active game servers: %w", err)
+			return v1.ErrorServiceError("获取可用游戏服务器出错", err)
 		}
 		if len(servers) == 0 {
-			return fmt.Errorf("no active game servers available")
+			return v1.ErrorServiceError("无法找到可用的游戏服务器")
 		}
 		// TODO 游戏服务器负载均衡选择策略
 		slices.SortStableFunc(servers, func(a, b *GameServer) int {
 			return cmp.Compare(a.Weight, b.Weight)
 		})
+		u, _ := url.Parse(servers[0].Address)
+		port, _ := strconv.Atoi(u.Port())
 		instance = &RoomInstance{
-			ServerUrl: servers[0].Address,
-			RoomId:    roomId,
-			AddTime:   time.Now(),
-			Status:    RoomInstanceStatusActive,
-			EndTime:   time.Now(),
+			ServerIp: u.Hostname(),
+			RoomId:   roomId,
+			AddTime:  time.Now(),
+			Status:   RoomInstanceStatusActive,
+			EndTime:  time.Now(),
+			RpcPort:  int32(port),
 		}
 
 		// 在游戏服务器创建房间实例，并获取连接token
 		token, err := uc.gameServerRepo.OpenRoomInstance(ctx, instance)
 		if err != nil {
-			return fmt.Errorf("failed to open room instance on target server: %w", err)
+			return v1.ErrorServiceError("创建房间实例出错", err)
 		}
 		err = uc.repo.Create(ctx, instance)
 		if err != nil {
-			return fmt.Errorf("failed to create room instance: %w", err)
+			return v1.ErrorServiceError("创建房间实例出错", err)
 		}
 
 		result.RoomInstance = *instance

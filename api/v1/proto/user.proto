@@ -33,6 +33,12 @@ service User {
       get: "/api/v1/user"
     };
   }
+
+  rpc GetUserDetail(GetUserDetailRequest) returns (GetUserDetailResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/user/{userId}"
+    };
+  }
 }
 
 message RegisterRequest {
@@ -89,4 +95,25 @@ message ListUserResponse {
   string message = 2;
   repeated UserDto data = 3;
   int32 total = 4;
+}
+
+message UserDetailDto {
+  int64 userId = 1;
+  string userName = 2;
+  string nickName = 3;
+  string addTime = 4;
+  int32 status = 5;
+  string email = 6;
+  string phone = 7;
+  int32 role = 8;
+}
+
+message GetUserDetailRequest {
+  int64 userId = 1;
+}
+
+message GetUserDetailResponse {
+  int32 code = 1;
+  string message = 2;
+  UserDetailDto data = 3;
 }

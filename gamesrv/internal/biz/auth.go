@@ -7,6 +7,6 @@ type MemberAuthInfo struct {
 }
 
 type MemberAuthRepo interface {
-	StoreAuthInfo(token string, info *MemberAuthInfo) error
-	GetAuthInfo(token string) (*MemberAuthInfo, error)
+	StoreAuthInfo(token string, roomId int64, info *MemberAuthInfo) error
+	GetAuthInfo(token string, roomId int64) (*MemberAuthInfo, error)
 }

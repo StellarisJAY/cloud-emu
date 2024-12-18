@@ -108,3 +108,28 @@ func (u *UserService) ListUser(ctx context.Context, request *v1.ListUserRequest)
 		Total:   p.Total,
 	}, nil
 }
+
+func (u *UserService) GetUserDetail(ctx context.Context, request *v1.GetUserDetailRequest) (*v1.GetUserDetailResponse, error) {
+	user, err := u.uuc.GetById(ctx, request.UserId)
+	if err != nil {
+		e := errors.FromError(err)
+		return &v1.GetUserDetailResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
+	}
+	return &v1.GetUserDetailResponse{
+		Code:    200,
+		Message: "查询成功",
+		Data: &v1.UserDetailDto{
+			UserId:   user.UserId,
+			UserName: user.UserName,
+			NickName: user.NickName,
+			AddTime:  user.AddTime.Format(time.DateTime),
+			Status:   user.Status,
+			Email:    user.Email,
+			Phone:    user.Phone,
+			Role:     user.Role,
+		},
+	}, nil
+}
