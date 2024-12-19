@@ -5,6 +5,7 @@ import (
 	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/bwmarrin/snowflake"
 	"github.com/go-kratos/kratos/v2/errors"
+	"github.com/go-kratos/kratos/v2/log"
 	"slices"
 	"time"
 )
@@ -49,10 +50,11 @@ type RoomMemberUseCase struct {
 	snowflakeId      *snowflake.Node
 	userRepo         UserRepo
 	tm               Transaction
+	logger           *log.Helper
 }
 
 func NewRoomMemberUseCase(roomMemberRepo RoomMemberRepo, roomRepo RoomRepo, roomInstanceRepo RoomInstanceRepo,
-	notificationRepo NotificationRepo, snowflakeId *snowflake.Node, userRepo UserRepo, tm Transaction) *RoomMemberUseCase {
+	notificationRepo NotificationRepo, snowflakeId *snowflake.Node, userRepo UserRepo, tm Transaction, logger log.Logger) *RoomMemberUseCase {
 	return &RoomMemberUseCase{
 		roomMemberRepo:   roomMemberRepo,
 		roomRepo:         roomRepo,
@@ -61,6 +63,7 @@ func NewRoomMemberUseCase(roomMemberRepo RoomMemberRepo, roomRepo RoomRepo, room
 		snowflakeId:      snowflakeId,
 		userRepo:         userRepo,
 		tm:               tm,
+		logger:           log.NewHelper(logger),
 	}
 }
 

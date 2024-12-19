@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
+	"github.com/StellrisJAY/cloud-emu/common/filter"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/biz"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/conf"
 	"github.com/go-kratos/kratos/v2/log"
@@ -48,7 +49,7 @@ func NewHTTPServer(c *conf.Server, ac *conf.Auth, userSrv v1.UserServer, roomSrv
 			handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"}),
 			handlers.AllowedOrigins([]string{"*"}),
 			handlers.ExposedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}),
-		)),
+		), filter.NewRemoteAddrFilter()),
 	}
 	if c.Http.Network != "" {
 		opts = append(opts, http.Network(c.Http.Network))

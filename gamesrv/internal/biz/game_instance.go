@@ -97,7 +97,14 @@ func makeGameInstance(roomId int64) (*GameInstance, error) {
 		connections: make(map[int64]*Connection),
 		mutex:       &sync.RWMutex{},
 		createTime:  time.Now(),
+		frameEnhancer: func(frame emulator.IFrame) emulator.IFrame {
+			return frame
+		},
+		allConnCloseCallback: func(instance *GameInstance) {
+
+		},
 	}
+	// 创建视频和音频编码器, dummy模拟器画面分辨率为256x240
 	videoEncoder, err := codec.NewVideoEncoder("vp8", 256, 240)
 	if err != nil {
 		return nil, err
@@ -108,6 +115,7 @@ func makeGameInstance(roomId int64) (*GameInstance, error) {
 	}
 	instance.videoEncoder = videoEncoder
 	instance.audioEncoder = audioEncoder
+	// 创建dummy模拟器，输出静止介绍画面
 	options := emulator.MakeDummyOptions(func(frame emulator.IFrame) {
 		instance.RenderCallback(frame, log.NewHelper(log.DefaultLogger))
 	})
@@ -116,6 +124,8 @@ func makeGameInstance(roomId int64) (*GameInstance, error) {
 	if err := e.Start(); err != nil {
 		return nil, err
 	}
+	// 暂停，等待新连接继续
+	_ = e.Pause()
 	return instance, nil
 }
 
@@ -151,7 +161,7 @@ func (g *GameInstance) RenderCallback(frame emulator.IFrame, logger *log.Helper)
 		return
 	}
 	defer release()
-	sample := media.Sample{Data: data, Duration: 15 * time.Millisecond, Timestamp: time.Now()}
+	sample := media.Sample{Data: data, Timestamp: time.Now()}
 	g.mutex.RLock()
 	defer g.mutex.RUnlock()
 	for _, conn := range g.connections {

@@ -8,6 +8,7 @@ import (
 	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/bwmarrin/snowflake"
 	"github.com/go-kratos/kratos/v2/errors"
+	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-redsync/redsync/v4"
 	"time"
 )
@@ -36,6 +37,7 @@ type RoomUseCase struct {
 	tm             Transaction
 	roomMemberRepo RoomMemberRepo
 	redSync        *redsync.Redsync
+	logger         *log.Helper
 }
 
 type RoomQuery struct {
@@ -61,9 +63,9 @@ type RoomRepo interface {
 }
 
 func NewRoomUseCase(repo RoomRepo, snowflakeId *snowflake.Node, userRepo UserRepo, tm Transaction,
-	roomMemberRepo RoomMemberRepo, redsync *redsync.Redsync) *RoomUseCase {
+	roomMemberRepo RoomMemberRepo, redsync *redsync.Redsync, logger log.Logger) *RoomUseCase {
 	return &RoomUseCase{repo: repo, snowflakeId: snowflakeId, userRepo: userRepo, tm: tm, roomMemberRepo: roomMemberRepo,
-		redSync: redsync}
+		redSync: redsync, logger: log.NewHelper(logger)}
 }
 
 func (r *RoomUseCase) Create(ctx context.Context, room *Room) error {

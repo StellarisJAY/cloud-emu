@@ -9,7 +9,9 @@ import (
 	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/bwmarrin/snowflake"
 	"github.com/go-kratos/kratos/v2/errors"
+	"github.com/go-kratos/kratos/v2/log"
 	"github.com/golang-jwt/jwt/v5"
+	"gorm.io/gorm"
 	"math/rand"
 	"time"
 )
@@ -50,6 +52,7 @@ type UserUseCase struct {
 	snowflakeId         *snowflake.Node
 	userEmailVerifyRepo UserEmailVerifyRepo
 	tm                  Transaction
+	logger              *log.Helper
 }
 
 type UserQuery struct {
@@ -85,8 +88,8 @@ type LoginClaims struct {
 }
 
 func NewUserUseCase(repo UserRepo, ar AuthRepo, snowflakeId *snowflake.Node, userEmailVerifyRepo UserEmailVerifyRepo,
-	tm Transaction) *UserUseCase {
-	return &UserUseCase{repo: repo, snowflakeId: snowflakeId, ar: ar, userEmailVerifyRepo: userEmailVerifyRepo, tm: tm}
+	tm Transaction, logger log.Logger) *UserUseCase {
+	return &UserUseCase{repo: repo, snowflakeId: snowflakeId, ar: ar, userEmailVerifyRepo: userEmailVerifyRepo, tm: tm, logger: log.NewHelper(logger)}
 }
 
 func (uc *UserUseCase) Register(ctx context.Context, user *User) error {
@@ -98,7 +101,11 @@ func (uc *UserUseCase) Register(ctx context.Context, user *User) error {
 	user.Status = UserStatusNotActivated
 	return uc.tm.Tx(ctx, func(ctx context.Context) error {
 		if err := uc.repo.Create(ctx, user); err != nil {
-			return err
+			if errors.Is(err, gorm.ErrDuplicatedKey) {
+				return errors.New(400, "Register Failed", "用户名已被使用")
+			}
+			uc.logger.Errorf("注册用户错误: %v", err)
+			return v1.ErrorServiceError("注册用户出错")
 		}
 		verify := UserEmailVerify{
 			Id:      uc.snowflakeId.Generate().Int64(),
@@ -107,7 +114,8 @@ func (uc *UserUseCase) Register(ctx context.Context, user *User) error {
 			Code:    uc.newVerifyCode(),
 		}
 		if err := uc.userEmailVerifyRepo.Create(ctx, &verify); err != nil {
-			return err
+			uc.logger.Error("注册用户错误:", err)
+			return v1.ErrorServiceError("注册用户出错")
 		}
 		// TODO 发送邮箱验证码
 		return nil
@@ -117,6 +125,7 @@ func (uc *UserUseCase) Register(ctx context.Context, user *User) error {
 func (uc *UserUseCase) GetById(ctx context.Context, id int64) (*User, error) {
 	user, err := uc.repo.GetById(ctx, id)
 	if err != nil {
+		uc.logger.Error("获取用户详情错误:", err)
 		return nil, errors.New(500, "Database Error", "无法获取用户详情")
 	}
 	if user == nil {

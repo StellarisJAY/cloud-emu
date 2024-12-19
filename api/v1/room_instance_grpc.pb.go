@@ -19,8 +19,12 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	RoomInstance_GetRoomInstance_FullMethodName = "/v1.RoomInstance/GetRoomInstance"
-	RoomInstance_ListGameHistory_FullMethodName = "/v1.RoomInstance/ListGameHistory"
+	RoomInstance_GetRoomInstance_FullMethodName       = "/v1.RoomInstance/GetRoomInstance"
+	RoomInstance_ListGameHistory_FullMethodName       = "/v1.RoomInstance/ListGameHistory"
+	RoomInstance_OpenGameConnection_FullMethodName    = "/v1.RoomInstance/OpenGameConnection"
+	RoomInstance_SdpAnswer_FullMethodName             = "/v1.RoomInstance/SdpAnswer"
+	RoomInstance_AddIceCandidate_FullMethodName       = "/v1.RoomInstance/AddIceCandidate"
+	RoomInstance_GetServerIceCandidate_FullMethodName = "/v1.RoomInstance/GetServerIceCandidate"
 )
 
 // RoomInstanceClient is the client API for RoomInstance service.
@@ -29,6 +33,10 @@ const (
 type RoomInstanceClient interface {
 	GetRoomInstance(ctx context.Context, in *GetRoomInstanceRequest, opts ...grpc.CallOption) (*GetRoomInstanceResponse, error)
 	ListGameHistory(ctx context.Context, in *ListGameHistoryRequest, opts ...grpc.CallOption) (*ListGameHistoryResponse, error)
+	OpenGameConnection(ctx context.Context, in *OpenGameConnectionRequest, opts ...grpc.CallOption) (*OpenGameConnectionResponse, error)
+	SdpAnswer(ctx context.Context, in *SdpAnswerRequest, opts ...grpc.CallOption) (*SdpAnswerResponse, error)
+	AddIceCandidate(ctx context.Context, in *AddIceCandidateRequest, opts ...grpc.CallOption) (*AddIceCandidateResponse, error)
+	GetServerIceCandidate(ctx context.Context, in *GetServerIceCandidateRequest, opts ...grpc.CallOption) (*GetServerIceCandidateResponse, error)
 }
 
 type roomInstanceClient struct {
@@ -59,12 +67,56 @@ func (c *roomInstanceClient) ListGameHistory(ctx context.Context, in *ListGameHi
 	return out, nil
 }
 
+func (c *roomInstanceClient) OpenGameConnection(ctx context.Context, in *OpenGameConnectionRequest, opts ...grpc.CallOption) (*OpenGameConnectionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(OpenGameConnectionResponse)
+	err := c.cc.Invoke(ctx, RoomInstance_OpenGameConnection_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *roomInstanceClient) SdpAnswer(ctx context.Context, in *SdpAnswerRequest, opts ...grpc.CallOption) (*SdpAnswerResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SdpAnswerResponse)
+	err := c.cc.Invoke(ctx, RoomInstance_SdpAnswer_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *roomInstanceClient) AddIceCandidate(ctx context.Context, in *AddIceCandidateRequest, opts ...grpc.CallOption) (*AddIceCandidateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AddIceCandidateResponse)
+	err := c.cc.Invoke(ctx, RoomInstance_AddIceCandidate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *roomInstanceClient) GetServerIceCandidate(ctx context.Context, in *GetServerIceCandidateRequest, opts ...grpc.CallOption) (*GetServerIceCandidateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetServerIceCandidateResponse)
+	err := c.cc.Invoke(ctx, RoomInstance_GetServerIceCandidate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RoomInstanceServer is the server API for RoomInstance service.
 // All implementations must embed UnimplementedRoomInstanceServer
 // for forward compatibility.
 type RoomInstanceServer interface {
 	GetRoomInstance(context.Context, *GetRoomInstanceRequest) (*GetRoomInstanceResponse, error)
 	ListGameHistory(context.Context, *ListGameHistoryRequest) (*ListGameHistoryResponse, error)
+	OpenGameConnection(context.Context, *OpenGameConnectionRequest) (*OpenGameConnectionResponse, error)
+	SdpAnswer(context.Context, *SdpAnswerRequest) (*SdpAnswerResponse, error)
+	AddIceCandidate(context.Context, *AddIceCandidateRequest) (*AddIceCandidateResponse, error)
+	GetServerIceCandidate(context.Context, *GetServerIceCandidateRequest) (*GetServerIceCandidateResponse, error)
 	mustEmbedUnimplementedRoomInstanceServer()
 }
 
@@ -80,6 +132,18 @@ func (UnimplementedRoomInstanceServer) GetRoomInstance(context.Context, *GetRoom
 }
 func (UnimplementedRoomInstanceServer) ListGameHistory(context.Context, *ListGameHistoryRequest) (*ListGameHistoryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListGameHistory not implemented")
+}
+func (UnimplementedRoomInstanceServer) OpenGameConnection(context.Context, *OpenGameConnectionRequest) (*OpenGameConnectionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OpenGameConnection not implemented")
+}
+func (UnimplementedRoomInstanceServer) SdpAnswer(context.Context, *SdpAnswerRequest) (*SdpAnswerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SdpAnswer not implemented")
+}
+func (UnimplementedRoomInstanceServer) AddIceCandidate(context.Context, *AddIceCandidateRequest) (*AddIceCandidateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddIceCandidate not implemented")
+}
+func (UnimplementedRoomInstanceServer) GetServerIceCandidate(context.Context, *GetServerIceCandidateRequest) (*GetServerIceCandidateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetServerIceCandidate not implemented")
 }
 func (UnimplementedRoomInstanceServer) mustEmbedUnimplementedRoomInstanceServer() {}
 func (UnimplementedRoomInstanceServer) testEmbeddedByValue()                      {}
@@ -138,6 +202,78 @@ func _RoomInstance_ListGameHistory_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RoomInstance_OpenGameConnection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OpenGameConnectionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomInstanceServer).OpenGameConnection(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoomInstance_OpenGameConnection_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomInstanceServer).OpenGameConnection(ctx, req.(*OpenGameConnectionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RoomInstance_SdpAnswer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SdpAnswerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomInstanceServer).SdpAnswer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoomInstance_SdpAnswer_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomInstanceServer).SdpAnswer(ctx, req.(*SdpAnswerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RoomInstance_AddIceCandidate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddIceCandidateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomInstanceServer).AddIceCandidate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoomInstance_AddIceCandidate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomInstanceServer).AddIceCandidate(ctx, req.(*AddIceCandidateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RoomInstance_GetServerIceCandidate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetServerIceCandidateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomInstanceServer).GetServerIceCandidate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoomInstance_GetServerIceCandidate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomInstanceServer).GetServerIceCandidate(ctx, req.(*GetServerIceCandidateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RoomInstance_ServiceDesc is the grpc.ServiceDesc for RoomInstance service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +288,22 @@ var RoomInstance_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListGameHistory",
 			Handler:    _RoomInstance_ListGameHistory_Handler,
+		},
+		{
+			MethodName: "OpenGameConnection",
+			Handler:    _RoomInstance_OpenGameConnection_Handler,
+		},
+		{
+			MethodName: "SdpAnswer",
+			Handler:    _RoomInstance_SdpAnswer_Handler,
+		},
+		{
+			MethodName: "AddIceCandidate",
+			Handler:    _RoomInstance_AddIceCandidate_Handler,
+		},
+		{
+			MethodName: "GetServerIceCandidate",
+			Handler:    _RoomInstance_GetServerIceCandidate_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

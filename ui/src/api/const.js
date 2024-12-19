@@ -1,6 +1,6 @@
 const Configs = {
     ApiServer: "http://localhost:8010/api/v1", // 设置后端API服务器地址
-    StunServer: "stun:localhost:3478",   // 设置STUN服务器地址
+    StunServer: "stun:43.138.153.172:3478",   // 设置STUN服务器地址
     TurnServer: {
         Host: "turn:localhost:3478", // 设置TURN服务器地址
         Username: "turn_user",       // 设置TURN服务器用户名

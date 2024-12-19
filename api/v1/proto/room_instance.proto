@@ -18,6 +18,33 @@ service RoomInstance {
       get: "/api/v1/room-instance/history"
     };
   }
+
+  rpc OpenGameConnection(OpenGameConnectionRequest) returns (OpenGameConnectionResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/room-instance/connect"
+      body: "*"
+    };
+  }
+
+  rpc SdpAnswer(SdpAnswerRequest) returns (SdpAnswerResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/room-instance/sdp-answer"
+      body: "*"
+    };
+  }
+
+  rpc AddIceCandidate(AddIceCandidateRequest) returns (AddIceCandidateResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/room-instance/ice-candidate"
+      body: "*"
+    };
+  }
+
+  rpc GetServerIceCandidate(GetServerIceCandidateRequest) returns (GetServerIceCandidateResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/room-instance/ice-candidate"
+    };
+  }
 }
 
 message RoomInstanceDto {
@@ -56,4 +83,52 @@ message ListGameHistoryResponse {
   string message = 2;
   repeated RoomInstanceDto data = 3;
   int32 total = 4;
+}
+
+message OpenGameConnectionResult {
+  string sdpOffer = 1;
+}
+
+message OpenGameConnectionRequest {
+  int64 roomId = 1;
+  string token = 2;
+}
+
+message OpenGameConnectionResponse {
+  int32 code = 1;
+  string message = 2;
+  OpenGameConnectionResult data = 3;
+}
+
+message SdpAnswerRequest {
+  int64 roomId = 1;
+  string token = 2;
+  string sdpAnswer = 3;
+}
+
+message SdpAnswerResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message AddIceCandidateRequest {
+  int64 roomId = 1;
+  string token = 2;
+  string iceCandidate = 3;
+}
+
+message AddIceCandidateResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message GetServerIceCandidateRequest {
+  int64 roomId = 1;
+  string token = 2;
+}
+
+message GetServerIceCandidateResponse {
+  int32 code = 1;
+  string message = 2;
+  repeated string data = 3;
 }

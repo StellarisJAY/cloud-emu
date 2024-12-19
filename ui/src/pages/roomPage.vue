@@ -304,6 +304,8 @@ export default {
       },
       emulatorSpeedSliderDisabled: true,
       emulatorInfoDrawerOpen: false,
+
+      connectToken: null,
     }
   },
   created() {
@@ -342,10 +344,12 @@ export default {
     openConnection: async function () {
       const roomId = this.roomId;
       try {
-        const resp = await api.post("/game/connection", {
+        const response = await api.get("/room-instance", {"roomId": this.roomId});
+        this.connectToken = response.data["accessToken"];
+        const resp = await api.post("/room-instance/connect", {
           "roomId": roomId,
+          "token": this.connectToken,
         });
-        console.log(resp);
         await this.createWebRTCPeerConnection(resp.data);
       } catch (errResp) {
         message.warn("连接失败，请重试");
@@ -358,11 +362,11 @@ export default {
           {
             urls: globalConfigs.StunServer,
           },
-          {
-            urls: globalConfigs.TurnServer.Host,
-            username: globalConfigs.TurnServer.Username,
-            credential: globalConfigs.TurnServer.Password,
-          }
+          // {
+          //   urls: globalConfigs.TurnServer.Host,
+          //   username: globalConfigs.TurnServer.Username,
+          //   credential: globalConfigs.TurnServer.Password,
+          // }
         ],
         iceTransportPolicy: "all",
       });
@@ -397,8 +401,9 @@ export default {
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       try {
-        await api.post("/game/sdp", {
+        await api.post("/room-instance/sdp-answer", {
           "roomId": this.roomId,
+          "token": this.connectToken,
           "sdpAnswer": answer.sdp,
         });
       } catch (errResp) {
@@ -410,22 +415,25 @@ export default {
       // 发送answer之前的candidate，避免远端没有收到answer导致无法这是candidate
       this.iceCandidates.forEach(candidate => {
         const s = JSON.stringify(candidate);
-        api.post("/game/ice", {
+        api.post("/room-instance/ice-candidate", {
           "roomId": this.roomId,
-          "candidate": s,
+          "token": this.connectToken,
+          "iceCandidate": s,
         });
       });
       // 发送answer之后的candidate直接发送给远端
       pc.onicecandidate = ev => {
         if (ev.candidate) {
           const s = JSON.stringify(ev.candidate);
-          api.post("/game/ice", {
+          api.post("/room-instance/ice-candidate", {
             "roomId": this.roomId,
-            "candidate": s,
+            "token": this.connectToken,
+            "iceCandidate": s,
           }).then(_ => {
-            return api.get("/ice/candidates?roomId=" + this.roomId);
+            return api.get("/room-instance/ice-candidate", {"roomId": this.roomId});
           }).then(resp => {
-            resp["candidates"].forEach(candidate => {
+            console.log(resp);
+            resp.data.forEach(candidate => {
               const c = JSON.parse(candidate);
               console.log("remote candidate: ", c);
               pc.addIceCandidate(c);
@@ -459,17 +467,17 @@ export default {
     },
     onConnected() {
       message.success("连接成功");
-      if (this.memberSelf["role"] !== RoleNameObserver) {
-        this.setKeyboardControl(true);
-        this.initControlButtons();
-      }
-      this.saveBtnDisabled = this.memberSelf["role"] !== RoleNameHost;
-      this.loadBtnDisabled = false;
-      this.restartBtnDisabled = this.memberSelf["role"] !== RoleNameHost;
-      this.graphicOptionsDisabled = this.memberSelf["role"] !== RoleNameHost;
-      this.emulatorSpeedSliderDisabled = this.memberSelf["role"] !== RoleNameHost;
-      this.getGraphicOptions();
-      this.getEmulatorSpeed();
+      // if (this.memberSelf["role"] !== RoleNameObserver) {
+      //   this.setKeyboardControl(true);
+      //   this.initControlButtons();
+      // }
+      // this.saveBtnDisabled = this.memberSelf["role"] !== RoleNameHost;
+      // this.loadBtnDisabled = false;
+      // this.restartBtnDisabled = this.memberSelf["role"] !== RoleNameHost;
+      // this.graphicOptionsDisabled = this.memberSelf["role"] !== RoleNameHost;
+      // this.emulatorSpeedSliderDisabled = this.memberSelf["role"] !== RoleNameHost;
+      // this.getGraphicOptions();
+      // this.getEmulatorSpeed();
     },
     onDisconnected() {
       message.warn("连接断开");

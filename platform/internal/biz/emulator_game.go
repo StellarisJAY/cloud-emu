@@ -8,6 +8,7 @@ import (
 	"github.com/StellrisJAY/cloud-emu/platform/internal/conf"
 	"github.com/bwmarrin/snowflake"
 	"github.com/go-kratos/kratos/v2/errors"
+	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/transport/http"
 	"github.com/golang-jwt/jwt/v5"
 	"io"
@@ -46,16 +47,18 @@ type EmulatorGameUseCase struct {
 	snowflakeId      *snowflake.Node
 	userRepo         UserRepo
 	ac               *conf.Auth
+	logger           *log.Helper
 }
 
 func NewEmulatorGameUseCase(emulatorGameRepo EmulatorGameRepo, tm Transaction, snowflakeId *snowflake.Node,
-	userRepo UserRepo, ac *conf.Auth) *EmulatorGameUseCase {
+	userRepo UserRepo, ac *conf.Auth, logger log.Logger) *EmulatorGameUseCase {
 	return &EmulatorGameUseCase{
 		emulatorGameRepo: emulatorGameRepo,
 		tm:               tm,
 		snowflakeId:      snowflakeId,
 		userRepo:         userRepo,
 		ac:               ac,
+		logger:           log.NewHelper(logger),
 	}
 }
 

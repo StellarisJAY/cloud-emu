@@ -22,6 +22,10 @@ const (
 	Game_OpenGameInstance_FullMethodName           = "/v1.Game/OpenGameInstance"
 	Game_GetRoomInstanceAccessToken_FullMethodName = "/v1.Game/GetRoomInstanceAccessToken"
 	Game_ShutdownRoomInstance_FullMethodName       = "/v1.Game/ShutdownRoomInstance"
+	Game_OpenGameConnection_FullMethodName         = "/v1.Game/OpenGameConnection"
+	Game_SdpAnswer_FullMethodName                  = "/v1.Game/SdpAnswer"
+	Game_AddIceCandidate_FullMethodName            = "/v1.Game/AddIceCandidate"
+	Game_GetIceCandidate_FullMethodName            = "/v1.Game/GetIceCandidate"
 )
 
 // GameClient is the client API for Game service.
@@ -31,6 +35,10 @@ type GameClient interface {
 	OpenGameInstance(ctx context.Context, in *OpenGameInstanceRequest, opts ...grpc.CallOption) (*OpenGameInstanceResponse, error)
 	GetRoomInstanceAccessToken(ctx context.Context, in *GetRoomInstanceAccessTokenRequest, opts ...grpc.CallOption) (*GetRoomInstanceAccessTokenResponse, error)
 	ShutdownRoomInstance(ctx context.Context, in *ShutdownRoomInstanceRequest, opts ...grpc.CallOption) (*ShutdownRoomInstanceResponse, error)
+	OpenGameConnection(ctx context.Context, in *GameSrvOpenGameConnectionRequest, opts ...grpc.CallOption) (*GameSrvOpenGameConnectionResponse, error)
+	SdpAnswer(ctx context.Context, in *GameSrvSdpAnswerRequest, opts ...grpc.CallOption) (*GameSrvSdpAnswerResponse, error)
+	AddIceCandidate(ctx context.Context, in *GameSrvAddIceCandidateRequest, opts ...grpc.CallOption) (*GameSrvAddIceCandidateResponse, error)
+	GetIceCandidate(ctx context.Context, in *GetIceCandidateRequest, opts ...grpc.CallOption) (*GetIceCandidateResponse, error)
 }
 
 type gameClient struct {
@@ -71,6 +79,46 @@ func (c *gameClient) ShutdownRoomInstance(ctx context.Context, in *ShutdownRoomI
 	return out, nil
 }
 
+func (c *gameClient) OpenGameConnection(ctx context.Context, in *GameSrvOpenGameConnectionRequest, opts ...grpc.CallOption) (*GameSrvOpenGameConnectionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GameSrvOpenGameConnectionResponse)
+	err := c.cc.Invoke(ctx, Game_OpenGameConnection_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gameClient) SdpAnswer(ctx context.Context, in *GameSrvSdpAnswerRequest, opts ...grpc.CallOption) (*GameSrvSdpAnswerResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GameSrvSdpAnswerResponse)
+	err := c.cc.Invoke(ctx, Game_SdpAnswer_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gameClient) AddIceCandidate(ctx context.Context, in *GameSrvAddIceCandidateRequest, opts ...grpc.CallOption) (*GameSrvAddIceCandidateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GameSrvAddIceCandidateResponse)
+	err := c.cc.Invoke(ctx, Game_AddIceCandidate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gameClient) GetIceCandidate(ctx context.Context, in *GetIceCandidateRequest, opts ...grpc.CallOption) (*GetIceCandidateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetIceCandidateResponse)
+	err := c.cc.Invoke(ctx, Game_GetIceCandidate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GameServer is the server API for Game service.
 // All implementations must embed UnimplementedGameServer
 // for forward compatibility.
@@ -78,6 +126,10 @@ type GameServer interface {
 	OpenGameInstance(context.Context, *OpenGameInstanceRequest) (*OpenGameInstanceResponse, error)
 	GetRoomInstanceAccessToken(context.Context, *GetRoomInstanceAccessTokenRequest) (*GetRoomInstanceAccessTokenResponse, error)
 	ShutdownRoomInstance(context.Context, *ShutdownRoomInstanceRequest) (*ShutdownRoomInstanceResponse, error)
+	OpenGameConnection(context.Context, *GameSrvOpenGameConnectionRequest) (*GameSrvOpenGameConnectionResponse, error)
+	SdpAnswer(context.Context, *GameSrvSdpAnswerRequest) (*GameSrvSdpAnswerResponse, error)
+	AddIceCandidate(context.Context, *GameSrvAddIceCandidateRequest) (*GameSrvAddIceCandidateResponse, error)
+	GetIceCandidate(context.Context, *GetIceCandidateRequest) (*GetIceCandidateResponse, error)
 	mustEmbedUnimplementedGameServer()
 }
 
@@ -96,6 +148,18 @@ func (UnimplementedGameServer) GetRoomInstanceAccessToken(context.Context, *GetR
 }
 func (UnimplementedGameServer) ShutdownRoomInstance(context.Context, *ShutdownRoomInstanceRequest) (*ShutdownRoomInstanceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ShutdownRoomInstance not implemented")
+}
+func (UnimplementedGameServer) OpenGameConnection(context.Context, *GameSrvOpenGameConnectionRequest) (*GameSrvOpenGameConnectionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OpenGameConnection not implemented")
+}
+func (UnimplementedGameServer) SdpAnswer(context.Context, *GameSrvSdpAnswerRequest) (*GameSrvSdpAnswerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SdpAnswer not implemented")
+}
+func (UnimplementedGameServer) AddIceCandidate(context.Context, *GameSrvAddIceCandidateRequest) (*GameSrvAddIceCandidateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddIceCandidate not implemented")
+}
+func (UnimplementedGameServer) GetIceCandidate(context.Context, *GetIceCandidateRequest) (*GetIceCandidateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetIceCandidate not implemented")
 }
 func (UnimplementedGameServer) mustEmbedUnimplementedGameServer() {}
 func (UnimplementedGameServer) testEmbeddedByValue()              {}
@@ -172,6 +236,78 @@ func _Game_ShutdownRoomInstance_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Game_OpenGameConnection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GameSrvOpenGameConnectionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameServer).OpenGameConnection(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Game_OpenGameConnection_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServer).OpenGameConnection(ctx, req.(*GameSrvOpenGameConnectionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Game_SdpAnswer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GameSrvSdpAnswerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameServer).SdpAnswer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Game_SdpAnswer_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServer).SdpAnswer(ctx, req.(*GameSrvSdpAnswerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Game_AddIceCandidate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GameSrvAddIceCandidateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameServer).AddIceCandidate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Game_AddIceCandidate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServer).AddIceCandidate(ctx, req.(*GameSrvAddIceCandidateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Game_GetIceCandidate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetIceCandidateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameServer).GetIceCandidate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Game_GetIceCandidate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServer).GetIceCandidate(ctx, req.(*GetIceCandidateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Game_ServiceDesc is the grpc.ServiceDesc for Game service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -190,6 +326,22 @@ var Game_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ShutdownRoomInstance",
 			Handler:    _Game_ShutdownRoomInstance_Handler,
+		},
+		{
+			MethodName: "OpenGameConnection",
+			Handler:    _Game_OpenGameConnection_Handler,
+		},
+		{
+			MethodName: "SdpAnswer",
+			Handler:    _Game_SdpAnswer_Handler,
+		},
+		{
+			MethodName: "AddIceCandidate",
+			Handler:    _Game_AddIceCandidate_Handler,
+		},
+		{
+			MethodName: "GetIceCandidate",
+			Handler:    _Game_GetIceCandidate_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

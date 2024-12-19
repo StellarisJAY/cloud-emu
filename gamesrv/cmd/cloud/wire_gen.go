@@ -30,7 +30,7 @@ func wireApp(confServer *conf.Server, confData *conf.Data, registry *conf.Regist
 	}
 	gameFileRepo := data.NewGameFileRepo(dataData)
 	memberAuthRepo := data.NewMemberAuthRepo(dataData)
-	gameServerUseCase := biz.NewGameServerUseCase(gameFileRepo, memberAuthRepo)
+	gameServerUseCase := biz.NewGameServerUseCase(gameFileRepo, memberAuthRepo, logger)
 	gameServer := service.NewGameService(gameServerUseCase)
 	grpcServer := server.NewGRPCServer(confServer, gameServer, logger)
 	registrar := server.NewRegistrar(registry)

@@ -10,19 +10,25 @@ service Game {
   rpc OpenGameInstance(OpenGameInstanceRequest) returns (OpenGameInstanceResponse) {}
   rpc GetRoomInstanceAccessToken(GetRoomInstanceAccessTokenRequest) returns (GetRoomInstanceAccessTokenResponse) {}
   rpc ShutdownRoomInstance(ShutdownRoomInstanceRequest) returns (ShutdownRoomInstanceResponse) {}
+  rpc OpenGameConnection(GameSrvOpenGameConnectionRequest) returns (GameSrvOpenGameConnectionResponse) {}
+  rpc SdpAnswer(GameSrvSdpAnswerRequest) returns (GameSrvSdpAnswerResponse) {}
+  rpc AddIceCandidate(GameSrvAddIceCandidateRequest) returns (GameSrvAddIceCandidateResponse) {}
+  rpc GetIceCandidate(GetIceCandidateRequest) returns (GetIceCandidateResponse) {}
 }
 
 message GetGameInstanceResult {
   string token = 1;
 }
 
+message RoomMemberAuth {
+  int64 userId = 1;
+  string ip = 2;
+  string appId = 3;
+}
+
 message OpenGameInstanceRequest {
   int64 roomId = 1;
-  int64 emulatorId = 2;
-  int64 gameId = 3;
-  string gameName = 4;
-  string gameFile = 5;
-  int64 userId = 6;
+  RoomMemberAuth auth = 2;
 }
 
 message OpenGameInstanceResponse {
@@ -33,7 +39,7 @@ message OpenGameInstanceResponse {
 
 message GetRoomInstanceAccessTokenRequest {
   int64 roomId = 1;
-  int64 userId = 2;
+  RoomMemberAuth auth = 2;
 }
 
 message GetRoomInstanceAccessTokenResponse {
@@ -50,4 +56,56 @@ message ShutdownRoomInstanceRequest {
 message ShutdownRoomInstanceResponse {
   int32 code = 1;
   string message = 2;
+}
+
+message GameSrvOpenGameConnectionResult {
+  string sdpOffer = 1;
+}
+
+message GameSrvOpenGameConnectionRequest {
+  int64 roomId = 1;
+  string token = 2;
+  RoomMemberAuth auth = 3;
+}
+
+message GameSrvOpenGameConnectionResponse {
+  int32 code = 1;
+  string message = 2;
+  GameSrvOpenGameConnectionResult data = 3;
+}
+
+message GameSrvSdpAnswerRequest {
+  int64 roomId = 1;
+  string token = 2;
+  RoomMemberAuth auth = 3;
+  string sdpAnswer = 4;
+}
+
+message GameSrvSdpAnswerResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message GameSrvAddIceCandidateRequest {
+  int64 roomId = 1;
+  string token = 2;
+  RoomMemberAuth auth = 3;
+  string iceCandidate = 4;
+}
+
+message GameSrvAddIceCandidateResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message GetIceCandidateRequest {
+  int64 roomId = 1;
+  string token = 2;
+  RoomMemberAuth auth = 3;
+}
+
+message GetIceCandidateResponse {
+  int32 code = 1;
+  string message = 2;
+  repeated string candidates = 3;
 }

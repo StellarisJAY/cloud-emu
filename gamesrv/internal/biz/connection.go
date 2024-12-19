@@ -136,3 +136,14 @@ func (c *Connection) Close() {
 	_ = c.dataChannel.Close()
 	_ = c.pc.Close()
 }
+
+func (c *Connection) getLocalICECandidates() []string {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	result := make([]string, len(c.localCandidates))
+	for i, candidate := range c.localCandidates {
+		bytes, _ := json.Marshal(candidate)
+		result[i] = string(bytes)
+	}
+	return result
+}

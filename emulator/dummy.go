@@ -2,31 +2,81 @@ package emulator
 
 import (
 	"context"
+	"image"
+	"image/color"
 	"time"
 )
 
 type DummyEmulator struct {
 	cancelFunc     context.CancelFunc
 	renderCallback func(frame IFrame)
+	pauseChan      chan struct{}
+	resumeChan     chan struct{}
 }
 
 func MakeDummyEmulator(options IEmulatorOptions) IEmulator {
 	return &DummyEmulator{
 		renderCallback: options.FrameConsumer(),
+		pauseChan:      make(chan struct{}),
+		resumeChan:     make(chan struct{}),
+	}
+}
+
+const dummyEmulatorFrameTick = 100 * time.Millisecond
+
+var (
+	g = image.NewYCbCr(image.Rect(0, 0, 256, 240), image.YCbCrSubsampleRatio420)
+)
+
+type dummyFrameAdapter struct{}
+
+func (d *dummyFrameAdapter) Width() int {
+	return 256
+}
+
+func (d *dummyFrameAdapter) Height() int {
+	return 240
+}
+
+func (d *dummyFrameAdapter) YCbCr() *image.YCbCr {
+	return g
+}
+
+func (d *dummyFrameAdapter) Read() (image.Image, func(), error) {
+	return g, func() {}, nil
+}
+
+func init() {
+	for y := 0; y < 256; y++ {
+		for x := 0; x < 240; x++ {
+			Y, cb, cr := color.RGBToYCbCr(0, 255, 0)
+			yOff := g.YOffset(x, y)
+			cOff := g.COffset(x, y)
+			if yOff < len(g.Y) && cOff < len(g.Cb) && cOff < len(g.Cr) {
+				g.Y[yOff] = Y
+				g.Cb[cOff] = cb
+				g.Cr[cOff] = cr
+			}
+		}
 	}
 }
 
 func (d *DummyEmulator) Start() error {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	d.cancelFunc = cancelFunc
+	frame := &dummyFrameAdapter{}
 	go func() {
-		ticker := time.NewTicker(100 * time.Millisecond)
+		ticker := time.NewTicker(dummyEmulatorFrameTick)
 		for {
 			select {
 			case <-ctx.Done():
 				return
+			case <-d.pauseChan:
+				ticker.Stop()
+			case <-d.resumeChan:
+				ticker.Reset(dummyEmulatorFrameTick)
 			case <-ticker.C:
-				d.renderCallback(nil)
+				d.renderCallback(frame)
 			}
 		}
 	}()
@@ -34,11 +84,13 @@ func (d *DummyEmulator) Start() error {
 }
 
 func (d *DummyEmulator) Pause() error {
-	panic("dummy模拟器未实现该方法")
+	d.pauseChan <- struct{}{}
+	return nil
 }
 
 func (d *DummyEmulator) Resume() error {
-	panic("dummy模拟器未实现该方法")
+	d.resumeChan <- struct{}{}
+	return nil
 }
 
 func (d *DummyEmulator) Save() (IEmulatorSave, error) {
@@ -54,8 +106,8 @@ func (d *DummyEmulator) Restart(options IEmulatorOptions) error {
 }
 
 func (d *DummyEmulator) Stop() error {
-	//TODO implement me
-	panic("implement me")
+	d.cancelFunc()
+	return nil
 }
 
 func (d *DummyEmulator) SubmitInput(controllerId int, keyCode string, pressed bool) {

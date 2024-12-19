@@ -178,6 +178,24 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.GetRoomInstanceResponse'
+    /api/v1/room-instance/connect:
+        post:
+            tags:
+                - RoomInstance
+            operationId: RoomInstance_OpenGameConnection
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.OpenGameConnectionRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.OpenGameConnectionResponse'
     /api/v1/room-instance/history:
         get:
             tags:
@@ -205,6 +223,62 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.ListGameHistoryResponse'
+    /api/v1/room-instance/ice-candidate:
+        get:
+            tags:
+                - RoomInstance
+            operationId: RoomInstance_GetServerIceCandidate
+            parameters:
+                - name: roomId
+                  in: query
+                  schema:
+                    type: string
+                - name: token
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.GetServerIceCandidateResponse'
+        post:
+            tags:
+                - RoomInstance
+            operationId: RoomInstance_AddIceCandidate
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.AddIceCandidateRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.AddIceCandidateResponse'
+    /api/v1/room-instance/sdp-answer:
+        post:
+            tags:
+                - RoomInstance
+            operationId: RoomInstance_SdpAnswer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.SdpAnswerRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.SdpAnswerResponse'
     /api/v1/room-member:
         get:
             tags:
@@ -446,6 +520,23 @@ components:
                     format: int32
                 message:
                     type: string
+        v1.AddIceCandidateRequest:
+            type: object
+            properties:
+                roomId:
+                    type: string
+                token:
+                    type: string
+                iceCandidate:
+                    type: string
+        v1.AddIceCandidateResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
         v1.CreateRoomRequest:
             type: object
             properties:
@@ -537,6 +628,18 @@ components:
                     type: string
                 data:
                     $ref: '#/components/schemas/v1.RoomDto'
+        v1.GetServerIceCandidateResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    type: array
+                    items:
+                        type: string
         v1.GetUserDetailResponse:
             type: object
             properties:
@@ -709,6 +812,28 @@ components:
                     type: string
                 addTime:
                     type: string
+        v1.OpenGameConnectionRequest:
+            type: object
+            properties:
+                roomId:
+                    type: string
+                token:
+                    type: string
+        v1.OpenGameConnectionResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/v1.OpenGameConnectionResult'
+        v1.OpenGameConnectionResult:
+            type: object
+            properties:
+                sdpOffer:
+                    type: string
         v1.RegisterRequest:
             type: object
             properties:
@@ -800,6 +925,23 @@ components:
                 online:
                     type: boolean
                 customData:
+                    type: string
+        v1.SdpAnswerRequest:
+            type: object
+            properties:
+                roomId:
+                    type: string
+                token:
+                    type: string
+                sdpAnswer:
+                    type: string
+        v1.SdpAnswerResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
                     type: string
         v1.UserDetailDto:
             type: object

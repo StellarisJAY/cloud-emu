@@ -7,6 +7,7 @@ import (
 	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/bwmarrin/snowflake"
+	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-redsync/redsync/v4"
 	"net/url"
 	"slices"
@@ -22,6 +23,7 @@ type RoomInstanceUseCase struct {
 	roomRepo       RoomRepo
 	roomMemberRepo RoomMemberRepo
 	tm             Transaction
+	logger         *log.Helper
 }
 
 type RoomInstanceRepo interface {
@@ -57,7 +59,8 @@ const (
 )
 
 func NewRoomInstanceUseCase(repo RoomInstanceRepo, snowflakeId *snowflake.Node, redsync *redsync.Redsync,
-	gameServerRepo GameServerRepo, roomRepo RoomRepo, roomMemberRepo RoomMemberRepo, tm Transaction) *RoomInstanceUseCase {
+	gameServerRepo GameServerRepo, roomRepo RoomRepo, roomMemberRepo RoomMemberRepo, tm Transaction,
+	logger log.Logger) *RoomInstanceUseCase {
 	return &RoomInstanceUseCase{
 		repo:           repo,
 		snowflakeId:    snowflakeId,
@@ -66,6 +69,7 @@ func NewRoomInstanceUseCase(repo RoomInstanceRepo, snowflakeId *snowflake.Node, 
 		roomRepo:       roomRepo,
 		roomMemberRepo: roomMemberRepo,
 		tm:             tm,
+		logger:         log.NewHelper(logger),
 	}
 }
 
@@ -74,10 +78,10 @@ type OpenRoomInstanceResult struct {
 	AccessToken string
 }
 
-func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int64, userId int64) (*OpenRoomInstanceResult, error) {
+func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int64, auth RoomMemberAuth) (*OpenRoomInstanceResult, error) {
 	result := &OpenRoomInstanceResult{}
 	err := uc.tm.Tx(ctx, func(ctx context.Context) error {
-		member, err := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId)
+		member, err := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, auth.UserId)
 		if err != nil {
 			return v1.ErrorServiceError("获取房间成员出错")
 		}
@@ -95,7 +99,7 @@ func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int6
 		instance, err := uc.repo.GetActiveInstanceByRoomId(ctx, roomId)
 		if instance != nil {
 			// 获取连接token
-			token, err := uc.gameServerRepo.GetRoomInstanceToken(ctx, instance, roomId, userId)
+			token, err := uc.gameServerRepo.GetRoomInstanceToken(ctx, instance, roomId, auth)
 			if err != nil {
 				return v1.ErrorServiceError("获取房间实例出错")
 			}
@@ -126,16 +130,17 @@ func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int6
 		u, _ := url.Parse(servers[0].Address)
 		port, _ := strconv.Atoi(u.Port())
 		instance = &RoomInstance{
-			ServerIp: u.Hostname(),
-			RoomId:   roomId,
-			AddTime:  time.Now(),
-			Status:   RoomInstanceStatusActive,
-			EndTime:  time.Now(),
-			RpcPort:  int32(port),
+			RoomInstanceId: uc.snowflakeId.Generate().Int64(),
+			ServerIp:       u.Hostname(),
+			RoomId:         roomId,
+			AddTime:        time.Now(),
+			Status:         RoomInstanceStatusActive,
+			EndTime:        time.Now(),
+			RpcPort:        int32(port),
 		}
 
 		// 在游戏服务器创建房间实例，并获取连接token
-		token, err := uc.gameServerRepo.OpenRoomInstance(ctx, instance)
+		token, err := uc.gameServerRepo.OpenRoomInstance(ctx, instance, auth)
 		if err != nil {
 			return v1.ErrorServiceError("创建房间实例出错", err)
 		}
@@ -160,6 +165,102 @@ func (uc *RoomInstanceUseCase) ListRoomGameHistory(ctx context.Context, roomId i
 		return nil, err
 	}
 	return instances, nil
+}
+
+func (uc *RoomInstanceUseCase) OpenGameConnection(ctx context.Context, roomId int64, token string, auth RoomMemberAuth) (string, error) {
+	mutex := uc.redsync.NewMutex(openRoomInstanceMutexName(roomId), redsync.WithExpiry(OpenRoomInstanceMutexExpire))
+	if err := mutex.Lock(); err != nil {
+		uc.logger.Error("创建连接分布式锁错误:", err)
+		return "", v1.ErrorServiceError("连接失败")
+	}
+	defer mutex.Unlock()
+	instance, err := uc.repo.GetActiveInstanceByRoomId(ctx, roomId)
+	if err != nil {
+		uc.logger.Error("创建连接获取房间实例错误:", err)
+		return "", v1.ErrorServiceError("连接失败")
+	}
+	if instance == nil {
+		uc.logger.Error("创建连接获取房间实例不存在:", roomId)
+		return "", v1.ErrorServiceError("连接失败")
+	}
+	sdpOffer, err := uc.gameServerRepo.OpenGameConnection(ctx, instance, token, auth)
+	if err != nil {
+		uc.logger.Error("游戏服务创建连接错误:", err)
+		return "", err
+	}
+	return sdpOffer, nil
+}
+
+func (uc *RoomInstanceUseCase) SdpAnswer(ctx context.Context, roomId int64, token string, auth RoomMemberAuth, sdpAnswer string) error {
+	mutex := uc.redsync.NewMutex(openRoomInstanceMutexName(roomId), redsync.WithExpiry(OpenRoomInstanceMutexExpire))
+	if err := mutex.Lock(); err != nil {
+		uc.logger.Error("sdpAnswer分布式锁错误:", err)
+		return v1.ErrorServiceError("连接失败")
+	}
+	defer mutex.Unlock()
+	instance, err := uc.repo.GetActiveInstanceByRoomId(ctx, roomId)
+	if err != nil {
+		uc.logger.Error("sdpAnswer获取房间实例错误:", err)
+		return v1.ErrorServiceError("连接失败")
+	}
+	if instance == nil {
+		uc.logger.Error("sdpAnswer获取房间实例不存在:", roomId)
+		return v1.ErrorServiceError("连接失败")
+	}
+	err = uc.gameServerRepo.SdpAnswer(ctx, instance, token, auth, sdpAnswer)
+	if err != nil {
+		uc.logger.Error("游戏服务sdpAnswer错误:", err)
+		return err
+	}
+	return nil
+}
+
+func (uc *RoomInstanceUseCase) AddICECandidate(ctx context.Context, roomId int64, token string, auth RoomMemberAuth, candidate string) error {
+	mutex := uc.redsync.NewMutex(openRoomInstanceMutexName(roomId), redsync.WithExpiry(OpenRoomInstanceMutexExpire))
+	if err := mutex.Lock(); err != nil {
+		uc.logger.Error("ice分布式锁错误:", err)
+		return v1.ErrorServiceError("连接失败")
+	}
+	defer mutex.Unlock()
+	instance, err := uc.repo.GetActiveInstanceByRoomId(ctx, roomId)
+	if err != nil {
+		uc.logger.Error("ice获取房间实例错误:", err)
+		return v1.ErrorServiceError("连接失败")
+	}
+	if instance == nil {
+		uc.logger.Error("ice获取房间实例不存在:", roomId)
+		return v1.ErrorServiceError("连接失败")
+	}
+	err = uc.gameServerRepo.AddICECandidate(ctx, instance, token, auth, candidate)
+	if err != nil {
+		uc.logger.Error("游戏服务ice错误:", err)
+		return err
+	}
+	return nil
+}
+
+func (uc *RoomInstanceUseCase) GetServerICECandidates(ctx context.Context, roomId int64, token string, auth RoomMemberAuth) ([]string, error) {
+	mutex := uc.redsync.NewMutex(openRoomInstanceMutexName(roomId), redsync.WithExpiry(OpenRoomInstanceMutexExpire))
+	if err := mutex.Lock(); err != nil {
+		uc.logger.Error("ice分布式锁错误:", err)
+		return nil, v1.ErrorServiceError("连接失败")
+	}
+	defer mutex.Unlock()
+	instance, err := uc.repo.GetActiveInstanceByRoomId(ctx, roomId)
+	if err != nil {
+		uc.logger.Error("ice获取房间实例错误:", err)
+		return nil, v1.ErrorServiceError("连接失败")
+	}
+	if instance == nil {
+		uc.logger.Error("ice获取房间实例不存在:", roomId)
+		return nil, v1.ErrorServiceError("连接失败")
+	}
+	candidates, err := uc.gameServerRepo.GetServerICECandidate(ctx, instance, token, auth)
+	if err != nil {
+		uc.logger.Error("游戏服务ice错误:", err)
+		return nil, err
+	}
+	return candidates, nil
 }
 
 func openRoomInstanceMutexName(roomId int64) string {
