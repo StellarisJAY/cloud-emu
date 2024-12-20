@@ -50,36 +50,25 @@ const tourSteps = [
 
 <template>
   <a-row style="height: 100vh; background-color: grey">
-    <!--left side buttons-->
+    <!--左侧控制按钮-->
     <a-col :span="7">
       <a-row style="height: 30%; margin-top: 10%">
-        <a-col :span="8" :offset="8">
-          <a-button class="control-btn" id="button-up" disabled>
-            <ArrowUpOutlined />
-          </a-button>
-        </a-col>
+        <a-col :span="8" id="slot-l1"></a-col>
+        <a-col :span="8" id="slot-l2"></a-col>
+        <a-col :span="8" id="slot-l3"></a-col>
       </a-row>
       <a-row style="height: 30%">
-        <a-col :span="8">
-          <a-button class="control-btn" id="button-left" disabled>
-            <ArrowLeftOutlined />
-          </a-button>
-        </a-col>
-        <a-col :span="8" :offset="8">
-          <a-button class="control-btn" id="button-right" disabled>
-            <ArrowRightOutlined />
-          </a-button>
-        </a-col>
+        <a-col :span="8" id="slot-l4"></a-col>
+        <a-col :span="8" id="slot-l5"></a-col>
+        <a-col :span="8" id="slot-l6"></a-col>
       </a-row>
       <a-row style="height: 30%">
-        <a-col :span="8" :offset="8">
-          <a-button class="control-btn" id="button-down" disabled>
-            <ArrowDownOutlined />
-          </a-button>
-        </a-col>
+        <a-col :span="8" id="slot-l7"></a-col>
+        <a-col :span="8" id="slot-l8"></a-col>
+        <a-col :span="8" id="slot-l9"></a-col>
       </a-row>
     </a-col>
-    <!--video screen and toolbar-->
+    <!--视频、工具栏-->
     <a-col :span="10" style="height: 100vh">
       <a-card style="height: 100%">
         <a-row>
@@ -118,35 +107,34 @@ const tourSteps = [
         </a-row>
       </a-card>
     </a-col>
-    <!--right side buttons-->
+    <!--右侧控制按钮-->
     <a-col :span="7">
       <a-row style="height: 30%; margin-top: 10%">
-        <a-col :span="8">
-          <a-button class="control-btn" id="button-start" disabled>START</a-button>
-        </a-col>
-        <a-col :span="8" :offset="8">
-          <a-button class="control-btn" id="button-a" disabled>A</a-button>
-        </a-col>
+        <a-col :span="8" id="slot-r1"></a-col>
+        <a-col :span="8" id="slot-r2"></a-col>
+        <a-col :span="8" id="slot-r3"></a-col>
       </a-row>
-      <a-row style="height: 30%; margin-top: 60%">
-        <a-col :span="8">
-          <a-button class="control-btn" id="button-select" disabled>SELECT</a-button>
-        </a-col>
-        <a-col :span="8" :offset="8">
-          <a-button class="control-btn" id="button-b" disabled>B</a-button>
-        </a-col>
+      <a-row style="height: 30%">
+        <a-col :span="8" id="slot-r4"></a-col>
+        <a-col :span="8" id="slot-r5"></a-col>
+        <a-col :span="8" id="slot-r6"></a-col>
+      </a-row>
+      <a-row style="height: 30%">
+        <a-col :span="8" id="slot-r7"></a-col>
+        <a-col :span="8" id="slot-r8"></a-col>
+        <a-col :span="8" id="slot-r9"></a-col>
       </a-row>
     </a-col>
-    <!--room member list-->
+    <!--房间详情-->
     <a-drawer v-model:open="membersDrawerOpen" placement="right" size="default" title="房间详情">
       <RoomInfoDrawer :member-self="memberSelf" :rtc-session="rtcSession" :full-room-info="fullRoomInfo"
         :room-id="roomId"></RoomInfoDrawer>
     </a-drawer>
-    <!--saved games-->
+    <!--存档列表-->
     <a-drawer size="default" title="保存游戏" placement="right" v-model:open="savedGameOpen">
       <SaveList :room-id="roomId"></SaveList>
     </a-drawer>
-    <!--chat modal-->
+    <!--聊天窗口-->
     <a-modal title="聊天" v-model:open="chatModalOpen" @cancel="_ => { setChatModal(false) }">
       <template #footer>
         <a-button @click="_ => { setChatModal(false) }">取消</a-button>
@@ -154,7 +142,7 @@ const tourSteps = [
       </template>
       <a-input placeholder="请输入消息..." v-model:value="chatMessage"></a-input>
     </a-modal>
-    <!--settings-->
+    <!--设置列表-->
     <a-drawer v-model:open="settingDrawerOpen" placement="right" title="设置" size="default">
       <a-form>
         <a-form-item label="显示状态数据">
@@ -178,11 +166,11 @@ const tourSteps = [
     </a-drawer>
     <a-tour :steps="tourSteps" :open="tourOpen" @close="_ => { tourOpen = false }"></a-tour>
     <!--模拟器，游戏选项-->
-    <a-drawer v-model:open="emulatorInfoDrawerOpen" placement="right" title="模拟器/游戏" size="large">
+    <a-drawer v-model:open="emulatorInfoDrawerOpen" placement="right" title="模拟器/游戏">
       <emulator-info-drawer :room-id="roomId"></emulator-info-drawer>
     </a-drawer>
-
   </a-row>
+  <!--实时状态参数-->
   <p id="stats" v-if="configs.showStats">RTT:{{ stats.rtt }}ms FPS:{{ stats.fps }} D:{{formatBytes(stats.bytesPerSecond)}}/s</p>
 </template>
 
@@ -193,7 +181,6 @@ import { Row, Col } from "ant-design-vue";
 import { Card, Button, Drawer, Select,Switch, notification, Slider } from "ant-design-vue";
 import { message } from "ant-design-vue";
 import { Form, FormItem, Modal, Input } from "ant-design-vue";
-import router from "../router/index.js";
 import { ArrowUpOutlined, ArrowDownOutlined, ArrowLeftOutlined, ArrowRightOutlined } from "@ant-design/icons-vue"
 import { Tour } from "ant-design-vue";
 import RoomInfoDrawer from "../components/roomInfoDrawer.vue";
@@ -201,15 +188,12 @@ import SaveList from "../components/saveList.vue";
 import KeyboardSetting from "../components/keyboardSetting.vue";
 import platform from "../util/platform.js";
 import EmulatorInfoDrawer from "../components/emulatorInfoDrawer.vue";
+import roomMemberAPI from "../api/roomMember.js";
 
 const MessageGameButtonPressed = 0
 const MessageGameButtonReleased = 1
 const MessageChat = 2;
 const MessagePing = 14;
-
-const RoleNameHost = "Host";
-const RoleNamePlayer = "Player";
-const RoleNameObserver = "Observer";
 
 export default {
   components: {
@@ -239,9 +223,7 @@ export default {
   data() {
     return {
       membersDrawerOpen: false,
-      memberSelf: {
-        role: 3,
-      },
+      memberSelf: {},
       rtcSession: {},
       connectBtnDisabled: false,
       saveBtnDisabled: true,
@@ -260,14 +242,9 @@ export default {
           "button-select": "Select",
           "button-start": "Start",
         },
-        existingGames: [],
         showStats: false,
       },
       savedGameOpen: false,
-      p1p2Options: [
-        { value: "1", label: "P1" },
-        { value: "2", label: "P2" },
-      ],
       fullRoomInfo: {},
       chatModalOpen: false,
       chatMessage: "",
@@ -314,10 +291,9 @@ export default {
       message.info("请使用横屏全屏来获取最佳游戏体验");
     }
     this.roomId = this.$route["params"]["roomId"];
-    // this.getMemberSelf().catch(_=>{
-    //   this.tryJoinRoom();
-    // });
-    // this.listGames();
+    roomMemberAPI.getUserRoomMember(this.roomId).then(res => {
+      this.memberSelf = res.data;
+    })
   },
   unmounted() {
     if (this.rtcSession && this.rtcSession.pc) {
@@ -467,10 +443,11 @@ export default {
     },
     onConnected() {
       message.success("连接成功");
-      // if (this.memberSelf["role"] !== RoleNameObserver) {
-      //   this.setKeyboardControl(true);
-      //   this.initControlButtons();
-      // }
+      dispatchEvent(new Event("webrtc-connected"));
+      if (this.memberSelf["role"] !== 3) {
+        // this.setKeyboardControl(true);
+        this.initControlButtons();
+      }
       // this.saveBtnDisabled = this.memberSelf["role"] !== RoleNameHost;
       // this.loadBtnDisabled = false;
       // this.restartBtnDisabled = this.memberSelf["role"] !== RoleNameHost;
@@ -478,9 +455,11 @@ export default {
       // this.emulatorSpeedSliderDisabled = this.memberSelf["role"] !== RoleNameHost;
       // this.getGraphicOptions();
       // this.getEmulatorSpeed();
+      this.restartBtnDisabled = false;
     },
     onDisconnected() {
       message.warn("连接断开");
+      dispatchEvent(new Event("webrtc-disconnected"));
       this.disableControlButtons();
       this.rtcSession.pc.close();
       this.saveBtnDisabled = true;
@@ -488,12 +467,6 @@ export default {
       this.loadBtnDisabled = true;
       this.chatBtnDisabled = true;
       this.graphicOptionsDisabled = true;
-      this.getMemberSelf().then(_ => {
-        this.connectBtnDisabled = false;
-      }).catch(_ => {
-        message.warn("无法访问该房间");
-        router.back();
-      })
     },
     sendAction(code, pressed) {
       const msg = JSON.stringify({

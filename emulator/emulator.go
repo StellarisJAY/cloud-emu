@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	TypeNES = "NES"
+	TypeNESGO = "NESGO"
 )
 
 // IFrame 模拟器输出画面接口
@@ -90,7 +90,7 @@ var (
 
 func MakeEmulator(emulatorType string, options IEmulatorOptions) (IEmulator, error) {
 	switch emulatorType {
-	case TypeNES:
+	case TypeNESGO:
 		return makeNESEmulatorAdapter(options)
 	default:
 		return nil, ErrorEmulatorNotSupported

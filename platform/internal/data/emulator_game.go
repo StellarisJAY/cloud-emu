@@ -1,9 +1,17 @@
 package data
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/biz"
+	"github.com/go-kratos/kratos/v2/errors"
+	"go.mongodb.org/mongo-driver/mongo/gridfs"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"gorm.io/gorm"
+	"net/url"
+	"strings"
 	"time"
 )
 
@@ -28,18 +36,43 @@ func NewEmulatorGameRepo(data *Data) biz.EmulatorGameRepo {
 	return &EmulatorGameRepo{data: data}
 }
 
+func getGameFileNameForGridFS(gameId int64) string {
+	return fmt.Sprintf("%d", gameId)
+}
+
+func (e *EmulatorGameRepo) getGridFSBucket(dbName string, bucketName string) (*gridfs.Bucket, error) {
+	bucket, err := gridfs.NewBucket(e.data.mongo.Database(dbName), options.GridFSBucket().SetName(bucketName))
+	if err != nil {
+		return nil, err
+	}
+	return bucket, nil
+}
+
 func (e *EmulatorGameRepo) Create(ctx context.Context, game *biz.EmulatorGame) error {
 	return e.data.DB(ctx).Table(EmulatorGameTableName).WithContext(ctx).Create(convertEmulatorGameBizToEntity(game)).Error
 }
 
-func (e *EmulatorGameRepo) Upload(ctx context.Context, game *biz.EmulatorGame, data []byte) error {
-	//TODO upload game to file system
-	return nil
+func (e *EmulatorGameRepo) Upload(_ context.Context, game *biz.EmulatorGame, data []byte) error {
+	u, _ := url.Parse(game.Url)
+	database := u.Host
+	bucketName := strings.Split(u.Path, "/")[1]
+	bucket, err := e.getGridFSBucket(database, bucketName)
+	if err != nil {
+		return err
+	}
+	reader := bytes.NewReader(data)
+	return bucket.UploadFromStreamWithID(game.GameId, getGameFileNameForGridFS(game.GameId), reader)
 }
 
-func (e *EmulatorGameRepo) Delete(ctx context.Context, gameId int64) error {
-	//TODO delete game file
-	panic("implement me")
+func (e *EmulatorGameRepo) DeleteFile(ctx context.Context, game *biz.EmulatorGame) error {
+	u, _ := url.Parse(game.Url)
+	database := u.Host
+	bucketName := strings.Split(u.Path, "/")[1]
+	bucket, err := e.getGridFSBucket(database, bucketName)
+	if err != nil {
+		return err
+	}
+	return bucket.DeleteContext(ctx, game.GameId)
 }
 
 func (e *EmulatorGameRepo) ListGame(ctx context.Context, query biz.EmulatorGameQuery, p *common.Pagination) ([]*biz.EmulatorGame, error) {
@@ -55,6 +88,24 @@ func (e *EmulatorGameRepo) ListGame(ctx context.Context, query biz.EmulatorGameQ
 		return nil, err
 	}
 	return result, nil
+}
+
+func (e *EmulatorGameRepo) GetById(ctx context.Context, gameId int64) (*biz.EmulatorGame, error) {
+	var result *biz.EmulatorGame
+	err := e.data.DB(ctx).Table(EmulatorGameTableName).WithContext(ctx).Where("game_id = ?", gameId).Scan(&result).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	} else {
+		return result, err
+	}
+}
+
+func (e *EmulatorGameRepo) Delete(ctx context.Context, gameId int64) error {
+	return e.data.DB(ctx).
+		Table(EmulatorGameTableName).
+		WithContext(ctx).
+		Where("game_id = ?", gameId).
+		Delete(&biz.EmulatorGame{}).Error
 }
 
 func convertEmulatorGameBizToEntity(gameBiz *biz.EmulatorGame) *EmulatorGameEntity {

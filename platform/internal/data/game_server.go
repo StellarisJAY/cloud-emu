@@ -161,3 +161,20 @@ func (g *GameServerRepo) GetServerICECandidate(ctx context.Context, instance *bi
 	}
 	return resp.Candidates, nil
 }
+
+func (g *GameServerRepo) RestartGameInstance(ctx context.Context, instance *biz.RoomInstance, userId int64, emulatorType, gameName, gameUrl string) error {
+	client, err := common.NewGRPCClient(instance.ServerIp, int(instance.RpcPort))
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+	gameServer := v1.NewGameClient(client)
+	_, err = gameServer.RestartGameInstance(ctx, &v1.RestartGameInstanceRequest{
+		RoomId:       instance.RoomId,
+		UserId:       userId,
+		EmulatorType: emulatorType,
+		GameName:     gameName,
+		GameUrl:      gameUrl,
+	})
+	return err
+}

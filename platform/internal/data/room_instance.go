@@ -28,6 +28,7 @@ type RoomInstanceEntity struct {
 	EndTime        time.Time
 	Status         int32
 	RpcPort        int32
+	GameId         int64
 }
 
 func (r *RoomInstanceRepo) Create(ctx context.Context, roomInstance *biz.RoomInstance) error {
@@ -91,5 +92,6 @@ func convertRoomInstanceBizToEntity(dto *biz.RoomInstance) *RoomInstanceEntity {
 		EndTime:        dto.EndTime,
 		Status:         dto.Status,
 		RpcPort:        dto.RpcPort,
+		GameId:         dto.GameId,
 	}
 }

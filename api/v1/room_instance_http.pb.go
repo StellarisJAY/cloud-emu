@@ -24,6 +24,7 @@ const OperationRoomInstanceGetRoomInstance = "/v1.RoomInstance/GetRoomInstance"
 const OperationRoomInstanceGetServerIceCandidate = "/v1.RoomInstance/GetServerIceCandidate"
 const OperationRoomInstanceListGameHistory = "/v1.RoomInstance/ListGameHistory"
 const OperationRoomInstanceOpenGameConnection = "/v1.RoomInstance/OpenGameConnection"
+const OperationRoomInstanceRestartRoomInstance = "/v1.RoomInstance/RestartRoomInstance"
 const OperationRoomInstanceSdpAnswer = "/v1.RoomInstance/SdpAnswer"
 
 type RoomInstanceHTTPServer interface {
@@ -32,6 +33,7 @@ type RoomInstanceHTTPServer interface {
 	GetServerIceCandidate(context.Context, *GetServerIceCandidateRequest) (*GetServerIceCandidateResponse, error)
 	ListGameHistory(context.Context, *ListGameHistoryRequest) (*ListGameHistoryResponse, error)
 	OpenGameConnection(context.Context, *OpenGameConnectionRequest) (*OpenGameConnectionResponse, error)
+	RestartRoomInstance(context.Context, *RestartRoomInstanceRequest) (*RestartRoomInstanceResponse, error)
 	SdpAnswer(context.Context, *SdpAnswerRequest) (*SdpAnswerResponse, error)
 }
 
@@ -43,6 +45,7 @@ func RegisterRoomInstanceHTTPServer(s *http.Server, srv RoomInstanceHTTPServer) 
 	r.POST("/api/v1/room-instance/sdp-answer", _RoomInstance_SdpAnswer0_HTTP_Handler(srv))
 	r.POST("/api/v1/room-instance/ice-candidate", _RoomInstance_AddIceCandidate0_HTTP_Handler(srv))
 	r.GET("/api/v1/room-instance/ice-candidate", _RoomInstance_GetServerIceCandidate0_HTTP_Handler(srv))
+	r.POST("/api/v1/room-instance/restart", _RoomInstance_RestartRoomInstance0_HTTP_Handler(srv))
 }
 
 func _RoomInstance_GetRoomInstance0_HTTP_Handler(srv RoomInstanceHTTPServer) func(ctx http.Context) error {
@@ -168,12 +171,35 @@ func _RoomInstance_GetServerIceCandidate0_HTTP_Handler(srv RoomInstanceHTTPServe
 	}
 }
 
+func _RoomInstance_RestartRoomInstance0_HTTP_Handler(srv RoomInstanceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in RestartRoomInstanceRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationRoomInstanceRestartRoomInstance)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.RestartRoomInstance(ctx, req.(*RestartRoomInstanceRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*RestartRoomInstanceResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 type RoomInstanceHTTPClient interface {
 	AddIceCandidate(ctx context.Context, req *AddIceCandidateRequest, opts ...http.CallOption) (rsp *AddIceCandidateResponse, err error)
 	GetRoomInstance(ctx context.Context, req *GetRoomInstanceRequest, opts ...http.CallOption) (rsp *GetRoomInstanceResponse, err error)
 	GetServerIceCandidate(ctx context.Context, req *GetServerIceCandidateRequest, opts ...http.CallOption) (rsp *GetServerIceCandidateResponse, err error)
 	ListGameHistory(ctx context.Context, req *ListGameHistoryRequest, opts ...http.CallOption) (rsp *ListGameHistoryResponse, err error)
 	OpenGameConnection(ctx context.Context, req *OpenGameConnectionRequest, opts ...http.CallOption) (rsp *OpenGameConnectionResponse, err error)
+	RestartRoomInstance(ctx context.Context, req *RestartRoomInstanceRequest, opts ...http.CallOption) (rsp *RestartRoomInstanceResponse, err error)
 	SdpAnswer(ctx context.Context, req *SdpAnswerRequest, opts ...http.CallOption) (rsp *SdpAnswerResponse, err error)
 }
 
@@ -242,6 +268,19 @@ func (c *RoomInstanceHTTPClientImpl) OpenGameConnection(ctx context.Context, in 
 	pattern := "/api/v1/room-instance/connect"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationRoomInstanceOpenGameConnection))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *RoomInstanceHTTPClientImpl) RestartRoomInstance(ctx context.Context, in *RestartRoomInstanceRequest, opts ...http.CallOption) (*RestartRoomInstanceResponse, error) {
+	var out RestartRoomInstanceResponse
+	pattern := "/api/v1/room-instance/restart"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationRoomInstanceRestartRoomInstance))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {

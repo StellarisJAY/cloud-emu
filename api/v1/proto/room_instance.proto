@@ -45,6 +45,13 @@ service RoomInstance {
       get: "/api/v1/room-instance/ice-candidate"
     };
   }
+
+  rpc RestartRoomInstance(RestartRoomInstanceRequest) returns (RestartRoomInstanceResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/room-instance/restart"
+      body: "*"
+    };
+  }
 }
 
 message RoomInstanceDto {
@@ -131,4 +138,15 @@ message GetServerIceCandidateResponse {
   int32 code = 1;
   string message = 2;
   repeated string data = 3;
+}
+
+message RestartRoomInstanceRequest {
+  int64 roomId = 1;
+  int64 emulatorId = 2;
+  int64 gameId = 3;
+}
+
+message RestartRoomInstanceResponse {
+  int32 code = 1;
+  string message = 2;
 }

@@ -37,7 +37,9 @@ type EmulatorGameQuery struct {
 type EmulatorGameRepo interface {
 	Create(ctx context.Context, game *EmulatorGame) error
 	Upload(ctx context.Context, game *EmulatorGame, data []byte) error
+	GetById(ctx context.Context, gameId int64) (*EmulatorGame, error)
 	Delete(ctx context.Context, gameId int64) error
+	DeleteFile(ctx context.Context, game *EmulatorGame) error
 	ListGame(ctx context.Context, query EmulatorGameQuery, p *common.Pagination) ([]*EmulatorGame, error)
 }
 
@@ -105,13 +107,37 @@ func (uc *EmulatorGameUseCase) upload(ctx context.Context, game *EmulatorGame, d
 		game.Size = int32(len(data))
 		game.AddTime = time.Now()
 		game.AddUser = userId
-		game.Url = fmt.Sprintf("mongodb://game-file/%d/%d", game.EmulatorId, game.GameId)
+		game.Url = fmt.Sprintf("mongodb://cloud-emu/game_file/%d", game.GameId)
 		err := uc.emulatorGameRepo.Create(ctx, game)
 		if err != nil {
+			uc.logger.Error("添加游戏错误:", err)
 			return errors.New(500, "Database Error", "上传游戏失败")
 		}
 		if err := uc.emulatorGameRepo.Upload(ctx, game, data); err != nil {
+			uc.logger.Error("上传mongodb错误:", err)
 			return errors.New(500, "Upload Error", "上传游戏失败")
+		}
+		return nil
+	})
+}
+
+func (uc *EmulatorGameUseCase) Delete(ctx context.Context, gameId int64) error {
+	return uc.tm.Tx(ctx, func(ctx context.Context) error {
+		game, err := uc.emulatorGameRepo.GetById(ctx, gameId)
+		if err != nil {
+			uc.logger.Error("删除游戏错误:", err)
+			return v1.ErrorServiceError("删除失败")
+		}
+		if game == nil {
+			return v1.ErrorNotFound("游戏不存在")
+		}
+		if err := uc.emulatorGameRepo.Delete(ctx, gameId); err != nil {
+			uc.logger.Error("删除游戏错误:", err)
+			return v1.ErrorServiceError("删除失败")
+		}
+		if err := uc.emulatorGameRepo.DeleteFile(ctx, game); err != nil {
+			uc.logger.Error("删除游戏错误:", err)
+			return v1.ErrorServiceError("删除失败")
 		}
 		return nil
 	})

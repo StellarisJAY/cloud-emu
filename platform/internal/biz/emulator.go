@@ -9,6 +9,7 @@ type Emulator struct {
 	Provider              string
 	SupportSave           bool
 	SupportGraphicSetting bool
+	EmulatorType          string
 }
 
 type EmulatorUseCase struct {
@@ -17,6 +18,7 @@ type EmulatorUseCase struct {
 
 type EmulatorRepo interface {
 	ListEmulator(ctx context.Context, query EmulatorQuery) ([]*Emulator, error)
+	GetById(ctx context.Context, emulatorId int64) (*Emulator, error)
 }
 
 type EmulatorQuery struct {
@@ -24,6 +26,7 @@ type EmulatorQuery struct {
 	Provider              string
 	SupportSave           bool
 	SupportGraphicSetting bool
+	EmulatorType          string
 }
 
 func NewEmulatorUseCase(repo EmulatorRepo) *EmulatorUseCase {

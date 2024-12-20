@@ -26,6 +26,7 @@ const (
 	Game_SdpAnswer_FullMethodName                  = "/v1.Game/SdpAnswer"
 	Game_AddIceCandidate_FullMethodName            = "/v1.Game/AddIceCandidate"
 	Game_GetIceCandidate_FullMethodName            = "/v1.Game/GetIceCandidate"
+	Game_RestartGameInstance_FullMethodName        = "/v1.Game/RestartGameInstance"
 )
 
 // GameClient is the client API for Game service.
@@ -39,6 +40,7 @@ type GameClient interface {
 	SdpAnswer(ctx context.Context, in *GameSrvSdpAnswerRequest, opts ...grpc.CallOption) (*GameSrvSdpAnswerResponse, error)
 	AddIceCandidate(ctx context.Context, in *GameSrvAddIceCandidateRequest, opts ...grpc.CallOption) (*GameSrvAddIceCandidateResponse, error)
 	GetIceCandidate(ctx context.Context, in *GetIceCandidateRequest, opts ...grpc.CallOption) (*GetIceCandidateResponse, error)
+	RestartGameInstance(ctx context.Context, in *RestartGameInstanceRequest, opts ...grpc.CallOption) (*RestartGameInstanceResponse, error)
 }
 
 type gameClient struct {
@@ -119,6 +121,16 @@ func (c *gameClient) GetIceCandidate(ctx context.Context, in *GetIceCandidateReq
 	return out, nil
 }
 
+func (c *gameClient) RestartGameInstance(ctx context.Context, in *RestartGameInstanceRequest, opts ...grpc.CallOption) (*RestartGameInstanceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RestartGameInstanceResponse)
+	err := c.cc.Invoke(ctx, Game_RestartGameInstance_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GameServer is the server API for Game service.
 // All implementations must embed UnimplementedGameServer
 // for forward compatibility.
@@ -130,6 +142,7 @@ type GameServer interface {
 	SdpAnswer(context.Context, *GameSrvSdpAnswerRequest) (*GameSrvSdpAnswerResponse, error)
 	AddIceCandidate(context.Context, *GameSrvAddIceCandidateRequest) (*GameSrvAddIceCandidateResponse, error)
 	GetIceCandidate(context.Context, *GetIceCandidateRequest) (*GetIceCandidateResponse, error)
+	RestartGameInstance(context.Context, *RestartGameInstanceRequest) (*RestartGameInstanceResponse, error)
 	mustEmbedUnimplementedGameServer()
 }
 
@@ -160,6 +173,9 @@ func (UnimplementedGameServer) AddIceCandidate(context.Context, *GameSrvAddIceCa
 }
 func (UnimplementedGameServer) GetIceCandidate(context.Context, *GetIceCandidateRequest) (*GetIceCandidateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetIceCandidate not implemented")
+}
+func (UnimplementedGameServer) RestartGameInstance(context.Context, *RestartGameInstanceRequest) (*RestartGameInstanceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RestartGameInstance not implemented")
 }
 func (UnimplementedGameServer) mustEmbedUnimplementedGameServer() {}
 func (UnimplementedGameServer) testEmbeddedByValue()              {}
@@ -308,6 +324,24 @@ func _Game_GetIceCandidate_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Game_RestartGameInstance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RestartGameInstanceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameServer).RestartGameInstance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Game_RestartGameInstance_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServer).RestartGameInstance(ctx, req.(*RestartGameInstanceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Game_ServiceDesc is the grpc.ServiceDesc for Game service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -342,6 +376,10 @@ var Game_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetIceCandidate",
 			Handler:    _Game_GetIceCandidate_Handler,
+		},
+		{
+			MethodName: "RestartGameInstance",
+			Handler:    _Game_RestartGameInstance_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

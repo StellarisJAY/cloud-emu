@@ -38,7 +38,7 @@ func (r *RoomRepo) Create(ctx context.Context, room *biz.Room) error {
 
 func (r *RoomRepo) GetById(ctx context.Context, id int64) (*biz.Room, error) {
 	var room *biz.Room
-	err := r.data.DB(ctx).Table(RoomTableName+" sr").Select("sr.*, su.user_name AS host_name, ri.game_id, eg.game_name").
+	err := r.data.DB(ctx).Table(RoomTableName+" sr").Select("sr.*, su.user_name AS host_name, ri.game_id, eg.game_name, ri.emulator_id").
 		Joins("LEFT JOIN room_member rm ON sr.room_id = rm.room_id ").
 		Joins("INNER JOIN sys_user su ON su.user_id = sr.host_id ").
 		Joins("LEFT JOIN room_instance ri ON sr.room_id = ri.room_id ").
@@ -65,10 +65,11 @@ func (r *RoomRepo) Update(ctx context.Context, room *biz.Room) error {
 
 func (r *RoomRepo) ListRooms(ctx context.Context, query biz.RoomQuery, page *common.Pagination) ([]*biz.Room, error) {
 	var rooms []*biz.Room
-	db := r.data.DB(ctx).Table(RoomTableName + " sr").Select("sr.*, su.user_name AS host_name").
+	db := r.data.DB(ctx).Table(RoomTableName + " sr").Select("sr.*, su.user_name AS host_name, ri.game_id, eg.game_name, ri.emulator_id").
 		Joins("INNER JOIN room_member rm ON sr.room_id = rm.room_id ").
 		Joins("INNER JOIN sys_user su ON su.user_id = sr.host_id ").
-		Joins("LEFT JOIN room_instance ri ON sr.room_id = ri.room_id ")
+		Joins("LEFT JOIN room_instance ri ON sr.room_id = ri.room_id ").
+		Joins("LEFT JOIN emulator_game eg ON eg.game_id = ri.game_id")
 	if query.MemberId != 0 {
 		db = db.Where("rm.user_id = ?", query.MemberId)
 	}

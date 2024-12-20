@@ -119,3 +119,11 @@ func (g *GameService) GetIceCandidate(ctx context.Context, request *v1.GetIceCan
 		Candidates: candidates,
 	}, nil
 }
+
+func (g *GameService) RestartGameInstance(ctx context.Context, request *v1.RestartGameInstanceRequest) (*v1.RestartGameInstanceResponse, error) {
+	err := g.uc.Restart(ctx, request.RoomId, request.UserId, request.EmulatorType, request.GameName, request.GameUrl)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.RestartGameInstanceResponse{Code: 200, Message: "重启成功"}, nil
+}

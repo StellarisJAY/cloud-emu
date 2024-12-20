@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "platform/api/v1;v1";
+
+service ButtonLayout {
+  rpc ListButtonLayout(ListButtonLayoutRequest) returns (ListButtonLayoutResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/button-layout"
+    };
+  }
+  rpc CreateButtonLayout(CreateButtonLayoutRequest) returns (CreateButtonLayoutResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/button-layout"
+      body: "*"
+    };
+  }
+  rpc UpdateButtonLayout(UpdateButtonLayoutRequest) returns (UpdateButtonLayoutResponse) {
+    option (google.api.http) = {
+      put: "/api/v1/button-layout"
+      body: "*"
+    };
+  }
+  rpc DeleteButtonLayout(DeleteButtonLayoutRequest) returns (DeleteButtonLayoutResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/button-layout/{layoutId}"
+    };
+  }
+}
+
+message ButtonLayoutDto {
+  int64 layoutId = 1;
+  string layoutName = 2;
+  int64 addUser = 3;
+  int64 emulatorId = 4;
+  string layout = 5;
+}
+
+message ListButtonLayoutRequest {
+  int64 emulatorId = 1;
+  string layoutName = 2;
+  int64 addUser = 3;
+  int32 page = 4;
+  int32 pageSize = 5;
+}
+
+message ListButtonLayoutResponse{
+  int32 code = 1;
+  string message = 2;
+  repeated ButtonLayoutDto data = 3;
+  int32 total = 4;
+}
+
+message CreateButtonLayoutRequest {
+  string layoutName = 1;
+  int64 emulatorId = 2;
+  string layout = 3;
+}
+
+message CreateButtonLayoutResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message UpdateButtonLayoutRequest {
+  int64 layoutId = 1;
+  string layoutName = 2;
+  string layout = 3;
+}
+
+message UpdateButtonLayoutResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message DeleteButtonLayoutRequest {
+  int64 layoutId = 1;
+}
+
+message DeleteButtonLayoutResponse {
+  int32 code = 1;
+  string message = 2;
+}

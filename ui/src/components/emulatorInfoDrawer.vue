@@ -16,7 +16,7 @@
         <a-select :options="emulatorGameOptions" v-model:value="updateForm.gameId" :disabled="!currentUserIsHost"></a-select>
       </a-form-item>
       <a-form-item>
-        <a-button type="primary" @click="restart" :disabled="!currentUserIsHost">重启</a-button>
+        <a-button type="primary" @click="restart" :disabled="!currentUserIsHost||restartDisabled ">重启</a-button>
       </a-form-item>
     </a-form>
   </div>
@@ -35,6 +35,7 @@ import {CrownTwoTone} from "@ant-design/icons-vue"
 import emulatorAPI from "../api/emulator.js";
 import roomAPI from "../api/room.js";
 import roomMemberAPI from "../api/roomMember.js";
+import api from "../api/request.js";
 
 export default {
   props: {
@@ -62,15 +63,19 @@ export default {
       selectedGame: null,
 
       updateForm: {
+        roomId: null,
         emulatorId: null,
         gameId: null,
       },
 
       roomDetail: null,
       userRoomMember: null,
+
+      restartDisabled: true,
     }
   },
   created() {
+    this.updateForm.roomId = this.roomId;
     this.getUserRoomMember();
     this.getRoomDetail();
     this.listEmulator();
@@ -81,6 +86,8 @@ export default {
       this.listEmulator();
       this.getRoomDetail();
     });
+    addEventListener("webrtc-connected", _=>{this.restartDisabled = false});
+    addEventListener("webrtc-disconnected", _=>{this.restartDisabled = true});
   },
   methods: {
     onEmulatorSelectChange() {
@@ -100,6 +107,7 @@ export default {
             value: item["emulatorId"]
           }
         });
+        this.selectedEmulator = this.emulators.find(item => item.emulatorId === this.updateForm.emulatorId);
         this.emulatorOptions.splice(0, 0, {label: "无", value: "0"});
         this.listGames();
       });
@@ -128,6 +136,7 @@ export default {
         this.roomDetail = resp.data;
         this.updateForm.emulatorId = this.roomDetail.emulatorId;
         this.updateForm.gameId = this.roomDetail.gameId;
+        this.selectedEmulator = this.emulators.find(item => item.emulatorId === this.updateForm.emulatorId);
       });
     },
 
@@ -140,6 +149,8 @@ export default {
 
     restart() {
       console.log(this.updateForm);
+      api.post("/room-instance/restart", this.updateForm).then(_=>{
+      })
     }
   }
 }

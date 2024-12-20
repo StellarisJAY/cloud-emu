@@ -87,6 +87,7 @@ type GameInstance struct {
 	frameEnhancer        func(frame emulator.IFrame) emulator.IFrame // 高分辨率画面生成器
 	reverseColorOpen     bool
 	grayscaleOpen        bool
+	lastFrameTime        time.Time
 }
 
 // makeGameInstance 创建初始的游戏实例，其中运行dummy模拟器，该模拟器只输出一个提示玩家选择游戏的单帧画面（后期考虑动画）
@@ -103,6 +104,7 @@ func makeGameInstance(roomId int64) (*GameInstance, error) {
 		allConnCloseCallback: func(instance *GameInstance) {
 
 		},
+		lastFrameTime: time.Now(),
 	}
 	// 创建视频和音频编码器, dummy模拟器画面分辨率为256x240
 	videoEncoder, err := codec.NewVideoEncoder("vp8", 256, 240)
@@ -161,7 +163,14 @@ func (g *GameInstance) RenderCallback(frame emulator.IFrame, logger *log.Helper)
 		return
 	}
 	defer release()
-	sample := media.Sample{Data: data, Timestamp: time.Now()}
+	frameTime := time.Now()
+	duration := frameTime.Sub(g.lastFrameTime)
+	// 模拟器暂停后可能导致上一帧距离当前帧时间过长，将该帧的时长设置为固定的20ms
+	if duration >= 500*time.Millisecond {
+		duration = 20 * time.Millisecond
+	}
+	g.lastFrameTime = frameTime
+	sample := media.Sample{Data: data, Duration: duration, Timestamp: time.Now()}
 	g.mutex.RLock()
 	defer g.mutex.RUnlock()
 	for _, conn := range g.connections {
@@ -334,14 +343,7 @@ func (g *GameInstance) handleMsgCloseConn(conn *Connection) {
 }
 
 func (g *GameInstance) handlePlayerControl(keyCode string, action byte, player int64) {
-	if player != g.controller1 && player != g.controller2 {
-		return
-	}
-	id := 1
-	if player == g.controller2 {
-		id = 2
-	}
-	g.e.SubmitInput(id, keyCode, action == MsgPlayerControlButtonPressed)
+	g.e.SubmitInput(1, keyCode, action == MsgPlayerControlButtonPressed)
 }
 
 func (g *GameInstance) handleSetController(playerId int64, id int) ConsumerResult {
@@ -425,17 +427,31 @@ func (g *GameInstance) handleLoadSave(loader *gameSaveLoader) ConsumerResult {
 }
 
 func (g *GameInstance) handleRestartEmulator(request *emulatorRestartRequest) ConsumerResult {
-	err := g.restartEmulator(request.game, request.gameData)
+	err := g.restartEmulator(request.game, request.gameData, request.emulatorType)
 	return ConsumerResult{Success: err == nil, Error: err}
 }
 
-func (g *GameInstance) restartEmulator(game string, gameData []byte) error {
-	opts, err := g.makeEmulatorOptions(g.EmulatorType, game, gameData)
+func (g *GameInstance) restartEmulator(game string, gameData []byte, emulatorType string) error {
+	if g.EmulatorType == emulatorType {
+		opts, err := g.makeEmulatorOptions(g.EmulatorType, game, gameData)
+		if err != nil {
+			return err
+		}
+		err = g.e.Restart(opts)
+		return err
+	}
+	options, err := g.makeEmulatorOptions(emulatorType, game, gameData)
 	if err != nil {
 		return err
 	}
-	err = g.e.Restart(opts)
-	return err
+	_ = g.e.Stop()
+	e, err := emulator.MakeEmulator(emulatorType, options)
+	if err != nil {
+		return err
+	}
+	g.e = e
+	g.EmulatorType = emulatorType
+	return g.e.Start()
 }
 
 func (g *GameInstance) SaveGame() (*GameSave, error) {
@@ -462,8 +478,9 @@ type gameSaveLoader struct {
 }
 
 type emulatorRestartRequest struct {
-	game     string
-	gameData []byte
+	game         string
+	gameData     []byte
+	emulatorType string
 }
 
 func (g *GameInstance) LoadSave(data []byte, game string, gameFileRepo GameFileRepo) error {
@@ -479,9 +496,9 @@ func (g *GameInstance) LoadSave(data []byte, game string, gameFileRepo GameFileR
 	}
 }
 
-func (g *GameInstance) RestartEmulator(game string, gameData []byte) error {
+func (g *GameInstance) RestartEmulator(game string, gameData []byte, emulatorType string) error {
 	ch := make(chan ConsumerResult)
-	request := &emulatorRestartRequest{game, gameData}
+	request := &emulatorRestartRequest{game, gameData, emulatorType}
 	g.messageChan <- &Message{Type: MsgRestartEmulator, Data: request, resultChan: ch}
 	result := <-ch
 	close(ch)
@@ -557,7 +574,7 @@ func (g *GameInstance) setEmulatorSpeed(boostRate float64) ConsumerResult {
 
 func (g *GameInstance) makeEmulatorOptions(emulatorName string, game string, gameData []byte) (emulator.IEmulatorOptions, error) {
 	switch emulatorName {
-	case emulator.TypeNES:
+	case emulator.TypeNESGO:
 		return emulator.MakeNesEmulatorOptions(game, gameData, g.audioSampleRate, g.audioSampleChan, func(frame emulator.IFrame) {
 			g.RenderCallback(frame, nil)
 		}), nil

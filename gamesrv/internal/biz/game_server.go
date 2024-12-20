@@ -213,3 +213,25 @@ func (uc *GameServerUseCase) GetLocalICECandidate(_ context.Context, roomId int6
 func (a *MemberAuthInfo) equals(other *MemberAuthInfo) bool {
 	return a.UserId == other.UserId && a.AppId == other.AppId && a.Ip == other.Ip
 }
+
+func (uc *GameServerUseCase) Restart(ctx context.Context, roomId int64, userId int64, emulatorType string, gameName string, gameUrl string) error {
+	uc.mutex.RLock()
+	instance, ok := uc.gameInstances[roomId]
+	if !ok {
+		uc.mutex.RUnlock()
+		return v1.ErrorServiceError("游戏实例不存在")
+	}
+	uc.mutex.RUnlock()
+	instance.mutex.RLock()
+	defer instance.mutex.RUnlock()
+	_, ok = instance.connections[userId]
+	if !ok {
+		uc.logger.Error("无法找到用户连接:", userId, roomId)
+		return v1.ErrorServiceError("用户未连接")
+	}
+	data, err := uc.gameFileRepo.GetGameData(ctx, gameUrl)
+	if err != nil {
+		return err
+	}
+	return instance.RestartEmulator(gameName, data, emulatorType)
+}

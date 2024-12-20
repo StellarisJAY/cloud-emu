@@ -24,6 +24,93 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.ActivateAccountResponse'
+    /api/v1/button-layout:
+        get:
+            tags:
+                - ButtonLayout
+            operationId: ButtonLayout_ListButtonLayout
+            parameters:
+                - name: emulatorId
+                  in: query
+                  schema:
+                    type: string
+                - name: layoutName
+                  in: query
+                  schema:
+                    type: string
+                - name: addUser
+                  in: query
+                  schema:
+                    type: string
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.ListButtonLayoutResponse'
+        put:
+            tags:
+                - ButtonLayout
+            operationId: ButtonLayout_UpdateButtonLayout
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.UpdateButtonLayoutRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.UpdateButtonLayoutResponse'
+        post:
+            tags:
+                - ButtonLayout
+            operationId: ButtonLayout_CreateButtonLayout
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.CreateButtonLayoutRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.CreateButtonLayoutResponse'
+    /api/v1/button-layout/{layoutId}:
+        delete:
+            tags:
+                - ButtonLayout
+            operationId: ButtonLayout_DeleteButtonLayout
+            parameters:
+                - name: layoutId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.DeleteButtonLayoutResponse'
     /api/v1/emulator:
         get:
             tags:
@@ -107,6 +194,99 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.ListInboxNotificationResponse'
+    /api/v1/keyboard-binding:
+        get:
+            tags:
+                - KeyboardBinding
+            operationId: KeyboardBinding_ListKeyboardBinding
+            parameters:
+                - name: emulatorId
+                  in: query
+                  schema:
+                    type: string
+                - name: bindingName
+                  in: query
+                  schema:
+                    type: string
+                - name: addUser
+                  in: query
+                  schema:
+                    type: string
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.ListKeyboardBindingResponse'
+        post:
+            tags:
+                - KeyboardBinding
+            operationId: KeyboardBinding_CreateKeyboardBinding
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.CreateKeyboardBindingRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.CreateKeyboardBindingResponse'
+    /api/v1/keyboard-binding/{bindingId}:
+        put:
+            tags:
+                - KeyboardBinding
+            operationId: KeyboardBinding_UpdateKeyboardBinding
+            parameters:
+                - name: bindingId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.UpdateKeyboardBindingRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.UpdateKeyboardBindingResponse'
+        delete:
+            tags:
+                - KeyboardBinding
+            operationId: KeyboardBinding_DeleteKeyboardBinding
+            parameters:
+                - name: bindingId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.DeleteKeyboardBindingResponse'
     /api/v1/login:
         post:
             tags:
@@ -261,6 +441,24 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.AddIceCandidateResponse'
+    /api/v1/room-instance/restart:
+        post:
+            tags:
+                - RoomInstance
+            operationId: RoomInstance_RestartRoomInstance
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.RestartRoomInstanceRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.RestartRoomInstanceResponse'
     /api/v1/room-instance/sdp-answer:
         post:
             tags:
@@ -537,6 +735,53 @@ components:
                     format: int32
                 message:
                     type: string
+        v1.ButtonLayoutDto:
+            type: object
+            properties:
+                layoutId:
+                    type: string
+                layoutName:
+                    type: string
+                addUser:
+                    type: string
+                emulatorId:
+                    type: string
+                layout:
+                    type: string
+        v1.CreateButtonLayoutRequest:
+            type: object
+            properties:
+                layoutName:
+                    type: string
+                emulatorId:
+                    type: string
+                layout:
+                    type: string
+        v1.CreateButtonLayoutResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+        v1.CreateKeyboardBindingRequest:
+            type: object
+            properties:
+                bindingName:
+                    type: string
+                emulatorId:
+                    type: string
+                binding:
+                    type: string
+        v1.CreateKeyboardBindingResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
         v1.CreateRoomRequest:
             type: object
             properties:
@@ -555,6 +800,22 @@ components:
                 password:
                     type: string
         v1.CreateRoomResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+        v1.DeleteButtonLayoutResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+        v1.DeleteKeyboardBindingResponse:
             type: object
             properties:
                 code:
@@ -675,6 +936,34 @@ components:
                     format: int32
                 message:
                     type: string
+        v1.KeyboardBindingDto:
+            type: object
+            properties:
+                bindingId:
+                    type: string
+                bindingName:
+                    type: string
+                addUser:
+                    type: string
+                emulatorId:
+                    type: string
+                binding:
+                    type: string
+        v1.ListButtonLayoutResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/v1.ButtonLayoutDto'
+                total:
+                    type: integer
+                    format: int32
         v1.ListEmulatorResponse:
             type: object
             properties:
@@ -729,6 +1018,21 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/v1.NotificationDto'
+                total:
+                    type: integer
+                    format: int32
+        v1.ListKeyboardBindingResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/v1.KeyboardBindingDto'
                 total:
                     type: integer
                     format: int32
@@ -855,6 +1159,23 @@ components:
                     format: int32
                 message:
                     type: string
+        v1.RestartRoomInstanceRequest:
+            type: object
+            properties:
+                roomId:
+                    type: string
+                emulatorId:
+                    type: string
+                gameId:
+                    type: string
+        v1.RestartRoomInstanceResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
         v1.RoomDto:
             type: object
             properties:
@@ -943,6 +1264,40 @@ components:
                     format: int32
                 message:
                     type: string
+        v1.UpdateButtonLayoutRequest:
+            type: object
+            properties:
+                layoutId:
+                    type: string
+                layoutName:
+                    type: string
+                layout:
+                    type: string
+        v1.UpdateButtonLayoutResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+        v1.UpdateKeyboardBindingRequest:
+            type: object
+            properties:
+                bindingId:
+                    type: string
+                bindingName:
+                    type: string
+                binding:
+                    type: string
+        v1.UpdateKeyboardBindingResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
         v1.UserDetailDto:
             type: object
             properties:
@@ -993,7 +1348,9 @@ components:
                 addTime:
                     type: string
 tags:
+    - name: ButtonLayout
     - name: Emulator
+    - name: KeyboardBinding
     - name: Notification
     - name: Room
     - name: RoomInstance

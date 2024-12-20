@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "platform/api/v1;v1";
+
+service KeyboardBinding {
+  rpc ListKeyboardBinding (ListKeyboardBindingRequest) returns (ListKeyboardBindingResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/keyboard-binding"
+    };
+  }
+  rpc CreateKeyboardBinding (CreateKeyboardBindingRequest) returns (CreateKeyboardBindingResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/keyboard-binding"
+      body: "*"
+    };
+  }
+  rpc UpdateKeyboardBinding (UpdateKeyboardBindingRequest) returns (UpdateKeyboardBindingResponse) {
+    option (google.api.http) = {
+      put: "/api/v1/keyboard-binding/{bindingId}"
+      body: "*"
+    };
+  }
+  rpc DeleteKeyboardBinding (DeleteKeyboardBindingRequest) returns (DeleteKeyboardBindingResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/keyboard-binding/{bindingId}"
+    };
+  }
+}
+
+message KeyboardBindingDto {
+  int64 bindingId = 1;
+  string bindingName = 2;
+  int64 addUser = 3;
+  int64 emulatorId = 4;
+  string binding = 5;
+}
+
+message ListKeyboardBindingRequest {
+  int64 emulatorId = 1;
+  string bindingName = 2;
+  int64 addUser = 3;
+  int32 page = 4;
+  int32 pageSize = 5;
+}
+
+message ListKeyboardBindingResponse {
+  int32 code = 1;
+  string message = 2;
+  repeated KeyboardBindingDto data = 3;
+  int32 total = 4;
+}
+
+message CreateKeyboardBindingRequest {
+  string bindingName = 1;
+  int64 emulatorId = 2;
+  string binding = 3;
+}
+
+message CreateKeyboardBindingResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message UpdateKeyboardBindingRequest {
+  int64 bindingId = 1;
+  string bindingName = 2;
+  string binding = 3;
+}
+
+message UpdateKeyboardBindingResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message DeleteKeyboardBindingRequest {
+  int64 bindingId = 1;
+}
+
+message DeleteKeyboardBindingResponse {
+  int32 code = 1;
+  string message = 2;
+}

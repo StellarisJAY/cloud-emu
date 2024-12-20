@@ -174,3 +174,20 @@ func (r *RoomInstanceService) GetServerIceCandidate(ctx context.Context, request
 		Data:    candidates,
 	}, nil
 }
+
+func (r *RoomInstanceService) RestartRoomInstance(ctx context.Context, request *v1.RestartRoomInstanceRequest) (*v1.RestartRoomInstanceResponse, error) {
+	c, _ := jwt.FromContext(ctx)
+	claims := c.(*biz.LoginClaims)
+	err := r.uc.Restart(ctx, request.RoomId, claims.UserId, request.EmulatorId, request.GameId)
+	if err != nil {
+		e := errors.FromError(err)
+		return &v1.RestartRoomInstanceResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
+	}
+	return &v1.RestartRoomInstanceResponse{
+		Code:    200,
+		Message: "重启成功",
+	}, nil
+}

@@ -2,7 +2,9 @@ package data
 
 import (
 	"context"
+	"errors"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/biz"
+	"gorm.io/gorm"
 )
 
 type EmulatorRepo struct {
@@ -31,4 +33,14 @@ func (e *EmulatorRepo) ListEmulator(ctx context.Context, query biz.EmulatorQuery
 		return nil, err
 	}
 	return result, nil
+}
+
+func (e *EmulatorRepo) GetById(ctx context.Context, id int64) (*biz.Emulator, error) {
+	var result *biz.Emulator
+	err := e.data.DB(ctx).Table(EmulatorTableName).Where("emulator_id =?", id).WithContext(ctx).Scan(&result).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	} else {
+		return result, err
+	}
 }

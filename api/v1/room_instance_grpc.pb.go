@@ -25,6 +25,7 @@ const (
 	RoomInstance_SdpAnswer_FullMethodName             = "/v1.RoomInstance/SdpAnswer"
 	RoomInstance_AddIceCandidate_FullMethodName       = "/v1.RoomInstance/AddIceCandidate"
 	RoomInstance_GetServerIceCandidate_FullMethodName = "/v1.RoomInstance/GetServerIceCandidate"
+	RoomInstance_RestartRoomInstance_FullMethodName   = "/v1.RoomInstance/RestartRoomInstance"
 )
 
 // RoomInstanceClient is the client API for RoomInstance service.
@@ -37,6 +38,7 @@ type RoomInstanceClient interface {
 	SdpAnswer(ctx context.Context, in *SdpAnswerRequest, opts ...grpc.CallOption) (*SdpAnswerResponse, error)
 	AddIceCandidate(ctx context.Context, in *AddIceCandidateRequest, opts ...grpc.CallOption) (*AddIceCandidateResponse, error)
 	GetServerIceCandidate(ctx context.Context, in *GetServerIceCandidateRequest, opts ...grpc.CallOption) (*GetServerIceCandidateResponse, error)
+	RestartRoomInstance(ctx context.Context, in *RestartRoomInstanceRequest, opts ...grpc.CallOption) (*RestartRoomInstanceResponse, error)
 }
 
 type roomInstanceClient struct {
@@ -107,6 +109,16 @@ func (c *roomInstanceClient) GetServerIceCandidate(ctx context.Context, in *GetS
 	return out, nil
 }
 
+func (c *roomInstanceClient) RestartRoomInstance(ctx context.Context, in *RestartRoomInstanceRequest, opts ...grpc.CallOption) (*RestartRoomInstanceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RestartRoomInstanceResponse)
+	err := c.cc.Invoke(ctx, RoomInstance_RestartRoomInstance_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RoomInstanceServer is the server API for RoomInstance service.
 // All implementations must embed UnimplementedRoomInstanceServer
 // for forward compatibility.
@@ -117,6 +129,7 @@ type RoomInstanceServer interface {
 	SdpAnswer(context.Context, *SdpAnswerRequest) (*SdpAnswerResponse, error)
 	AddIceCandidate(context.Context, *AddIceCandidateRequest) (*AddIceCandidateResponse, error)
 	GetServerIceCandidate(context.Context, *GetServerIceCandidateRequest) (*GetServerIceCandidateResponse, error)
+	RestartRoomInstance(context.Context, *RestartRoomInstanceRequest) (*RestartRoomInstanceResponse, error)
 	mustEmbedUnimplementedRoomInstanceServer()
 }
 
@@ -144,6 +157,9 @@ func (UnimplementedRoomInstanceServer) AddIceCandidate(context.Context, *AddIceC
 }
 func (UnimplementedRoomInstanceServer) GetServerIceCandidate(context.Context, *GetServerIceCandidateRequest) (*GetServerIceCandidateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetServerIceCandidate not implemented")
+}
+func (UnimplementedRoomInstanceServer) RestartRoomInstance(context.Context, *RestartRoomInstanceRequest) (*RestartRoomInstanceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RestartRoomInstance not implemented")
 }
 func (UnimplementedRoomInstanceServer) mustEmbedUnimplementedRoomInstanceServer() {}
 func (UnimplementedRoomInstanceServer) testEmbeddedByValue()                      {}
@@ -274,6 +290,24 @@ func _RoomInstance_GetServerIceCandidate_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RoomInstance_RestartRoomInstance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RestartRoomInstanceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomInstanceServer).RestartRoomInstance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoomInstance_RestartRoomInstance_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomInstanceServer).RestartRoomInstance(ctx, req.(*RestartRoomInstanceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RoomInstance_ServiceDesc is the grpc.ServiceDesc for RoomInstance service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -304,6 +338,10 @@ var RoomInstance_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetServerIceCandidate",
 			Handler:    _RoomInstance_GetServerIceCandidate_Handler,
+		},
+		{
+			MethodName: "RestartRoomInstance",
+			Handler:    _RoomInstance_RestartRoomInstance_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

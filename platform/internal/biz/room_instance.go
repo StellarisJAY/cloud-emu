@@ -16,14 +16,16 @@ import (
 )
 
 type RoomInstanceUseCase struct {
-	repo           RoomInstanceRepo
-	snowflakeId    *snowflake.Node
-	redsync        *redsync.Redsync
-	gameServerRepo GameServerRepo
-	roomRepo       RoomRepo
-	roomMemberRepo RoomMemberRepo
-	tm             Transaction
-	logger         *log.Helper
+	repo             RoomInstanceRepo
+	snowflakeId      *snowflake.Node
+	redsync          *redsync.Redsync
+	gameServerRepo   GameServerRepo
+	roomRepo         RoomRepo
+	roomMemberRepo   RoomMemberRepo
+	tm               Transaction
+	logger           *log.Helper
+	emulatorGameRepo EmulatorGameRepo
+	emulatorRepo     EmulatorRepo
 }
 
 type RoomInstanceRepo interface {
@@ -47,10 +49,11 @@ type RoomInstance struct {
 	RpcPort        int32     `json:"rpcPort"`
 	EndTime        time.Time `json:"endTime"`
 	Status         int32     `json:"status"`
+	GameId         int64     `json:"gameId"`
 }
 
 const (
-	RoomInstanceStatusActive int32 = iota
+	RoomInstanceStatusActive int32 = iota + 1
 	RoomInstanceStatusEnd
 )
 
@@ -60,16 +63,18 @@ const (
 
 func NewRoomInstanceUseCase(repo RoomInstanceRepo, snowflakeId *snowflake.Node, redsync *redsync.Redsync,
 	gameServerRepo GameServerRepo, roomRepo RoomRepo, roomMemberRepo RoomMemberRepo, tm Transaction,
-	logger log.Logger) *RoomInstanceUseCase {
+	emulatorRepo EmulatorRepo, emulatorGameRepo EmulatorGameRepo, logger log.Logger) *RoomInstanceUseCase {
 	return &RoomInstanceUseCase{
-		repo:           repo,
-		snowflakeId:    snowflakeId,
-		redsync:        redsync,
-		gameServerRepo: gameServerRepo,
-		roomRepo:       roomRepo,
-		roomMemberRepo: roomMemberRepo,
-		tm:             tm,
-		logger:         log.NewHelper(logger),
+		repo:             repo,
+		snowflakeId:      snowflakeId,
+		redsync:          redsync,
+		gameServerRepo:   gameServerRepo,
+		roomRepo:         roomRepo,
+		roomMemberRepo:   roomMemberRepo,
+		tm:               tm,
+		emulatorRepo:     emulatorRepo,
+		emulatorGameRepo: emulatorGameRepo,
+		logger:           log.NewHelper(logger),
 	}
 }
 
@@ -261,6 +266,58 @@ func (uc *RoomInstanceUseCase) GetServerICECandidates(ctx context.Context, roomI
 		return nil, err
 	}
 	return candidates, nil
+}
+
+func (uc *RoomInstanceUseCase) Restart(ctx context.Context, roomId, userId, emulatorId, gameId int64) error {
+	return uc.tm.Tx(ctx, func(ctx context.Context) error {
+		mutex := uc.redsync.NewMutex(openRoomInstanceMutexName(roomId), redsync.WithExpiry(OpenRoomInstanceMutexExpire))
+		if err := mutex.Lock(); err != nil {
+			uc.logger.Error("重启获取分布式锁错误:", err)
+			return v1.ErrorServiceError("重启失败")
+		}
+		defer mutex.Unlock()
+		// 检查操作人是否是房主
+		member, err := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId)
+		if err != nil {
+			uc.logger.Error("重启获取房间成员错误:", err)
+			return v1.ErrorServiceError("重启失败")
+		}
+		if member == nil || member.Role != RoomMemberRoleHost {
+			return v1.ErrorAccessDenied("重启失败，无权限")
+		}
+		// 获取房间实例
+		instance, err := uc.repo.GetActiveInstanceByRoomId(ctx, roomId)
+		if err != nil {
+			uc.logger.Error("重启获取房间实例错误:", err)
+			return v1.ErrorServiceError("重启失败")
+		}
+		if instance == nil {
+			uc.logger.Error("重启获取房间实例不存在:", roomId)
+			return v1.ErrorServiceError("重启失败")
+		}
+		// 获取游戏信息和模拟器信息
+		game, _ := uc.emulatorGameRepo.GetById(ctx, gameId)
+		if game == nil || game.EmulatorId != emulatorId {
+			return v1.ErrorServiceError("重启失败，无法加载该游戏")
+		}
+		emulator, _ := uc.emulatorRepo.GetById(ctx, emulatorId)
+		if emulator == nil {
+			return v1.ErrorServiceError("重启失败，模拟器不存在")
+		}
+		instance.EmulatorId = emulator.EmulatorId
+		instance.GameId = game.GameId
+		err = uc.repo.Update(ctx, instance)
+		if err != nil {
+			uc.logger.Error("重启更新房间实例错误:", err)
+			return v1.ErrorServiceError("重启失败")
+		}
+		err = uc.gameServerRepo.RestartGameInstance(ctx, instance, userId, emulator.EmulatorType, game.GameName, game.Url)
+		if err != nil {
+			uc.logger.Error("重启游戏实例错误:", err)
+			return v1.ErrorServiceError("重启失败")
+		}
+		return nil
+	})
 }
 
 func openRoomInstanceMutexName(roomId int64) string {
