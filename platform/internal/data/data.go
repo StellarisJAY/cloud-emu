@@ -6,6 +6,7 @@ import (
 	"github.com/StellrisJAY/cloud-emu/platform/internal/conf"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
+	"github.com/hashicorp/consul/api"
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/gridfs"
@@ -22,9 +23,10 @@ var ProviderSet = wire.NewSet(NewData, NewRedisClient, NewUserRepo, NewRoomRepo,
 
 // Data .
 type Data struct {
-	db    *gorm.DB
-	redis *redis.Client
-	mongo *mongo.Client
+	db     *gorm.DB
+	redis  *redis.Client
+	mongo  *mongo.Client
+	consul *api.Client
 }
 
 type txKey struct{}
@@ -38,7 +40,7 @@ func NewRedisClient(c *conf.Data) *redis.Client {
 }
 
 // NewData .
-func NewData(c *conf.Data, redis *redis.Client, logger log.Logger) (*Data, func(), error) {
+func NewData(c *conf.Data, redis *redis.Client, logger log.Logger, consul *api.Client) (*Data, func(), error) {
 	d := &Data{}
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
@@ -64,6 +66,7 @@ func NewData(c *conf.Data, redis *redis.Client, logger log.Logger) (*Data, func(
 	d.mongo = client
 	d.db = db
 	d.redis = redis
+	d.consul = consul
 	return d, cleanup, nil
 }
 

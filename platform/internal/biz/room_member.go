@@ -72,7 +72,7 @@ func (uc *RoomMemberUseCase) ListRoomMembers(ctx context.Context, roomId int64) 
 	if err != nil {
 		return nil, err
 	}
-	roomInstance, _ := uc.roomInstanceRepo.GetActiveInstanceByRoomId(ctx, roomId)
+	roomInstance, _ := uc.roomInstanceRepo.GetRoomInstance(ctx, roomId)
 	// 没有活跃房间实例，成员均不在线
 	if roomInstance == nil {
 		return members, nil

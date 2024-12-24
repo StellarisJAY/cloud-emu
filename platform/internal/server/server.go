@@ -15,7 +15,7 @@ import (
 )
 
 // ProviderSet is server providers.
-var ProviderSet = wire.NewSet(NewGRPCServer, NewHTTPServer, NewDiscovery, NewRegistrar)
+var ProviderSet = wire.NewSet(NewGRPCServer, NewHTTPServer, NewDiscovery, NewRegistrar, NewConsulClient)
 
 func newNacosClient(c *conf.Registry) naming_client.INamingClient {
 	cliConfig := constant.ClientConfig{
@@ -41,7 +41,7 @@ func newNacosClient(c *conf.Registry) naming_client.INamingClient {
 	return client
 }
 
-func newConsulClient(c *conf.Registry) *api.Client {
+func NewConsulClient(c *conf.Registry) *api.Client {
 	client, err := api.NewClient(&api.Config{
 		Address: fmt.Sprintf("%s:%d", c.ServerIp, c.Port),
 	})
@@ -56,7 +56,7 @@ func NewRegistrar(c *conf.Registry) registry.Registrar {
 	case "nacos":
 		return nacos.New(newNacosClient(c), nacos.WithPrefix(""))
 	case "consul":
-		return consul.New(newConsulClient(c), consul.WithHeartbeat(true), consul.WithHealthCheck(true))
+		return consul.New(NewConsulClient(c), consul.WithHeartbeat(true), consul.WithHealthCheck(true))
 	default:
 		panic("unsupported scheme: " + c.Scheme)
 	}
@@ -67,7 +67,7 @@ func NewDiscovery(c *conf.Registry) registry.Discovery {
 	case "nacos":
 		return nacos.New(newNacosClient(c), nacos.WithPrefix(""))
 	case "consul":
-		return consul.New(newConsulClient(c), consul.WithHeartbeat(true), consul.WithHealthCheck(true))
+		return consul.New(NewConsulClient(c), consul.WithHeartbeat(true), consul.WithHealthCheck(true))
 	default:
 		panic("unsupported scheme: " + c.Scheme)
 	}

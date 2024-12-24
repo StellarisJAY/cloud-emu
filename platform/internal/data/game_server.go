@@ -5,6 +5,7 @@ import (
 	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/biz"
+	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/registry"
 )
 
@@ -35,10 +36,10 @@ func (g *GameServerRepo) ListActiveGameServers(ctx context.Context) ([]*biz.Game
 }
 
 // OpenRoomInstance 在选中的game服务器启动房间实例
-func (g *GameServerRepo) OpenRoomInstance(ctx context.Context, instance *biz.RoomInstance, auth biz.RoomMemberAuth) (string, error) {
+func (g *GameServerRepo) OpenRoomInstance(ctx context.Context, instance *biz.RoomInstance, auth biz.RoomMemberAuth) (string, string, error) {
 	client, err := common.NewGRPCClient(instance.ServerIp, int(instance.RpcPort))
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	defer client.Close()
 	gameServer := v1.NewGameClient(client)
@@ -51,9 +52,12 @@ func (g *GameServerRepo) OpenRoomInstance(ctx context.Context, instance *biz.Roo
 		},
 	})
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-	return response.Data.Token, nil
+	if response.Code != 200 {
+		return "", "", errors.New(int(response.Code), "Service Error", response.Message)
+	}
+	return response.Data.Token, response.Data.SessionKey, nil
 }
 
 // GetRoomInstanceToken 获取房间实例的访问token
@@ -74,6 +78,9 @@ func (g *GameServerRepo) GetRoomInstanceToken(ctx context.Context, instance *biz
 	})
 	if err != nil {
 		return "", err
+	}
+	if response.Code != 200 {
+		return "", errors.New(int(response.Code), "Service Error", response.Message)
 	}
 	return response.Data.Token, nil
 }
@@ -97,6 +104,9 @@ func (g *GameServerRepo) OpenGameConnection(ctx context.Context, instance *biz.R
 	if err != nil {
 		return "", err
 	}
+	if resp.Code != 200 {
+		return "", errors.New(int(resp.Code), "Service Error", resp.Message)
+	}
 	return resp.Data.SdpOffer, nil
 }
 
@@ -107,7 +117,7 @@ func (g *GameServerRepo) SdpAnswer(ctx context.Context, instance *biz.RoomInstan
 	}
 	defer client.Close()
 	gameServer := v1.NewGameClient(client)
-	_, err = gameServer.SdpAnswer(ctx, &v1.GameSrvSdpAnswerRequest{
+	resp, err := gameServer.SdpAnswer(ctx, &v1.GameSrvSdpAnswerRequest{
 		RoomId: instance.RoomId,
 		Token:  token,
 		Auth: &v1.RoomMemberAuth{
@@ -117,7 +127,13 @@ func (g *GameServerRepo) SdpAnswer(ctx context.Context, instance *biz.RoomInstan
 		},
 		SdpAnswer: sdpAnswer,
 	})
-	return err
+	if err != nil {
+		return err
+	}
+	if resp.Code != 200 {
+		return errors.New(int(resp.Code), "Service Error", resp.Message)
+	}
+	return nil
 }
 
 func (g *GameServerRepo) AddICECandidate(ctx context.Context, instance *biz.RoomInstance, token string, auth biz.RoomMemberAuth, candidate string) error {
@@ -127,7 +143,7 @@ func (g *GameServerRepo) AddICECandidate(ctx context.Context, instance *biz.Room
 	}
 	defer client.Close()
 	gameServer := v1.NewGameClient(client)
-	_, err = gameServer.AddIceCandidate(ctx, &v1.GameSrvAddIceCandidateRequest{
+	resp, err := gameServer.AddIceCandidate(ctx, &v1.GameSrvAddIceCandidateRequest{
 		RoomId: instance.RoomId,
 		Token:  token,
 		Auth: &v1.RoomMemberAuth{
@@ -137,7 +153,13 @@ func (g *GameServerRepo) AddICECandidate(ctx context.Context, instance *biz.Room
 		},
 		IceCandidate: candidate,
 	})
-	return err
+	if err != nil {
+		return err
+	}
+	if resp.Code != 200 {
+		return errors.New(int(resp.Code), "Service Error", resp.Message)
+	}
+	return nil
 }
 
 func (g *GameServerRepo) GetServerICECandidate(ctx context.Context, instance *biz.RoomInstance, token string, auth biz.RoomMemberAuth) ([]string, error) {
@@ -159,6 +181,9 @@ func (g *GameServerRepo) GetServerICECandidate(ctx context.Context, instance *bi
 	if err != nil {
 		return nil, err
 	}
+	if resp.Code != 200 {
+		return nil, errors.New(int(resp.Code), "Service Error", resp.Message)
+	}
 	return resp.Candidates, nil
 }
 
@@ -169,12 +194,19 @@ func (g *GameServerRepo) RestartGameInstance(ctx context.Context, instance *biz.
 	}
 	defer client.Close()
 	gameServer := v1.NewGameClient(client)
-	_, err = gameServer.RestartGameInstance(ctx, &v1.RestartGameInstanceRequest{
+	resp, err := gameServer.RestartGameInstance(ctx, &v1.RestartGameInstanceRequest{
 		RoomId:       instance.RoomId,
 		UserId:       userId,
 		EmulatorType: emulatorType,
 		GameName:     gameName,
 		GameUrl:      gameUrl,
 	})
-	return err
+
+	if err != nil {
+		return err
+	}
+	if resp.Code != 200 {
+		return errors.New(int(resp.Code), "Service Error", resp.Message)
+	}
+	return nil
 }

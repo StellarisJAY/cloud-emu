@@ -77,7 +77,6 @@ type GameInstance struct {
 	cancel               context.CancelFunc    // 消息接收和音频接收取消函数
 	connections          map[int64]*Connection // 连接列表
 	mutex                *sync.RWMutex         // 连接列表mutex
-	LeaseID              int64
 	status               atomic.Int32
 	createTime           time.Time                    // 实例创建时间
 	InstanceId           string                       // 实例ID
@@ -88,6 +87,10 @@ type GameInstance struct {
 	reverseColorOpen     bool
 	grayscaleOpen        bool
 	lastFrameTime        time.Time
+
+	roomInstanceId int64
+	sessionKey     string
+	doneChan       chan struct{}
 }
 
 // makeGameInstance 创建初始的游戏实例，其中运行dummy模拟器，该模拟器只输出一个提示玩家选择游戏的单帧画面（后期考虑动画）
@@ -101,10 +104,8 @@ func makeGameInstance(roomId int64) (*GameInstance, error) {
 		frameEnhancer: func(frame emulator.IFrame) emulator.IFrame {
 			return frame
 		},
-		allConnCloseCallback: func(instance *GameInstance) {
-
-		},
-		lastFrameTime: time.Now(),
+		allConnCloseCallback: func(instance *GameInstance) {},
+		lastFrameTime:        time.Now(),
 	}
 	// 创建视频和音频编码器, dummy模拟器画面分辨率为256x240
 	videoEncoder, err := codec.NewVideoEncoder("vp8", 256, 240)
@@ -451,6 +452,14 @@ func (g *GameInstance) restartEmulator(game string, gameData []byte, emulatorTyp
 	}
 	g.e = e
 	g.EmulatorType = emulatorType
+
+	width, height := g.e.OutputResolution()
+	videoEncoder, err := codec.NewVideoEncoder("vp8", width, height)
+	if err != nil {
+		return err
+	}
+	g.videoEncoder.Close()
+	g.videoEncoder = videoEncoder
 	return g.e.Start()
 }
 
@@ -578,6 +587,10 @@ func (g *GameInstance) makeEmulatorOptions(emulatorName string, game string, gam
 		return emulator.MakeNesEmulatorOptions(game, gameData, g.audioSampleRate, g.audioSampleChan, func(frame emulator.IFrame) {
 			g.RenderCallback(frame, nil)
 		}), nil
+	case emulator.TypeChip8:
+		return emulator.MakeBaseEmulatorOptions(game, gameData, g.audioSampleRate, g.audioSampleChan, func(frame emulator.IFrame) {
+			g.RenderCallback(frame, nil)
+		})
 	default:
 		return nil, emulator.ErrorEmulatorNotSupported
 	}

@@ -26,14 +26,14 @@ func (g *GameService) OpenGameInstance(ctx context.Context, request *v1.OpenGame
 			Ip:     request.Auth.Ip,
 		},
 	}
-	token, err := g.uc.CreateRoomInstance(ctx, params)
+	token, sessionKey, err := g.uc.CreateRoomInstance(ctx, params)
 	if err != nil {
 		return nil, err
 	}
 	return &v1.OpenGameInstanceResponse{
 		Code:    200,
 		Message: "创建成功",
-		Data:    &v1.GetGameInstanceResult{Token: token},
+		Data:    &v1.GetGameInstanceResult{Token: token, SessionKey: sessionKey},
 	}, nil
 }
 

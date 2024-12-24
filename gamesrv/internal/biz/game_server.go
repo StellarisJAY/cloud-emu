@@ -6,6 +6,7 @@ import (
 	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/uuid"
+	"github.com/hashicorp/consul/api"
 	"github.com/pion/webrtc/v3"
 	"sync"
 	"time"
@@ -52,32 +53,35 @@ type GameServerUseCase struct {
 	gameInstances  map[int64]*GameInstance
 	mutex          *sync.RWMutex
 	logger         *log.Helper
+	consul         *api.Client
 }
 
 type CreateRoomInstanceParams struct {
-	RoomId int64
-	Auth   *MemberAuthInfo
+	RoomId         int64
+	Auth           *MemberAuthInfo
+	RoomInstanceId int64
 }
 
-func NewGameServerUseCase(gameFileRepo GameFileRepo, memberAuthRepo MemberAuthRepo, logger log.Logger) *GameServerUseCase {
+func NewGameServerUseCase(gameFileRepo GameFileRepo, memberAuthRepo MemberAuthRepo, logger log.Logger, consul *api.Client) *GameServerUseCase {
 	return &GameServerUseCase{
 		gameFileRepo:   gameFileRepo,
 		memberAuthRepo: memberAuthRepo,
 		logger:         log.NewHelper(logger),
 		mutex:          &sync.RWMutex{},
 		gameInstances:  make(map[int64]*GameInstance),
+		consul:         consul,
 	}
 }
 
-func (uc *GameServerUseCase) CreateRoomInstance(ctx context.Context, params CreateRoomInstanceParams) (string, error) {
+func (uc *GameServerUseCase) CreateRoomInstance(ctx context.Context, params CreateRoomInstanceParams) (string, string, error) {
 	instance, err := makeGameInstance(params.RoomId)
 	if err != nil {
-		return "", v1.ErrorServiceError("创建游戏实例出错")
+		return "", "", v1.ErrorServiceError("创建游戏实例出错")
 	}
 	uid, _ := uuid.NewUUID()
 	token := uid.String()
 	if err := uc.memberAuthRepo.StoreAuthInfo(token, params.RoomId, params.Auth); err != nil {
-		return "", v1.ErrorServiceError("创建玩家token出错")
+		return "", "", v1.ErrorServiceError("创建玩家token出错")
 	}
 	consumerCtx, consumerCancel := context.WithCancel(context.Background())
 	go instance.messageConsumer(consumerCtx)
@@ -85,10 +89,18 @@ func (uc *GameServerUseCase) CreateRoomInstance(ctx context.Context, params Crea
 	uc.mutex.Lock()
 	defer uc.mutex.Unlock()
 	uc.gameInstances[params.RoomId] = instance
-	return token, nil
+	// 创建consul session
+	sessionKey, err := uc.createGameInstanceSession(instance)
+	return token, sessionKey, err
 }
 
 func (uc *GameServerUseCase) GetRoomInstanceToken(ctx context.Context, roomId int64, auth *MemberAuthInfo) (string, error) {
+	uc.mutex.RLock()
+	_, ok := uc.gameInstances[roomId]
+	uc.mutex.RUnlock()
+	if !ok {
+		return "", v1.ErrorAccessDenied("连接失败，游戏实例不存在")
+	}
 	uid, _ := uuid.NewUUID()
 	token := uid.String()
 	if err := uc.memberAuthRepo.StoreAuthInfo(token, roomId, auth); err != nil {
@@ -234,4 +246,21 @@ func (uc *GameServerUseCase) Restart(ctx context.Context, roomId int64, userId i
 		return err
 	}
 	return instance.RestartEmulator(gameName, data, emulatorType)
+}
+
+func (uc *GameServerUseCase) createGameInstanceSession(gameInstance *GameInstance) (string, error) {
+	sessionKey, _, err := uc.consul.Session().Create(&api.SessionEntry{
+		TTL:      "10s",
+		Behavior: "delete",
+	}, nil)
+	if err != nil {
+		return "", err
+	}
+	go func() {
+		e := uc.consul.Session().RenewPeriodic("10s", sessionKey, &api.WriteOptions{}, gameInstance.doneChan)
+		if e != nil {
+			uc.logger.Error("session renew error:", e)
+		}
+	}()
+	return sessionKey, nil
 }

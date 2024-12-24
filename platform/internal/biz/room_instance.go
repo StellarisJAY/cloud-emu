@@ -34,6 +34,8 @@ type RoomInstanceRepo interface {
 	GetActiveInstanceByRoomId(ctx context.Context, roomId int64) (*RoomInstance, error)
 	ListInstanceByRoomId(ctx context.Context, roomId int64, p *common.Pagination) ([]*RoomInstance, error)
 	ListOnlineRoomMembers(ctx context.Context, roomInstance *RoomInstance) ([]*RoomMember, error)
+	SaveRoomInstance(ctx context.Context, roomInstance *RoomInstance) error
+	GetRoomInstance(_ context.Context, roomId int64) (*RoomInstance, error)
 }
 
 type RoomInstance struct {
@@ -50,6 +52,7 @@ type RoomInstance struct {
 	EndTime        time.Time `json:"endTime"`
 	Status         int32     `json:"status"`
 	GameId         int64     `json:"gameId"`
+	SessionKey     string
 }
 
 const (
@@ -83,6 +86,9 @@ type OpenRoomInstanceResult struct {
 	AccessToken string
 }
 
+// OpenRoomInstance 创建房间实例，并获取连接token
+// TODO 1. 游戏服务器负载均衡; 2. 房间实例记录实时更新; 3. 所有玩家连接断开后释放房间实例资源
+// old approach: etcd+lease
 func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int64, auth RoomMemberAuth) (*OpenRoomInstanceResult, error) {
 	result := &OpenRoomInstanceResult{}
 	err := uc.tm.Tx(ctx, func(ctx context.Context) error {
@@ -101,12 +107,12 @@ func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int6
 		}
 		defer mutex.Unlock()
 		// 房间实例已经存在
-		instance, err := uc.repo.GetActiveInstanceByRoomId(ctx, roomId)
+		instance, err := uc.repo.GetRoomInstance(ctx, roomId)
 		if instance != nil {
 			// 获取连接token
 			token, err := uc.gameServerRepo.GetRoomInstanceToken(ctx, instance, roomId, auth)
 			if err != nil {
-				return v1.ErrorServiceError("获取房间实例出错")
+				return v1.ErrorServiceError("获取token失败")
 			}
 			result.RoomInstance = *instance
 			result.AccessToken = token
@@ -145,15 +151,15 @@ func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int6
 		}
 
 		// 在游戏服务器创建房间实例，并获取连接token
-		token, err := uc.gameServerRepo.OpenRoomInstance(ctx, instance, auth)
+		token, sessionKey, err := uc.gameServerRepo.OpenRoomInstance(ctx, instance, auth)
 		if err != nil {
 			return v1.ErrorServiceError("创建房间实例出错", err)
 		}
-		err = uc.repo.Create(ctx, instance)
+		instance.SessionKey = sessionKey
+		err = uc.repo.SaveRoomInstance(ctx, instance)
 		if err != nil {
 			return v1.ErrorServiceError("创建房间实例出错", err)
 		}
-
 		result.RoomInstance = *instance
 		result.AccessToken = token
 		return nil
@@ -179,7 +185,7 @@ func (uc *RoomInstanceUseCase) OpenGameConnection(ctx context.Context, roomId in
 		return "", v1.ErrorServiceError("连接失败")
 	}
 	defer mutex.Unlock()
-	instance, err := uc.repo.GetActiveInstanceByRoomId(ctx, roomId)
+	instance, err := uc.repo.GetRoomInstance(ctx, roomId)
 	if err != nil {
 		uc.logger.Error("创建连接获取房间实例错误:", err)
 		return "", v1.ErrorServiceError("连接失败")
@@ -203,7 +209,7 @@ func (uc *RoomInstanceUseCase) SdpAnswer(ctx context.Context, roomId int64, toke
 		return v1.ErrorServiceError("连接失败")
 	}
 	defer mutex.Unlock()
-	instance, err := uc.repo.GetActiveInstanceByRoomId(ctx, roomId)
+	instance, err := uc.repo.GetRoomInstance(ctx, roomId)
 	if err != nil {
 		uc.logger.Error("sdpAnswer获取房间实例错误:", err)
 		return v1.ErrorServiceError("连接失败")
@@ -227,7 +233,7 @@ func (uc *RoomInstanceUseCase) AddICECandidate(ctx context.Context, roomId int64
 		return v1.ErrorServiceError("连接失败")
 	}
 	defer mutex.Unlock()
-	instance, err := uc.repo.GetActiveInstanceByRoomId(ctx, roomId)
+	instance, err := uc.repo.GetRoomInstance(ctx, roomId)
 	if err != nil {
 		uc.logger.Error("ice获取房间实例错误:", err)
 		return v1.ErrorServiceError("连接失败")
@@ -251,7 +257,7 @@ func (uc *RoomInstanceUseCase) GetServerICECandidates(ctx context.Context, roomI
 		return nil, v1.ErrorServiceError("连接失败")
 	}
 	defer mutex.Unlock()
-	instance, err := uc.repo.GetActiveInstanceByRoomId(ctx, roomId)
+	instance, err := uc.repo.GetRoomInstance(ctx, roomId)
 	if err != nil {
 		uc.logger.Error("ice获取房间实例错误:", err)
 		return nil, v1.ErrorServiceError("连接失败")
@@ -286,7 +292,7 @@ func (uc *RoomInstanceUseCase) Restart(ctx context.Context, roomId, userId, emul
 			return v1.ErrorAccessDenied("重启失败，无权限")
 		}
 		// 获取房间实例
-		instance, err := uc.repo.GetActiveInstanceByRoomId(ctx, roomId)
+		instance, err := uc.repo.GetRoomInstance(ctx, roomId)
 		if err != nil {
 			uc.logger.Error("重启获取房间实例错误:", err)
 			return v1.ErrorServiceError("重启失败")

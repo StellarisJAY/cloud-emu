@@ -19,6 +19,7 @@ service Game {
 
 message GetGameInstanceResult {
   string token = 1;
+  string sessionKey = 2;
 }
 
 message RoomMemberAuth {
