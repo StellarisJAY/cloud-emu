@@ -8,6 +8,7 @@ import (
 
 const (
 	TypeNESGO = "NESGO"
+	TypeChip8 = "CHIP8"
 )
 
 // IFrame 模拟器输出画面接口
@@ -63,6 +64,14 @@ type IEmulatorOptions interface {
 	FrameConsumer() func(frame IFrame)
 }
 
+type BaseEmulatorOptions struct {
+	game            string
+	gameData        []byte
+	audioSampleRate int
+	audioSampleChan chan float32
+	frameConsumer   func(frame IFrame)
+}
+
 type IEmulatorSave interface {
 	GameName() string
 	SaveData() []byte
@@ -92,6 +101,9 @@ func MakeEmulator(emulatorType string, options IEmulatorOptions) (IEmulator, err
 	switch emulatorType {
 	case TypeNESGO:
 		return makeNESEmulatorAdapter(options)
+	case TypeChip8:
+		e := makeChip8EmulatorAdapter(options)
+		return e, nil
 	default:
 		return nil, ErrorEmulatorNotSupported
 	}
@@ -138,4 +150,35 @@ func (b *BaseFrame) YCbCr() *image.YCbCr {
 
 func (b *BaseFrame) Read() (image.Image, func(), error) {
 	return b.image, func() {}, nil
+}
+
+func MakeBaseEmulatorOptions(game string, gameData []byte, audioSampleRate int, audioSampleChan chan float32,
+	frameConsumer func(frame IFrame)) (IEmulatorOptions, error) {
+	return &BaseEmulatorOptions{
+		game:            game,
+		gameData:        gameData,
+		audioSampleRate: audioSampleRate,
+		audioSampleChan: audioSampleChan,
+		frameConsumer:   frameConsumer,
+	}, nil
+}
+
+func (b *BaseEmulatorOptions) Game() string {
+	return b.game
+}
+
+func (b *BaseEmulatorOptions) GameData() []byte {
+	return b.gameData
+}
+
+func (b *BaseEmulatorOptions) AudioSampleRate() int {
+	return b.audioSampleRate
+}
+
+func (b *BaseEmulatorOptions) AudioSampleChan() chan float32 {
+	return b.audioSampleChan
+}
+
+func (b *BaseEmulatorOptions) FrameConsumer() func(frame IFrame) {
+	return b.frameConsumer
 }
