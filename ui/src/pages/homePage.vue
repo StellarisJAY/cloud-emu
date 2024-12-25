@@ -4,8 +4,7 @@
             <a-menu theme="dark" mode="horizontal" v-model:selectedKeys="headerSelectedKeys">
                 <a-menu-item key="1">我的房间</a-menu-item>
                 <a-menu-item key="2">加入房间</a-menu-item>
-                <!-- <a-menu-item key="3">键盘设置</a-menu-item>
-                <a-menu-item key="4">宏设置</a-menu-item> -->
+                <a-menu-item key="3">通知</a-menu-item>
                 <a-menu-item key="5" @click="logout">注销</a-menu-item>
             </a-menu>
         </a-layout-header>
@@ -14,8 +13,7 @@
                 :lg="{ offset: 4, span: 16 }">
                 <RoomList v-if="headerSelectedKeys[0] === '1'" :joined="true" />
                 <RoomList v-else-if="headerSelectedKeys[0] === '2'" :joined="false"></RoomList>
-                <!-- <UserSetting v-else-if="headerSelectedKeys[0] === '3'"></UserSetting>
-                <MacroList v-else-if="headerSelectedKeys[0]==='4'"></MacroList> -->
+                <NotificationList v-else-if="headerSelectedKeys[0] === '3'"></NotificationList>
             </a-col>
         </a-row>
     </a-layout>
@@ -25,10 +23,9 @@
 import { Layout, Menu, Card } from 'ant-design-vue';
 import { Row, Col } from "ant-design-vue";
 import RoomList from "../components/roomList.vue";
-import UserSetting from "../components/userSetting.vue";
 import router from "../router/index.js";
 import tokenStorage from "../api/token.js";
-import MacroList from "../components/macroList.vue";
+import NotificationList from "../components/notificationList.vue";
 export default {
     components: {
         ALayout: Layout,
@@ -40,8 +37,7 @@ export default {
         ACol: Col,
         ACard: Card,
         RoomList: RoomList,
-        UserSetting: UserSetting,
-        MacroList,
+        NotificationList: NotificationList,
     },
     data() {
         return {

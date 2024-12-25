@@ -121,3 +121,20 @@ func (r *RoomService) GetRoom(ctx context.Context, request *v1.GetRoomRequest) (
 		},
 	}, nil
 }
+
+func (r *RoomService) JoinRoom(ctx context.Context, request *v1.JoinRoomRequest) (*v1.JoinRoomResponse, error) {
+	c, _ := jwt.FromContext(ctx)
+	claims := c.(*biz.LoginClaims)
+	err := r.roomUC.Join(ctx, request.RoomId, claims.UserId, request.Password)
+	if err != nil {
+		e := errors.FromError(err)
+		return &v1.JoinRoomResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
+	}
+	return &v1.JoinRoomResponse{
+		Code:    200,
+		Message: "加入成功",
+	}, nil
+}

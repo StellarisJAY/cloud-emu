@@ -16,7 +16,7 @@
         <a-select :options="emulatorGameOptions" v-model:value="updateForm.gameId" :disabled="!currentUserIsHost"></a-select>
       </a-form-item>
       <a-form-item>
-        <a-button type="primary" @click="restart" :disabled="!currentUserIsHost||restartDisabled ">重启</a-button>
+        <a-button type="primary" @click="restart" :disabled="!currentUserIsHost ">重启</a-button>
       </a-form-item>
     </a-form>
   </div>
@@ -27,7 +27,7 @@ import {
   Button,
   Col,
   Descriptions,
-  Form,
+  Form, message,
   Row,
   Select,
 } from 'ant-design-vue';
@@ -70,8 +70,6 @@ export default {
 
       roomDetail: null,
       userRoomMember: null,
-
-      restartDisabled: true,
     }
   },
   created() {
@@ -86,8 +84,6 @@ export default {
       this.listEmulator();
       this.getRoomDetail();
     });
-    addEventListener("webrtc-connected", _=>{this.restartDisabled = false});
-    addEventListener("webrtc-disconnected", _=>{this.restartDisabled = true});
   },
   methods: {
     onEmulatorSelectChange() {
@@ -148,8 +144,14 @@ export default {
     },
 
     restart() {
-      console.log(this.updateForm);
+      if (this.updateForm.emulatorId === "0" || this.updateForm.gameId === "0") {
+        message.warn("请先选择模拟器和游戏");
+        return;
+      }
       api.post("/room-instance/restart", this.updateForm).then(_=>{
+        message.success("重启成功");
+      }).catch(resp=>{
+        message.error(resp.message);
       })
     }
   }

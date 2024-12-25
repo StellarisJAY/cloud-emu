@@ -92,7 +92,7 @@ type OpenRoomInstanceResult struct {
 func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int64, auth RoomMemberAuth) (*OpenRoomInstanceResult, error) {
 	result := &OpenRoomInstanceResult{}
 	err := uc.tm.Tx(ctx, func(ctx context.Context) error {
-		member, err := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, auth.UserId)
+		member, err := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, auth.UserId, RoomMemberStatusJoined)
 		if err != nil {
 			return v1.ErrorServiceError("获取房间成员出错")
 		}
@@ -283,23 +283,23 @@ func (uc *RoomInstanceUseCase) Restart(ctx context.Context, roomId, userId, emul
 		}
 		defer mutex.Unlock()
 		// 检查操作人是否是房主
-		member, err := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId)
+		member, err := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId, RoomMemberStatusJoined)
 		if err != nil {
 			uc.logger.Error("重启获取房间成员错误:", err)
 			return v1.ErrorServiceError("重启失败")
 		}
 		if member == nil || member.Role != RoomMemberRoleHost {
-			return v1.ErrorAccessDenied("重启失败，无权限")
+			return v1.ErrorAccessDenied("当前用户没有权限重启模拟器")
 		}
 		// 获取房间实例
 		instance, err := uc.repo.GetRoomInstance(ctx, roomId)
 		if err != nil {
 			uc.logger.Error("重启获取房间实例错误:", err)
-			return v1.ErrorServiceError("重启失败")
+			return v1.ErrorServiceError("无法重启，请先连接模拟器")
 		}
 		if instance == nil {
 			uc.logger.Error("重启获取房间实例不存在:", roomId)
-			return v1.ErrorServiceError("重启失败")
+			return v1.ErrorServiceError("无法重启，请先连接模拟器")
 		}
 		// 获取游戏信息和模拟器信息
 		game, _ := uc.emulatorGameRepo.GetById(ctx, gameId)
@@ -310,16 +310,16 @@ func (uc *RoomInstanceUseCase) Restart(ctx context.Context, roomId, userId, emul
 		if emulator == nil {
 			return v1.ErrorServiceError("重启失败，模拟器不存在")
 		}
-		instance.EmulatorId = emulator.EmulatorId
-		instance.GameId = game.GameId
-		err = uc.repo.Update(ctx, instance)
-		if err != nil {
-			uc.logger.Error("重启更新房间实例错误:", err)
-			return v1.ErrorServiceError("重启失败")
-		}
-		err = uc.gameServerRepo.RestartGameInstance(ctx, instance, userId, emulator.EmulatorType, game.GameName, game.Url)
+		err = uc.gameServerRepo.RestartGameInstance(ctx, instance, userId, emulator.EmulatorType, game.GameName, game.Url, emulatorId, gameId)
 		if err != nil {
 			uc.logger.Error("重启游戏实例错误:", err)
+			return v1.ErrorServiceError("无法重启，请检查模拟器连接")
+		}
+		instance.EmulatorId = emulator.EmulatorId
+		instance.GameId = game.GameId
+		err = uc.repo.SaveRoomInstance(ctx, instance)
+		if err != nil {
+			uc.logger.Error("重启更新房间实例错误:", err)
 			return v1.ErrorServiceError("重启失败")
 		}
 		return nil

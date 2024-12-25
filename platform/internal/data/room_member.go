@@ -14,6 +14,7 @@ type RoomMemberEntity struct {
 	UserId       int64
 	AddTime      time.Time
 	Role         int32
+	Status       int32
 }
 
 const RoomMemberTableName = "room_member"
@@ -48,14 +49,17 @@ func (r *RoomMemberRepo) List(ctx context.Context, roomId int64) ([]*biz.RoomMem
 	return members, nil
 }
 
-func (r *RoomMemberRepo) GetByRoomAndUser(ctx context.Context, roomId, userId int64) (*biz.RoomMember, error) {
+func (r *RoomMemberRepo) GetByRoomAndUser(ctx context.Context, roomId, userId int64, status int32) (*biz.RoomMember, error) {
 	var member *biz.RoomMember
-	err := r.data.DB(ctx).Table(RoomMemberTableName+" rm").
+	d := r.data.DB(ctx).Table(RoomMemberTableName+" rm").
 		Joins("INNER JOIN "+UserTableName+" su ON su.user_id = rm.user_id").
 		Select("rm.*, su.user_name, su.nick_name").
 		Where("rm.room_id=?", roomId).
-		Where("rm.user_id=?", userId).
-		WithContext(ctx).
+		Where("rm.user_id=?", userId)
+	if status != 0 {
+		d = d.Where("rm.status=?", status)
+	}
+	err := d.WithContext(ctx).
 		Scan(&member).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
@@ -73,6 +77,7 @@ func convertRoomMemberBizToEntity(member *biz.RoomMember) *RoomMemberEntity {
 		UserId:       member.UserId,
 		AddTime:      time.Now(),
 		Role:         member.Role,
+		Status:       member.Status,
 	}
 }
 

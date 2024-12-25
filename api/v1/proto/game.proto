@@ -118,6 +118,8 @@ message RestartGameInstanceRequest {
   string emulatorType = 3;
   string gameName = 4;
   string gameUrl = 5;
+  int64 emulatorId = 6;
+  int64 gameId = 7;
 }
 
 message RestartGameInstanceResponse {

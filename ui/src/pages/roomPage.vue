@@ -189,11 +189,13 @@ import KeyboardSetting from "../components/keyboardSetting.vue";
 import platform from "../util/platform.js";
 import EmulatorInfoDrawer from "../components/emulatorInfoDrawer.vue";
 import roomMemberAPI from "../api/roomMember.js";
+import router from "../router/index.js";
 
 const MessageGameButtonPressed = 0
 const MessageGameButtonReleased = 1
 const MessageChat = 2;
 const MessagePing = 14;
+const MessageRestart = 17;
 
 export default {
   components: {
@@ -293,7 +295,14 @@ export default {
     this.roomId = this.$route["params"]["roomId"];
     roomMemberAPI.getUserRoomMember(this.roomId).then(res => {
       this.memberSelf = res.data;
-    })
+    }).catch(resp=>{
+      if (resp["code"] && resp["code"] === 404) {
+        router.push("/join-room/" + this.roomId);
+      } else {
+        message.error("无法进入房间");
+        router.back();
+      }
+    });
   },
   unmounted() {
     if (this.rtcSession && this.rtcSession.pc) {
@@ -444,23 +453,12 @@ export default {
     onConnected() {
       message.success("连接成功");
       dispatchEvent(new Event("webrtc-connected"));
-      if (this.memberSelf["role"] !== 3) {
-        // this.setKeyboardControl(true);
-        this.initControlButtons();
-      }
-      // this.saveBtnDisabled = this.memberSelf["role"] !== RoleNameHost;
-      // this.loadBtnDisabled = false;
-      // this.restartBtnDisabled = this.memberSelf["role"] !== RoleNameHost;
-      // this.graphicOptionsDisabled = this.memberSelf["role"] !== RoleNameHost;
-      // this.emulatorSpeedSliderDisabled = this.memberSelf["role"] !== RoleNameHost;
-      // this.getGraphicOptions();
-      // this.getEmulatorSpeed();
       this.restartBtnDisabled = false;
     },
     onDisconnected() {
       message.warn("连接断开");
       dispatchEvent(new Event("webrtc-disconnected"));
-      this.disableControlButtons();
+      this.destroyScreenButtons();
       this.rtcSession.pc.close();
       this.saveBtnDisabled = true;
       this.restartBtnDisabled = true;
@@ -474,26 +472,6 @@ export default {
         "data": code,
       });
       this.rtcSession.dataChannel.send(msg);
-    },
-
-    initControlButtons() {
-      const mapping = this.configs.controlButtonMapping
-      for (const k in mapping) {
-        const button = document.getElementById(k);
-        const keyCode = mapping[k]
-        button.disabled = false
-        button.addEventListener("touchstart", _ => this.sendAction(keyCode, MessageGameButtonPressed))
-        button.addEventListener("touchend", _ => this.sendAction(keyCode, MessageGameButtonReleased))
-        button.addEventListener("mousedown", _ => this.sendAction(keyCode, MessageGameButtonPressed))
-        button.addEventListener("mouseup", _ => this.sendAction(keyCode, MessageGameButtonReleased))
-      }
-    },
-    disableControlButtons() {
-      const mapping = this.configs.controlButtonMapping
-      for (const k in mapping) {
-        const button = document.getElementById(k)
-        button.disabled = true
-      }
     },
 
     openSavedGamesDrawer() {
@@ -512,22 +490,6 @@ export default {
       }).catch(_ => {
         message.error("保存失败");
         _this.saveBtnDisabled = false;
-      })
-    },
-
-    restart() {
-      this.restartBtnDisabled = true;
-      const _this = this;
-      api.post("/game/restart", {
-        "roomId": this.roomId,
-        "game": this.selectedGame,
-      }).then(_ => {
-        return message.success("重启成功")
-      }).then(_ => {
-        _this.restartBtnDisabled = false;
-      }).catch(_ => {
-        message.error("重启失败");
-        _this.restartBtnDisabled = false;
       })
     },
 
@@ -612,6 +574,11 @@ export default {
             });
           });
           break;
+        case MessageRestart:
+          message.info("模拟器重启");
+          this.destroyScreenButtons();
+          this.initScreenButtons(msgObj["data"]["EmulatorId"]);
+          break;
         default:
           break
       }
@@ -629,11 +596,6 @@ export default {
     onDataChannelClose() {
       if (this.pingInterval) clearInterval(this.pingInterval);
       this.chatBtnDisabled = true;
-    },
-
-    setKeyboardBindingEnabled: function () {
-      this.setKeyboardControl(true);
-      message.info("设置成功");
     },
 
     collectRTCStats: function () {
@@ -678,22 +640,6 @@ export default {
       });
     },
 
-    getGraphicOptions: function() {
-      const _this = this;
-      api.get("/game/graphic?roomId=" + this.roomId).then(resp => {
-        _this.graphicOptions.highResOpen = resp['highResOpen'];
-        _this.graphicOptions.reverseColor = resp['reverseColor'];
-        _this.graphicOptions.grayscale = resp['grayscale'];
-      });
-    },
-
-    getEmulatorSpeed: function() {
-      const _this = this;
-      api.get("/game/speed?roomId=" + this.roomId).then(resp => {
-        _this.emulatorSpeedRate = resp['rate'];
-      });
-    },
-
     setEmulatorSpeed: function() {
       const _this = this;
       this.emulatorSpeedSliderDisabled = true;
@@ -708,7 +654,33 @@ export default {
         _this.emulatorSpeedSliderDisabled = false;
         message.error("设置失败");
       });
-    }
+    },
+
+    initScreenButtons: function(emulatorId) {
+      // 初始化时使用默认布局
+      const layout = globalConfigs.defaultButtonLayouts[emulatorId];
+      layout.forEach(item => {
+        let button = document.createElement("button");
+        button.innerText = item.label;
+        button.style.width = "100%";
+        button.style.height = "100%";
+        button.style.borderStyle = "solid 1px #ccc";
+        button.addEventListener("mousedown", _=>this.sendAction(item["code"], MessageGameButtonPressed));
+        button.addEventListener("mouseup", _=>this.sendAction(item["code"], MessageGameButtonReleased));
+        button.addEventListener("touchstart", _=>this.sendAction(item["code"], MessageGameButtonPressed));
+        button.addEventListener("touchend", _=>this.sendAction(item["code"], MessageGameButtonReleased));
+        const id = "slot-"+item["slot"];
+        document.getElementById(id).appendChild(button);
+      });
+    },
+
+    destroyScreenButtons: function() {
+      const slots = ["l1","l2","l3","l4","l5","l6","l7","l8","l9","r1","r2","r3","r4","r5","r6","r7","r8","r9"];
+      slots.forEach(slot => {
+        const element = document.getElementById("slot-"+slot);
+        if (element.firstElementChild) element.removeChild(element.firstElementChild);
+      });
+    },
   }
 }
 </script>

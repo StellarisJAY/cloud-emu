@@ -27,6 +27,11 @@ const router = createRouter({
             path: "/room/:roomId",
             name: "room",
             component: ()=>import("../pages/roomPage.vue")
+        },
+        {
+            path: "/join-room/:roomId",
+            name: "joinRoom",
+            component: ()=>import("../pages/joinRoomPage.vue")
         }
     ]
 })

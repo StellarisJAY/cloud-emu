@@ -62,6 +62,16 @@ type CreateRoomInstanceParams struct {
 	RoomInstanceId int64
 }
 
+type RestartParams struct {
+	RoomId       int64
+	UserId       int64
+	EmulatorType string
+	GameName     string
+	GameUrl      string
+	EmulatorId   int64
+	GameId       int64
+}
+
 func NewGameServerUseCase(gameFileRepo GameFileRepo, memberAuthRepo MemberAuthRepo, logger log.Logger, consul *api.Client) *GameServerUseCase {
 	return &GameServerUseCase{
 		gameFileRepo:   gameFileRepo,
@@ -226,9 +236,9 @@ func (a *MemberAuthInfo) equals(other *MemberAuthInfo) bool {
 	return a.UserId == other.UserId && a.AppId == other.AppId && a.Ip == other.Ip
 }
 
-func (uc *GameServerUseCase) Restart(ctx context.Context, roomId int64, userId int64, emulatorType string, gameName string, gameUrl string) error {
+func (uc *GameServerUseCase) Restart(ctx context.Context, params RestartParams) error {
 	uc.mutex.RLock()
-	instance, ok := uc.gameInstances[roomId]
+	instance, ok := uc.gameInstances[params.RoomId]
 	if !ok {
 		uc.mutex.RUnlock()
 		return v1.ErrorServiceError("游戏实例不存在")
@@ -236,16 +246,16 @@ func (uc *GameServerUseCase) Restart(ctx context.Context, roomId int64, userId i
 	uc.mutex.RUnlock()
 	instance.mutex.RLock()
 	defer instance.mutex.RUnlock()
-	_, ok = instance.connections[userId]
+	_, ok = instance.connections[params.UserId]
 	if !ok {
-		uc.logger.Error("无法找到用户连接:", userId, roomId)
+		uc.logger.Error("无法找到用户连接:", params.UserId, params.RoomId)
 		return v1.ErrorServiceError("用户未连接")
 	}
-	data, err := uc.gameFileRepo.GetGameData(ctx, gameUrl)
+	data, err := uc.gameFileRepo.GetGameData(ctx, params.GameUrl)
 	if err != nil {
 		return err
 	}
-	return instance.RestartEmulator(gameName, data, emulatorType)
+	return instance.RestartEmulator(params.GameName, data, params.EmulatorType, params.EmulatorId, params.GameId)
 }
 
 func (uc *GameServerUseCase) createGameInstanceSession(gameInstance *GameInstance) (string, error) {

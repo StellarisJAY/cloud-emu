@@ -33,6 +33,12 @@ service Room {
       delete: "/api/v1/room/{roomId}"
     };
   }
+  rpc JoinRoom(JoinRoomRequest) returns (JoinRoomResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/room/join"
+      body: "*"
+    };
+  }
 }
 
 message RoomDto {
@@ -97,6 +103,16 @@ message DeleteRoomRequest {
 }
 
 message DeleteRoomResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message JoinRoomRequest {
+  int64 roomId = 1;
+  string password = 2;
+}
+
+message JoinRoomResponse {
   int32 code = 1;
   string message = 2;
 }

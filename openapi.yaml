@@ -529,6 +529,24 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.GetUserRoomMemberResponse'
+    /api/v1/room/join:
+        post:
+            tags:
+                - Room
+            operationId: Room_JoinRoom
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.JoinRoomRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.JoinRoomResponse'
     /api/v1/room/{id}:
         get:
             tags:
@@ -929,6 +947,21 @@ components:
                 roomId:
                     type: string
         v1.InviteRoomMemberResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+        v1.JoinRoomRequest:
+            type: object
+            properties:
+                roomId:
+                    type: string
+                password:
+                    type: string
+        v1.JoinRoomResponse:
             type: object
             properties:
                 code:

@@ -21,5 +21,5 @@ type GameServerRepo interface {
 	SdpAnswer(ctx context.Context, instance *RoomInstance, token string, auth RoomMemberAuth, sdpAnswer string) error
 	AddICECandidate(ctx context.Context, instance *RoomInstance, token string, auth RoomMemberAuth, candidate string) error
 	GetServerICECandidate(ctx context.Context, instance *RoomInstance, token string, auth RoomMemberAuth) ([]string, error)
-	RestartGameInstance(ctx context.Context, instance *RoomInstance, userId int64, emulatorType, gameName, gameUrl string) error
+	RestartGameInstance(ctx context.Context, instance *RoomInstance, userId int64, emulatorType, gameName, gameUrl string, emulatorId, gameId int64) error
 }

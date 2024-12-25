@@ -32,6 +32,7 @@ const (
 	MsgPing
 	MsgSetGraphicOptions
 	MsgSetEmulatorSpeed
+	MsgEmulatorRestart
 )
 
 const (
@@ -505,13 +506,14 @@ func (g *GameInstance) LoadSave(data []byte, game string, gameFileRepo GameFileR
 	}
 }
 
-func (g *GameInstance) RestartEmulator(game string, gameData []byte, emulatorType string) error {
+func (g *GameInstance) RestartEmulator(game string, gameData []byte, emulatorType string, emulatorId, gameId int64) error {
 	ch := make(chan ConsumerResult)
 	request := &emulatorRestartRequest{game, gameData, emulatorType}
 	g.messageChan <- &Message{Type: MsgRestartEmulator, Data: request, resultChan: ch}
 	result := <-ch
 	close(ch)
 	if result.Success {
+		g.onRestartSuccess(emulatorId, gameId)
 		return nil
 	} else {
 		return result.Error
@@ -593,5 +595,22 @@ func (g *GameInstance) makeEmulatorOptions(emulatorName string, game string, gam
 		})
 	default:
 		return nil, emulator.ErrorEmulatorNotSupported
+	}
+}
+
+func (g *GameInstance) onRestartSuccess(emulatorId, gameId int64) {
+	g.mutex.RLock()
+	defer g.mutex.RUnlock()
+	content := &struct {
+		EmulatorId int64
+		GameId     int64
+	}{
+		EmulatorId: emulatorId,
+		GameId:     gameId,
+	}
+	msg := &Message{Type: MsgEmulatorRestart, Data: content}
+	raw, _ := json.Marshal(msg)
+	for _, conn := range g.connections {
+		_ = conn.dataChannel.Send(raw)
 	}
 }

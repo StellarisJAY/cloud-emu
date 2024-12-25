@@ -1,5 +1,5 @@
 <template>
-  <a-card :bordered="false">
+  <a-card :bordered="false" class="center-card">
     <template #extra>
       <a-button v-if="joined" type="primary" @click="openCreateRoomModal">新建房间</a-button>
     </template>

@@ -2,11 +2,13 @@ package biz
 
 import (
 	"context"
+	"encoding/json"
 	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/bwmarrin/snowflake"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"slices"
+	"strconv"
 	"time"
 )
 
@@ -38,7 +40,7 @@ type RoomMemberRepo interface {
 	Create(ctx context.Context, member *RoomMember) error
 	Update(ctx context.Context, member *RoomMember) error
 	List(ctx context.Context, roomId int64) ([]*RoomMember, error)
-	GetByRoomAndUser(ctx context.Context, roomId, userId int64) (*RoomMember, error)
+	GetByRoomAndUser(ctx context.Context, roomId, userId int64, status int32) (*RoomMember, error)
 	CountRoomMember(ctx context.Context, roomId int64) (int32, error)
 }
 
@@ -94,15 +96,14 @@ func (uc *RoomMemberUseCase) ListRoomMembers(ctx context.Context, roomId int64) 
 
 func (uc *RoomMemberUseCase) InviteRoomMember(ctx context.Context, userId int64, invitedUserId int64, roomId int64) error {
 	return uc.tm.Tx(ctx, func(ctx context.Context) error {
-		member, _ := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, invitedUserId)
+		room, _ := uc.roomRepo.GetById(ctx, roomId)
+		if room == nil || room.HostId != userId {
+			return v1.ErrorAccessDenied("无法邀请用户加入房间")
+		}
+		member, _ := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, invitedUserId, 0)
 		if member != nil {
 			return errors.New(500, "", "无法邀请该用户")
 		}
-		user, _ := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId)
-		if user == nil || user.Role != RoomMemberRoleHost {
-			return errors.New(500, "", "无法邀请该用户")
-		}
-
 		if u, _ := uc.userRepo.GetById(ctx, invitedUserId); u == nil || u.Status != UserStatusAvailable {
 			return errors.New(500, "", "无法邀请该用户")
 		}
@@ -119,11 +120,15 @@ func (uc *RoomMemberUseCase) InviteRoomMember(ctx context.Context, userId int64,
 		if err != nil {
 			return errors.New(500, "", "无法邀请该用户")
 		}
+		content, _ := json.Marshal(struct {
+			RoomId   string `json:"roomId"`
+			RoomName string `json:"roomName"`
+		}{strconv.FormatInt(roomId, 10), room.RoomName})
 		notice := Notification{
 			NotificationId: uc.snowflakeId.Generate().Int64(),
 			Type:           NotificationTypeInvitation,
 			SenderId:       userId,
-			Content:        "",
+			Content:        string(content),
 			AddTime:        time.Now().Local(),
 			ReceiverId:     invitedUserId,
 		}
@@ -135,7 +140,7 @@ func (uc *RoomMemberUseCase) InviteRoomMember(ctx context.Context, userId int64,
 }
 
 func (uc *RoomMemberUseCase) GetByRoomAndUser(ctx context.Context, roomId, userId int64) (*RoomMember, error) {
-	rm, err := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId)
+	rm, err := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId, RoomMemberStatusJoined)
 	if err != nil {
 		return nil, errors.New(500, "Database Error", "查询出错")
 	}

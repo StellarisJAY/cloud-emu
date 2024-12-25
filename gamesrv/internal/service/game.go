@@ -121,7 +121,15 @@ func (g *GameService) GetIceCandidate(ctx context.Context, request *v1.GetIceCan
 }
 
 func (g *GameService) RestartGameInstance(ctx context.Context, request *v1.RestartGameInstanceRequest) (*v1.RestartGameInstanceResponse, error) {
-	err := g.uc.Restart(ctx, request.RoomId, request.UserId, request.EmulatorType, request.GameName, request.GameUrl)
+	err := g.uc.Restart(ctx, biz.RestartParams{
+		RoomId:       request.RoomId,
+		UserId:       request.UserId,
+		EmulatorType: request.EmulatorType,
+		GameName:     request.GameName,
+		GameUrl:      request.GameUrl,
+		EmulatorId:   request.EmulatorId,
+		GameId:       request.GameId,
+	})
 	if err != nil {
 		return nil, err
 	}

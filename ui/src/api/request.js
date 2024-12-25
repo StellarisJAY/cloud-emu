@@ -28,11 +28,8 @@ v1.interceptors.response.use(r => {
 });
 
 function errorHandler(err) {
-    const response = err["response"];
-    if (response && response.status) {
-        if (response.status === 401) return router.push("/login");
-    }
-    return Promise.reject(response);
+    if (err["code"] === 401) return router.push("/login");
+    return Promise.reject(err);
 }
 
 const api = {

@@ -31,13 +31,14 @@ type Room struct {
 }
 
 type RoomUseCase struct {
-	repo           RoomRepo
-	snowflakeId    *snowflake.Node
-	userRepo       UserRepo
-	tm             Transaction
-	roomMemberRepo RoomMemberRepo
-	redSync        *redsync.Redsync
-	logger         *log.Helper
+	repo             RoomRepo
+	snowflakeId      *snowflake.Node
+	userRepo         UserRepo
+	tm               Transaction
+	roomMemberRepo   RoomMemberRepo
+	redSync          *redsync.Redsync
+	logger           *log.Helper
+	roomInstanceRepo RoomInstanceRepo
 }
 
 type RoomQuery struct {
@@ -59,13 +60,13 @@ type RoomRepo interface {
 	Create(ctx context.Context, room *Room) error
 	GetById(ctx context.Context, id int64) (*Room, error)
 	Update(ctx context.Context, room *Room) error
-	ListRooms(ctx context.Context, query RoomQuery, page *common.Pagination) ([]*Room, error)
+	ListJoinedRooms(ctx context.Context, query RoomQuery, page *common.Pagination) ([]*Room, error)
 }
 
 func NewRoomUseCase(repo RoomRepo, snowflakeId *snowflake.Node, userRepo UserRepo, tm Transaction,
-	roomMemberRepo RoomMemberRepo, redsync *redsync.Redsync, logger log.Logger) *RoomUseCase {
+	roomMemberRepo RoomMemberRepo, redsync *redsync.Redsync, logger log.Logger, roomInstanceRepo RoomInstanceRepo) *RoomUseCase {
 	return &RoomUseCase{repo: repo, snowflakeId: snowflakeId, userRepo: userRepo, tm: tm, roomMemberRepo: roomMemberRepo,
-		redSync: redsync, logger: log.NewHelper(logger)}
+		redSync: redsync, logger: log.NewHelper(logger), roomInstanceRepo: roomInstanceRepo}
 }
 
 func (r *RoomUseCase) Create(ctx context.Context, room *Room) error {
@@ -96,7 +97,7 @@ func (r *RoomUseCase) Create(ctx context.Context, room *Room) error {
 
 func (r *RoomUseCase) ListMyRooms(ctx context.Context, userId int64, query RoomQuery, page *common.Pagination) ([]*Room, error) {
 	query.MemberId = userId
-	rooms, err := r.repo.ListRooms(ctx, query, page)
+	rooms, err := r.repo.ListJoinedRooms(ctx, query, page)
 	if err != nil {
 		return nil, err
 	}
@@ -115,6 +116,12 @@ func (r *RoomUseCase) buildRoomDto(ctx context.Context, room *Room) error {
 	}
 	room.MemberCount = count
 	// TODO 获取模拟器信息
+	instance, _ := r.roomInstanceRepo.GetRoomInstance(ctx, room.RoomId)
+	if instance != nil {
+		room.EmulatorId = instance.EmulatorId
+		room.EmulatorName = instance.EmulatorName
+		room.GameId = instance.GameId
+	}
 	return nil
 }
 
@@ -130,4 +137,62 @@ func (r *RoomUseCase) GetById(ctx context.Context, id int64) (*Room, error) {
 		return nil, err
 	}
 	return room, nil
+}
+
+func (r *RoomUseCase) Join(ctx context.Context, roomId int64, userId int64, password string) error {
+	return r.tm.Tx(ctx, func(ctx context.Context) error {
+		// 判断房间是否存在
+		room, err := r.repo.GetById(ctx, roomId)
+		if err != nil {
+			r.logger.Error("加入房间获取房间详情错误", err)
+			return v1.ErrorServiceError("加入房间出错")
+		}
+		if room == nil {
+			return v1.ErrorNotFound("房间不存在")
+		}
+		// 邀请加入，判断userId成员是否存在，不存在则没有被邀请
+		if room.JoinType == RoomJoinTypeInvite {
+			member, _ := r.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId, RoomMemberStatusInvited)
+			if member == nil {
+				return v1.ErrorAccessDenied("您没有被邀请加入该房间")
+			}
+			// 更新被邀请成员状态
+			member.Status = RoomMemberStatusJoined
+			if err := r.roomMemberRepo.Update(ctx, member); err != nil {
+				r.logger.Error("加入房间更新成员错误", err)
+				return v1.ErrorServiceError("加入房间出错")
+			}
+			return nil
+		}
+		// 密码加入，判断密码是否正确
+		if room.JoinType == RoomJoinTypePassword {
+			hash := sha256.Sum256([]byte(password))
+			if room.Password != hex.EncodeToString(hash[:]) {
+				return v1.ErrorAccessDenied("房间密码错误")
+			}
+		}
+		// 判断房间成员数量是否已满
+		count, err := r.roomMemberRepo.CountRoomMember(ctx, roomId)
+		if err != nil {
+			r.logger.Error("加入房间获取房间成员数量错误", err)
+			return v1.ErrorServiceError("加入房间出错")
+		}
+		if count >= room.MemberLimit {
+			return v1.ErrorAccessDenied("房间已满")
+		}
+		// 数据库添加成员
+		member := RoomMember{
+			RoomMemberId: r.snowflakeId.Generate().Int64(),
+			RoomId:       roomId,
+			UserId:       userId,
+			Role:         RoomMemberRolePlayer,
+			AddTime:      time.Now(),
+			Status:       RoomMemberStatusJoined,
+		}
+		if err := r.roomMemberRepo.Create(ctx, &member); err != nil {
+			r.logger.Error("加入房间创建成员错误", err)
+			return v1.ErrorServiceError("加入房间出错")
+		}
+		return nil
+	})
 }

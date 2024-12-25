@@ -52,7 +52,36 @@ const Configs = {
             },
         ]
     },
-    
+
+    defaultButtonLayouts: {
+        "1":[{"label": "←", "code": "Left", "slot": "l4"},
+            {"label": "→", "code": "Right", "slot": "l6"},
+            {"label": "↑", "code": "Up", "slot": "l2"},
+            {"label": "↓", "code": "Down", "slot": "l8"},
+            {"label": "A", "code": "A", "slot": "r1"},
+            {"label": "B", "code": "B", "slot": "r7"},
+            {"label": "Select", "code": "Select", "slot": "r3"},
+            {"label": "Start", "code": "Start", "slot": "r9"}],
+        "2": [
+            {"label": "1", "code": "1", "slot": "l1"},
+            {"label": "2", "code": "2", "slot": "l2"},
+            {"label": "3", "code": "3", "slot": "l3"},
+            {"label": "4", "code": "4", "slot": "l4"},
+            {"label": "5", "code": "5", "slot": "l5"},
+            {"label": "6", "code": "6", "slot": "l6"},
+            {"label": "7", "code": "7", "slot": "l7"},
+            {"label": "8", "code": "8", "slot": "l8"},
+            {"label": "9", "code": "9", "slot": "l9"},
+            {"label": "A", "code": "A", "slot": "r7"},
+            {"label": "B", "code": "B", "slot": "r8"},
+            {"label": "C", "code": "C", "slot": "r3"},
+            {"label": "D", "code": "D", "slot": "r6"},
+            {"label": "E", "code": "E", "slot": "r9"},
+            {"label": "F", "code": "F", "slot": "r5"},
+            {"label": "0", "code": "0", "slot": "r4"},
+        ],
+    },
+
     enums: {
         roomJoinTypeEnum: [
             {"id": 1, "name": "公开"},
