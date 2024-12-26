@@ -92,7 +92,7 @@ type OpenRoomInstanceResult struct {
 func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int64, auth RoomMemberAuth) (*OpenRoomInstanceResult, error) {
 	result := &OpenRoomInstanceResult{}
 	err := uc.tm.Tx(ctx, func(ctx context.Context) error {
-		member, err := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, auth.UserId, RoomMemberStatusJoined)
+		member, err := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, auth.UserId)
 		if err != nil {
 			return v1.ErrorServiceError("获取房间成员出错")
 		}
@@ -283,7 +283,7 @@ func (uc *RoomInstanceUseCase) Restart(ctx context.Context, roomId, userId, emul
 		}
 		defer mutex.Unlock()
 		// 检查操作人是否是房主
-		member, err := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId, RoomMemberStatusJoined)
+		member, err := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId)
 		if err != nil {
 			uc.logger.Error("重启获取房间成员错误:", err)
 			return v1.ErrorServiceError("重启失败")

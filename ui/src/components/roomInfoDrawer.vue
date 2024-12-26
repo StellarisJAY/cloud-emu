@@ -8,7 +8,7 @@
         <a-input-password v-model:value="updateRoomForm.password" :disabled="!currentUserIsHost"></a-input-password>
       </a-form-item>
       <a-form-item>
-        <a-button type="primary" @click="updateRoom" :disabled="!currentUserIsHost">确认</a-button>
+        <a-button type="primary" @click="updateRoom" :disabled="!currentUserIsHost">修改</a-button>
       </a-form-item>
     </a-form>
     <a-divider orientation="left">房间成员</a-divider>
@@ -23,6 +23,8 @@
         </a-list-item>
       </template>
     </a-list>
+    <a-button @click="openUserPicker" type="primary" :disabled="!currentUserIsHost">邀请用户</a-button>
+    <UserPicker :visible="userPickerOpen"/>
   </div>
 </template>
 
@@ -36,12 +38,15 @@ import {
   List,
   Row,
   Select,
-    Divider,
+  Divider, message,
 } from 'ant-design-vue';
 import {CrownTwoTone} from "@ant-design/icons-vue"
 import constants from "../api/const.js";
 import roomAPI from "../api/room.js";
 import roomMemberAPI from "../api/roomMember.js";
+import UserPicker from "./userPicker.vue";
+import user from "../api/user.js";
+import roomMember from "../api/roomMember.js";
 
 export default {
   props: {
@@ -63,6 +68,7 @@ export default {
     AFormItem: Form.Item,
     ASelect: Select,
     ADivider: Divider,
+    UserPicker: UserPicker,
   },
   data() {
     return {
@@ -75,6 +81,7 @@ export default {
         password: null,
       },
       roomDetail: null,
+      userPickerOpen: false,
     }
   },
   created() {
@@ -108,7 +115,30 @@ export default {
         this.userRoomMember = resp.data;
         this.currentUserIsHost = this.userRoomMember["role"] === 1;
       })
-    }
+    },
+    openUserPicker() {
+      this.userPickerOpen = true;
+      addEventListener("userPickerCancel", this.onUserPickerCancel);
+      addEventListener("userPickerConfirm", this.onUserPickerConfirm);
+    },
+    inviteUsers(users) {
+      users.forEach((user) => {
+        roomMemberAPI.inviteRoomMember(this.roomId, user["userId"]);
+      });
+      message.success("已发送邀请");
+    },
+    onUserPickerCancel(ev) {
+      this.userPickerOpen = false;
+      removeEventListener("userPickerCancel", this.onUserPickerCancel);
+    },
+    onUserPickerConfirm(ev) {
+      this.userPickerOpen = false;
+      removeEventListener("userPickerConfirm", this.onUserPickerConfirm);
+      const pickedUsers = ev.detail["users"];
+      if (pickedUsers && pickedUsers.length > 0) {
+        this.inviteUsers(pickedUsers);
+      }
+    },
   }
 }
 </script>

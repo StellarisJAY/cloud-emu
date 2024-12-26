@@ -20,7 +20,6 @@ const (
 
 const (
 	RoomMemberStatusJoined int32 = iota + 1
-	RoomMemberStatusInvited
 	RoomMemberStatusBanned
 )
 
@@ -40,7 +39,7 @@ type RoomMemberRepo interface {
 	Create(ctx context.Context, member *RoomMember) error
 	Update(ctx context.Context, member *RoomMember) error
 	List(ctx context.Context, roomId int64) ([]*RoomMember, error)
-	GetByRoomAndUser(ctx context.Context, roomId, userId int64, status int32) (*RoomMember, error)
+	GetByRoomAndUser(ctx context.Context, roomId, userId int64) (*RoomMember, error)
 	CountRoomMember(ctx context.Context, roomId int64) (int32, error)
 }
 
@@ -100,24 +99,11 @@ func (uc *RoomMemberUseCase) InviteRoomMember(ctx context.Context, userId int64,
 		if room == nil || room.HostId != userId {
 			return v1.ErrorAccessDenied("无法邀请用户加入房间")
 		}
-		member, _ := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, invitedUserId, 0)
+		member, _ := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, invitedUserId)
 		if member != nil {
 			return errors.New(500, "", "无法邀请该用户")
 		}
 		if u, _ := uc.userRepo.GetById(ctx, invitedUserId); u == nil || u.Status != UserStatusAvailable {
-			return errors.New(500, "", "无法邀请该用户")
-		}
-
-		member = &RoomMember{
-			RoomMemberId: uc.snowflakeId.Generate().Int64(),
-			RoomId:       roomId,
-			UserId:       invitedUserId,
-			Role:         RoomMemberRolePlayer,
-			AddTime:      time.Now().Local(),
-			Status:       RoomMemberStatusInvited,
-		}
-		err := uc.roomMemberRepo.Create(ctx, member)
-		if err != nil {
 			return errors.New(500, "", "无法邀请该用户")
 		}
 		content, _ := json.Marshal(struct {
@@ -132,7 +118,7 @@ func (uc *RoomMemberUseCase) InviteRoomMember(ctx context.Context, userId int64,
 			AddTime:        time.Now().Local(),
 			ReceiverId:     invitedUserId,
 		}
-		if err = uc.notificationRepo.Create(ctx, &notice); err != nil {
+		if err := uc.notificationRepo.Create(ctx, &notice); err != nil {
 			return errors.New(500, "", "无法邀请该用户")
 		}
 		return nil
@@ -140,7 +126,7 @@ func (uc *RoomMemberUseCase) InviteRoomMember(ctx context.Context, userId int64,
 }
 
 func (uc *RoomMemberUseCase) GetByRoomAndUser(ctx context.Context, roomId, userId int64) (*RoomMember, error) {
-	rm, err := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId, RoomMemberStatusJoined)
+	rm, err := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId)
 	if err != nil {
 		return nil, errors.New(500, "Database Error", "查询出错")
 	}

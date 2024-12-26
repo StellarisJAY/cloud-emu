@@ -86,6 +86,26 @@ func (r *RoomRepo) ListJoinedRooms(ctx context.Context, query biz.RoomQuery, pag
 	return rooms, nil
 }
 
+func (r *RoomRepo) ListRooms(ctx context.Context, query biz.RoomQuery, page *common.Pagination) ([]*biz.Room, error) {
+	var rooms []*biz.Room
+	db := r.data.DB(ctx).Table(RoomTableName + " sr").Select("sr.*, su.user_name AS host_name").
+		Joins("INNER JOIN sys_user su ON su.user_id = sr.host_id ")
+	if query.HostName != "" {
+		db = db.Where("su.user_name LIKE ?", "%"+query.HostName+"%")
+	}
+	if query.RoomName != "" {
+		db = db.Where("room_name LIKE ?", "%"+query.RoomName+"%")
+	}
+	if query.JoinType != 0 {
+		db = db.Where("join_type = ?", query.JoinType)
+	}
+	err := db.Scopes(common.WithPagination(page)).WithContext(ctx).Scan(&rooms).Error
+	if err != nil {
+		return nil, err
+	}
+	return rooms, nil
+}
+
 func convertRoomBizToEntity(room *biz.Room) *RoomEntity {
 	return &RoomEntity{
 		RoomId:      room.RoomId,

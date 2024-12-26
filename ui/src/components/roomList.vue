@@ -5,17 +5,25 @@
     </template>
     <a-row>
       <a-form layout="inline">
-        <a-form-item label="房间名称">
-          <a-input v-model:value="listRoomQuery.roomName"></a-input>
-        </a-form-item>
-        <a-form-item label="房主名称">
-          <a-input v-model:value="listRoomQuery.hostName"></a-input>
-        </a-form-item>
-        <a-form-item label="访问权限">
-          <a-select :options="joinTypeQueryOptions" v-model:value="listRoomQuery.joinType"></a-select>
-        </a-form-item>
+        <a-col :span="7">
+          <a-form-item label="房间名称">
+            <a-input v-model:value="listRoomQuery.roomName"></a-input>
+          </a-form-item>
+        </a-col>
+        <a-col :span="7">
+          <a-form-item label="房主名称">
+            <a-input v-model:value="listRoomQuery.hostName"></a-input>
+          </a-form-item>
+        </a-col>
+        <a-col :span="7">
+          <a-form-item label="访问权限">
+            <a-select :options="joinTypeQueryOptions" v-model:value="listRoomQuery.joinType"></a-select>
+          </a-form-item>
+        </a-col>
+        <a-col :span="3">
+          <a-button @click="listRoom">查询</a-button>
+        </a-col>
       </a-form>
-      <a-button @click="listRoom">查询</a-button>
     </a-row>
     <a-list :grid="{ gutter: 16, xs: 1, sm: 2, md: 2, lg: 2, xl: 3, xxl: 3 }" :data-source="rooms">
       <template #renderItem="{ item }">
@@ -41,7 +49,10 @@
       </template>
     </a-list>
 
-    <a-modal v-if="joined" :open="createRoomModalOpen" title="新建房间" @cancel="_ => { createRoomModalOpen = false }">
+    <a-pagination v-model:current="listRoomQuery.page" v-model:pageSize="listRoomQuery.pageSize" :total="totalPages">
+    </a-pagination>
+
+    <a-modal v-if="joined" :open="createRoomModalOpen" title="新建房间">
       <template #footer>
         <a-button @click="_ => { createRoomModalOpen = false }">取消</a-button>
         <a-button type="primary" @click="createRoom()" html-type="submit">创建</a-button>
@@ -65,7 +76,19 @@
 </template>
 
 <script>
-import { Card, Button, List, Modal, Form, Input, Switch, Select, Descriptions, InputNumber} from 'ant-design-vue';
+import {
+  Card,
+  Button,
+  List,
+  Modal,
+  Form,
+  Input,
+  Switch,
+  Select,
+  Descriptions,
+  InputNumber,
+  Pagination
+} from 'ant-design-vue';
 import { Row, Col } from "ant-design-vue";
 import { message } from "ant-design-vue";
 import api from "../api/request.js";
@@ -95,6 +118,7 @@ export default {
     ADescriptions: Descriptions,
     ADescriptionsItem: Descriptions.Item,
     AInputNumber: InputNumber,
+    APagination: Pagination,
   },
   data() {
     return {
@@ -113,10 +137,6 @@ export default {
         id: 0,
         password: ""
       },
-      supportedEmulators: [],
-      selectedEmulatorName: "",
-      selectedEmulator: {},
-      emulatorOptions: [],
       selectedJoinType: 1,
       joinTypeOptions: [],
 
@@ -127,7 +147,8 @@ export default {
         joinType: 0,
         page: 1,
         pageSize: 10
-      }
+      },
+      totalPages: 1,
     }
   },
   created() {
@@ -139,7 +160,7 @@ export default {
     this.joinTypeQueryOptions = configs.getEnumOptionsWithAll("roomJoinTypeEnum");
   },
   methods: {
-    listRoom() {
+    listRoom(e) {
       if (this.joined) {
         this.listJoinedRooms()
       } else {
@@ -147,10 +168,16 @@ export default {
       }
     },
     listJoinedRooms() {
-      roomAPI.listJoinedRooms(this.listRoomQuery).then(resp=>this.rooms = resp.data);
+      roomAPI.listJoinedRooms(this.listRoomQuery).then(resp=>{
+        this.rooms = resp.data;
+        this.totalPages = Math.ceil(resp.total / this.listRoomQuery.pageSize);
+      });
     },
     listAllRooms() {
-      roomAPI.listAllRooms(this.listRoomQuery).then(resp=>this.rooms = resp.data);
+      roomAPI.listAllRooms(this.listRoomQuery).then(resp=>{
+        this.rooms = resp.data;
+        this.totalPages = Math.ceil(resp.total / this.listRoomQuery.pageSize);
+      });
     },
     createRoom() {
       if (this.createRoomState.name === "") {
@@ -165,7 +192,7 @@ export default {
       });
     },
     joinRoom(room) {
-
+      router.push(`/room/`+room["roomId"]);
     },
     leaveRoom(id) {
       // TODO leave room
@@ -174,12 +201,9 @@ export default {
       this.joinTypeOptions = configs.getEnumOptions("roomJoinTypeEnum");
       this.createRoomModalOpen = true;
     },
-    onSelectEmulatorChange: function() {
-      this.selectedEmulator = this.supportedEmulators.find(emulator => emulator.name === this.selectedEmulatorName);
-    },
     getJoinTypeName(id) {
       return configs.getEnumName("roomJoinTypeEnum", id);
-    }
+    },
   }
 }
 </script>

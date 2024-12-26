@@ -28,7 +28,10 @@ v1.interceptors.response.use(r => {
 });
 
 function errorHandler(err) {
-    if (err["code"] === 401) return router.push("/login");
+    if (err.response && err.response.status === 401) return router.push("/login");
+    if (err["code"] === 401) {
+        return router.push("/login");
+    }
     return Promise.reject(err);
 }
 

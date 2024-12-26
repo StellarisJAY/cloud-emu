@@ -1,5 +1,5 @@
 <template>
-    <a-layout style="height: 100vh;">
+    <a-layout id="layout">
         <a-layout-header style="position: fixed; z-index: 1; width: 100%;">
             <a-menu theme="dark" mode="horizontal" v-model:selectedKeys="headerSelectedKeys">
                 <a-menu-item key="1">我的房间</a-menu-item>
@@ -54,7 +54,7 @@ export default {
 </script>
 
 <style>
-.center-card {
-    height: 100vh;
+#layout {
+  background-color: #e1e1e1;
 }
 </style>

@@ -64,8 +64,44 @@ func (r *RoomService) ListMyRooms(ctx context.Context, request *v1.ListRoomReque
 }
 
 func (r *RoomService) ListAllRooms(ctx context.Context, request *v1.ListRoomRequest) (*v1.ListRoomResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	query := biz.RoomQuery{
+		RoomName:   request.RoomName,
+		HostName:   request.HostName,
+		JoinType:   request.JoinType,
+		EmulatorId: request.EmulatorId,
+	}
+	page := &common.Pagination{
+		Page:     request.Page,
+		PageSize: request.PageSize,
+	}
+	rooms, err := r.roomUC.ListAllRooms(ctx, query, page)
+	if err != nil {
+		e := errors.FromError(err)
+		return &v1.ListRoomResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
+	}
+	result := make([]*v1.RoomDto, 0, len(rooms))
+	for _, room := range rooms {
+		result = append(result, &v1.RoomDto{
+			RoomId:      room.RoomId,
+			RoomName:    room.RoomName,
+			HostId:      room.HostId,
+			HostName:    room.HostName,
+			MemberCount: room.MemberCount,
+			MemberLimit: room.MemberLimit,
+			AddTime:     room.AddTime.Format(time.DateTime),
+			EmulatorId:  room.EmulatorId,
+			JoinType:    room.JoinType,
+		})
+	}
+	return &v1.ListRoomResponse{
+		Code:    200,
+		Message: "查询成功",
+		Data:    result,
+		Total:   page.Total,
+	}, nil
 }
 
 func (r *RoomService) CreateRoom(ctx context.Context, request *v1.CreateRoomRequest) (*v1.CreateRoomResponse, error) {

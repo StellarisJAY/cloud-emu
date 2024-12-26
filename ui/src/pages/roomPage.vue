@@ -8,7 +8,6 @@ const refSaveBtn = ref(null)
 const refLoadBtn = ref(null)
 const refRoomBtn = ref(null)
 const refSettingBtn = ref(null)
-const refKeyboardSettings = ref(null)
 const tourSteps = [
   {
     title: "选择游戏",
@@ -49,7 +48,7 @@ const tourSteps = [
 </script>
 
 <template>
-  <a-row style="height: 100vh; background-color: grey">
+  <a-row style="height: 100vh; background-color: #00b8a9">
     <!--左侧控制按钮-->
     <a-col :span="7">
       <a-row style="height: 30%; margin-top: 10%">
@@ -69,40 +68,39 @@ const tourSteps = [
       </a-row>
     </a-col>
     <!--视频、工具栏-->
-    <a-col :span="10" style="height: 100vh">
-      <a-card style="height: 100%">
+    <a-col :span="10">
+      <a-card id="center-container">
         <a-row>
           <a-col :span="6">
-            <a-button ref="refSaveBtn" type="primary" :disabled="saveBtnDisabled" @click="saveGame"
+            <a-button ref="refSaveBtn" class="toolbar-button" type="primary" :disabled="saveBtnDisabled" @click="saveGame"
               style="width: 90%">保存</a-button>
           </a-col>
           <a-col :span="6">
-            <a-button ref="refLoadBtn" type="primary" :disabled="loadBtnDisabled" @click="openSavedGamesDrawer"
+            <a-button ref="refLoadBtn" class="toolbar-button" type="primary" :disabled="loadBtnDisabled" @click="openSavedGamesDrawer"
               style="width: 90%">读档</a-button>
           </a-col>
           <a-col :span="6">
-            <a-button type="primary" :disabled="chatBtnDisabled" @click="_ => { setChatModal(true) }"
+            <a-button class="toolbar-button" type="primary" :disabled="chatBtnDisabled" @click="_ => { setChatModal(true) }"
               style="width: 90%">聊天</a-button>
           </a-col>
           <a-col :span="6">
-            <a-button ref="refRoomBtn" type="primary" @click="openRoomMemberDrawer" style="width: 90%">房间</a-button>
+            <a-button ref="refRoomBtn" class="toolbar-button" type="primary" @click="openRoomMemberDrawer" style="width: 90%">房间</a-button>
           </a-col>
         </a-row>
-        <a-row style="height: 80%">
+        <a-row style="height:80%;margin-bottom:20px;margin-top:20px;">
           <video id="video" playsinline></video>
         </a-row>
         <a-row>
           <a-col :span="6">
-            <a-button ref="refConnBtn" style="width: 90%;" type="primary" @click="connect"
+            <a-button ref="refConnBtn" class="toolbar-button" type="primary" @click="connect"
               :disabled="connectBtnDisabled">连接</a-button>
           </a-col>
-          <a-col :span="6">
-            <a-button ref="refRestart" style="width: 90%;" type="primary"
+          <a-col :span="12">
+            <a-button ref="refRestart" class="toolbar-button" type="primary"
               @click="openEmulatorInfoDrawer">模拟器/游戏</a-button>
           </a-col>
-          <a-col :span="6"></a-col>
           <a-col :span="6">
-            <a-button ref="refSettingBtn" style="width: 90%" type="primary" @click="openSettingDrawer">设置</a-button>
+            <a-button ref="refSettingBtn" class="toolbar-button" type="primary" @click="openSettingDrawer">设置</a-button>
           </a-col>
         </a-row>
       </a-card>
@@ -300,7 +298,6 @@ export default {
         router.push("/join-room/" + this.roomId);
       } else {
         message.error("无法进入房间");
-        router.back();
       }
     });
   },
@@ -661,10 +658,9 @@ export default {
       const layout = globalConfigs.defaultButtonLayouts[emulatorId];
       layout.forEach(item => {
         let button = document.createElement("button");
+        button.type = "button";
+        button.className = "control-button";
         button.innerText = item.label;
-        button.style.width = "100%";
-        button.style.height = "100%";
-        button.style.borderStyle = "solid 1px #ccc";
         button.addEventListener("mousedown", _=>this.sendAction(item["code"], MessageGameButtonPressed));
         button.addEventListener("mouseup", _=>this.sendAction(item["code"], MessageGameButtonReleased));
         button.addEventListener("touchstart", _=>this.sendAction(item["code"], MessageGameButtonPressed));
@@ -691,9 +687,20 @@ export default {
   background-color: black;
 }
 
-.control-btn {
+#center-container {
+  height: 100vh;
+  background-color: #f8f3d4;
+}
+
+.toolbar-button {
+  background-color: #9c253d;
+  width: 90%;
+}
+
+.control-button {
   width: 100%;
   height: 100%;
+  background-color: #f8f3d4;
 }
 
 #stats {

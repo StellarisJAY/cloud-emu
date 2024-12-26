@@ -53,7 +53,6 @@ type RoomQuery struct {
 const (
 	RoomJoinTypePublic int32 = iota + 1
 	RoomJoinTypePassword
-	RoomJoinTypeInvite
 )
 
 type RoomRepo interface {
@@ -61,6 +60,7 @@ type RoomRepo interface {
 	GetById(ctx context.Context, id int64) (*Room, error)
 	Update(ctx context.Context, room *Room) error
 	ListJoinedRooms(ctx context.Context, query RoomQuery, page *common.Pagination) ([]*Room, error)
+	ListRooms(ctx context.Context, query RoomQuery, page *common.Pagination) ([]*Room, error)
 }
 
 func NewRoomUseCase(repo RoomRepo, snowflakeId *snowflake.Node, userRepo UserRepo, tm Transaction,
@@ -98,6 +98,19 @@ func (r *RoomUseCase) Create(ctx context.Context, room *Room) error {
 func (r *RoomUseCase) ListMyRooms(ctx context.Context, userId int64, query RoomQuery, page *common.Pagination) ([]*Room, error) {
 	query.MemberId = userId
 	rooms, err := r.repo.ListJoinedRooms(ctx, query, page)
+	if err != nil {
+		return nil, err
+	}
+	for _, room := range rooms {
+		if err := r.buildRoomDto(ctx, room); err != nil {
+			return nil, err
+		}
+	}
+	return rooms, nil
+}
+
+func (r *RoomUseCase) ListAllRooms(ctx context.Context, query RoomQuery, page *common.Pagination) ([]*Room, error) {
+	rooms, err := r.repo.ListRooms(ctx, query, page)
 	if err != nil {
 		return nil, err
 	}
@@ -150,18 +163,8 @@ func (r *RoomUseCase) Join(ctx context.Context, roomId int64, userId int64, pass
 		if room == nil {
 			return v1.ErrorNotFound("房间不存在")
 		}
-		// 邀请加入，判断userId成员是否存在，不存在则没有被邀请
-		if room.JoinType == RoomJoinTypeInvite {
-			member, _ := r.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId, RoomMemberStatusInvited)
-			if member == nil {
-				return v1.ErrorAccessDenied("您没有被邀请加入该房间")
-			}
-			// 更新被邀请成员状态
-			member.Status = RoomMemberStatusJoined
-			if err := r.roomMemberRepo.Update(ctx, member); err != nil {
-				r.logger.Error("加入房间更新成员错误", err)
-				return v1.ErrorServiceError("加入房间出错")
-			}
+		member, _ := r.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId)
+		if member != nil {
 			return nil
 		}
 		// 密码加入，判断密码是否正确
@@ -181,7 +184,7 @@ func (r *RoomUseCase) Join(ctx context.Context, roomId int64, userId int64, pass
 			return v1.ErrorAccessDenied("房间已满")
 		}
 		// 数据库添加成员
-		member := RoomMember{
+		newMember := RoomMember{
 			RoomMemberId: r.snowflakeId.Generate().Int64(),
 			RoomId:       roomId,
 			UserId:       userId,
@@ -189,7 +192,7 @@ func (r *RoomUseCase) Join(ctx context.Context, roomId int64, userId int64, pass
 			AddTime:      time.Now(),
 			Status:       RoomMemberStatusJoined,
 		}
-		if err := r.roomMemberRepo.Create(ctx, &member); err != nil {
+		if err := r.roomMemberRepo.Create(ctx, &newMember); err != nil {
 			r.logger.Error("加入房间创建成员错误", err)
 			return v1.ErrorServiceError("加入房间出错")
 		}
