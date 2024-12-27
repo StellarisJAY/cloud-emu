@@ -135,3 +135,24 @@ func (g *GameService) RestartGameInstance(ctx context.Context, request *v1.Resta
 	}
 	return &v1.RestartGameInstanceResponse{Code: 200, Message: "重启成功"}, nil
 }
+
+func (g *GameService) SaveGame(ctx context.Context, request *v1.GameSrvSaveGameRequest) (*v1.GameSrvSaveGameResponse, error) {
+	emulatorId, gameId, data, err := g.uc.SaveGame(ctx, request.RoomId, request.UserId)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.GameSrvSaveGameResponse{
+		Code:    200,
+		Message: "保存成功",
+		Data: &v1.GameSrvSaveResult{
+			EmulatorId: emulatorId,
+			GameId:     gameId,
+			SaveData:   data,
+		},
+	}, nil
+}
+
+func (g *GameService) LoadSave(ctx context.Context, request *v1.GameSrvLoadSaveRequest) (*v1.GameSrvLoadSaveResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}

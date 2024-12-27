@@ -1,0 +1,123 @@
+package data
+
+import (
+	"bytes"
+	"context"
+	"errors"
+	"fmt"
+	"github.com/StellrisJAY/cloud-emu/common"
+	"github.com/StellrisJAY/cloud-emu/platform/internal/biz"
+	"go.mongodb.org/mongo-driver/mongo/gridfs"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"gorm.io/gorm"
+	"net/url"
+	"strings"
+	"time"
+)
+
+type GameSaveRepo struct {
+	d *Data
+}
+
+type GameSaveEntity struct {
+	SaveId     int64
+	RoomId     int64
+	EmulatorId int64
+	GameId     int64
+	AddTime    time.Time
+	FileUrl    string
+}
+
+const GameSaveTableName = "game_save"
+
+func NewGameSaveRepo(d *Data) biz.GameSaveRepo {
+	return &GameSaveRepo{d: d}
+}
+
+func (g *GameSaveRepo) getBucket(dbName, bucketName string) (*gridfs.Bucket, error) {
+	return gridfs.NewBucket(g.d.mongo.Database(dbName), options.GridFSBucket().SetName(bucketName))
+}
+
+func getGameSaveNameForGridFS(saveId int64) string {
+	return fmt.Sprintf("%d", saveId)
+}
+
+func (g *GameSaveRepo) Create(ctx context.Context, save *biz.GameSave) error {
+	return g.d.DB(ctx).Table(GameSaveTableName).Create(gameSaveBizToEntity(save)).WithContext(ctx).Error
+}
+
+func (g *GameSaveRepo) Upload(ctx context.Context, save *biz.GameSave, data []byte) error {
+	u, _ := url.Parse(save.FileUrl)
+	database := u.Host
+	bucketName := strings.Split(u.Path, "/")[1]
+	bucket, err := g.getBucket(database, bucketName)
+	if err != nil {
+		return err
+	}
+	return bucket.UploadFromStreamWithID(save.SaveId, getGameSaveNameForGridFS(save.SaveId), bytes.NewReader(data))
+}
+
+func (g *GameSaveRepo) Download(ctx context.Context, save *biz.GameSave) ([]byte, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (g *GameSaveRepo) List(ctx context.Context, query biz.GameSaveQuery, p *common.Pagination) ([]*biz.GameSave, error) {
+	var result []*biz.GameSave
+	d := g.d.DB(ctx).Table(GameSaveTableName + " gs").Select("gs.*, emulator_name, game_name, room_name").
+		Joins("INNER JOIN emulator e ON gs.emulator_id = e.emulator_id").
+		Joins("INNER JOIN sys_room sr ON sr.room_id = gs.room_id").
+		Joins("INNER JOIN emulator_game eg ON gs.game_id = eg.game_id")
+	if query.RoomId != 0 {
+		d = d.Where("gs.room_id = ?", query.RoomId)
+	}
+	if query.EmulatorId != 0 {
+		d = d.Where("gs.emulator_id =?", query.EmulatorId)
+	}
+	if query.GameId != 0 {
+		d = d.Where("gs.game_id = ?", query.GameId)
+	}
+	err := d.Scopes(common.WithPagination(p)).WithContext(ctx).Scan(&result).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		} else {
+			return nil, err
+		}
+	}
+	return result, nil
+}
+
+func (g *GameSaveRepo) Delete(ctx context.Context, saveId int64) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (g *GameSaveRepo) DeleteFile(ctx context.Context, save *biz.GameSave) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (g *GameSaveRepo) Get(ctx context.Context, saveId int64) (*biz.GameSave, error) {
+	var result *biz.GameSave
+	err := g.d.DB(ctx).Table(GameSaveTableName).WithContext(ctx).Where("save_id =?", saveId).Scan(&result).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		} else {
+			return nil, err
+		}
+	}
+	return result, nil
+}
+
+func gameSaveBizToEntity(save *biz.GameSave) *GameSaveEntity {
+	return &GameSaveEntity{
+		SaveId:     save.SaveId,
+		RoomId:     save.RoomId,
+		EmulatorId: save.EmulatorId,
+		GameId:     save.GameId,
+		AddTime:    save.AddTime,
+		FileUrl:    save.FileUrl,
+	}
+}

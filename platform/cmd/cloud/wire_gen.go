@@ -66,7 +66,10 @@ func wireApp(confServer *conf.Server, confData *conf.Data, auth *conf.Auth, regi
 	keyboardBindingUseCase := biz.NewKeyboardBindingUseCase(keyboardBindingRepo, logger)
 	keyboardBindingServer := service.NewKeyboardBindingService(keyboardBindingUseCase)
 	grpcServer := server.NewGRPCServer(confServer, userServer, roomServer, roomInstanceServer, notificationServer, roomMemberServer, emulatorServer, buttonLayoutServer, keyboardBindingServer, logger)
-	httpServer := server.NewHTTPServer(confServer, auth, userServer, roomServer, roomInstanceServer, notificationServer, roomMemberServer, emulatorServer, emulatorGameUseCase, buttonLayoutServer, keyboardBindingServer, logger)
+	gameSaveRepo := data.NewGameSaveRepo(dataData)
+	gameSaveUseCase := biz.NewGameSaveUseCase(gameSaveRepo, roomInstanceRepo, gameServerRepo, roomMemberRepo, node, transaction, logger)
+	gameSaveServer := service.NewGameSaveService(gameSaveUseCase)
+	httpServer := server.NewHTTPServer(confServer, auth, userServer, roomServer, roomInstanceServer, notificationServer, roomMemberServer, emulatorServer, emulatorGameUseCase, buttonLayoutServer, keyboardBindingServer, gameSaveServer, logger)
 	registrar := server.NewRegistrar(registry)
 	app := newApp(logger, confServer, grpcServer, httpServer, registrar)
 	return app, func() {

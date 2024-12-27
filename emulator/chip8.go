@@ -2,6 +2,7 @@ package emulator
 
 import (
 	"context"
+	"errors"
 	"github.com/StellrisJAY/cloud-emu/emulator/chip8"
 )
 
@@ -37,11 +38,11 @@ func (c *chip8EmulatorAdapter) Resume() error {
 }
 
 func (c *chip8EmulatorAdapter) Save() (IEmulatorSave, error) {
-	panic("not implemented")
+	return nil, errors.New("不支持存档")
 }
 
 func (c *chip8EmulatorAdapter) LoadSave(save IEmulatorSave, gameFileRepo IGameFileRepo) error {
-	panic("not implemented")
+	return errors.New("不支持存档")
 }
 
 func (c *chip8EmulatorAdapter) Restart(options IEmulatorOptions) error {

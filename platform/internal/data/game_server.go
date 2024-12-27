@@ -213,3 +213,23 @@ func (g *GameServerRepo) RestartGameInstance(ctx context.Context, instance *biz.
 	}
 	return nil
 }
+
+func (g *GameServerRepo) SaveGame(ctx context.Context, instance *biz.RoomInstance, roomId, userId int64) (int64, int64, []byte, error) {
+	client, err := common.NewGRPCClient(instance.ServerIp, int(instance.RpcPort))
+	if err != nil {
+		return 0, 0, nil, err
+	}
+	defer client.Close()
+	gameServer := v1.NewGameClient(client)
+	resp, err := gameServer.SaveGame(ctx, &v1.GameSrvSaveGameRequest{
+		RoomId: roomId,
+		UserId: userId,
+	})
+	if err != nil {
+		return 0, 0, nil, err
+	}
+	if resp.Code != 200 {
+		return 0, 0, nil, errors.New(int(resp.Code), "Service Error", resp.Message)
+	}
+	return resp.Data.EmulatorId, resp.Data.GameId, resp.Data.SaveData, nil
+}

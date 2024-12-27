@@ -4,53 +4,22 @@ import (
 	"context"
 	"encoding/json"
 	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
+	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/biz/game"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/uuid"
 	"github.com/hashicorp/consul/api"
 	"github.com/pion/webrtc/v3"
 	"sync"
-	"time"
 )
-
-const (
-	DefaultAudioSampleRate = 48000
-)
-
-type GameSave struct {
-	Id         int64  `json:"id"`
-	RoomId     int64  `json:"roomId"`
-	Game       string `json:"game"`
-	Data       []byte `json:"data"`
-	CreateTime int64  `json:"createTime"`
-	ExitSave   bool   `json:"exitSave"`
-}
-type GameInstanceStats struct {
-	RoomId            int64         `json:"roomId"`
-	Connections       int           `json:"connections"`
-	ActiveConnections int           `json:"activeConnections"`
-	Game              string        `json:"game"`
-	Uptime            time.Duration `json:"uptime"`
-}
-
-type GraphicOptions struct {
-	HighResOpen  bool `json:"highResOpen"`
-	ReverseColor bool `json:"reverseColor"`
-	Grayscale    bool `json:"grayscale"`
-}
 
 type GameFileRepo interface {
 	GetGameData(ctx context.Context, game string) ([]byte, error)
-	GetSavedGame(ctx context.Context, id int64) (*GameSave, error)
-	SaveGame(ctx context.Context, save *GameSave) error
-	ListSaves(ctx context.Context, roomId int64, page, pageSize int32) ([]*GameSave, int32, error)
-	DeleteSave(ctx context.Context, saveId int64) error
-	GetExitSave(ctx context.Context, roomId int64) (*GameSave, error)
 }
 
 type GameServerUseCase struct {
 	gameFileRepo   GameFileRepo
 	memberAuthRepo MemberAuthRepo
-	gameInstances  map[int64]*GameInstance
+	gameInstances  map[int64]*game.Instance
 	mutex          *sync.RWMutex
 	logger         *log.Helper
 	consul         *api.Client
@@ -78,13 +47,13 @@ func NewGameServerUseCase(gameFileRepo GameFileRepo, memberAuthRepo MemberAuthRe
 		memberAuthRepo: memberAuthRepo,
 		logger:         log.NewHelper(logger),
 		mutex:          &sync.RWMutex{},
-		gameInstances:  make(map[int64]*GameInstance),
+		gameInstances:  make(map[int64]*game.Instance),
 		consul:         consul,
 	}
 }
 
-func (uc *GameServerUseCase) CreateRoomInstance(ctx context.Context, params CreateRoomInstanceParams) (string, string, error) {
-	instance, err := makeGameInstance(params.RoomId)
+func (uc *GameServerUseCase) CreateRoomInstance(_ context.Context, params CreateRoomInstanceParams) (string, string, error) {
+	instance, err := game.MakeGameInstance(params.RoomId)
 	if err != nil {
 		return "", "", v1.ErrorServiceError("创建游戏实例出错")
 	}
@@ -94,8 +63,8 @@ func (uc *GameServerUseCase) CreateRoomInstance(ctx context.Context, params Crea
 		return "", "", v1.ErrorServiceError("创建玩家token出错")
 	}
 	consumerCtx, consumerCancel := context.WithCancel(context.Background())
-	go instance.messageConsumer(consumerCtx)
-	instance.cancel = consumerCancel
+	go instance.MessageHandler(consumerCtx)
+	instance.Cancel = consumerCancel
 	uc.mutex.Lock()
 	defer uc.mutex.Unlock()
 	uc.gameInstances[params.RoomId] = instance
@@ -104,7 +73,7 @@ func (uc *GameServerUseCase) CreateRoomInstance(ctx context.Context, params Crea
 	return token, sessionKey, err
 }
 
-func (uc *GameServerUseCase) GetRoomInstanceToken(ctx context.Context, roomId int64, auth *MemberAuthInfo) (string, error) {
+func (uc *GameServerUseCase) GetRoomInstanceToken(_ context.Context, roomId int64, auth *MemberAuthInfo) (string, error) {
 	uc.mutex.RLock()
 	_, ok := uc.gameInstances[roomId]
 	uc.mutex.RUnlock()
@@ -151,9 +120,7 @@ func (uc *GameServerUseCase) SdpAnswer(_ context.Context, roomId int64, token st
 	if !ok {
 		return v1.ErrorAccessDenied("连接失败，游戏实例不存在")
 	}
-	instance.mutex.RLock()
-	conn, ok := instance.connections[auth.UserId]
-	instance.mutex.RUnlock()
+	conn, ok := instance.GetConnection(auth.UserId)
 	if !ok {
 		uc.logger.Error("sdpAnswer无法找到用户连接:", auth.UserId, roomId)
 		return v1.ErrorServiceError("连接失败")
@@ -162,7 +129,7 @@ func (uc *GameServerUseCase) SdpAnswer(_ context.Context, roomId int64, token st
 		Type: webrtc.SDPTypeAnswer,
 		SDP:  sdpAnswer,
 	}
-	if err := conn.pc.SetRemoteDescription(sdp); err != nil {
+	if err := conn.SetRemoteDescription(sdp); err != nil {
 		uc.logger.Error("sdpAnswer setRemoteDescription错误:", roomId, auth.UserId, err)
 		return v1.ErrorServiceError("连接失败")
 	}
@@ -175,9 +142,7 @@ func (uc *GameServerUseCase) AddICECandidate(_ context.Context, roomId int64, to
 	if err != nil {
 		return err
 	}
-	instance.mutex.RLock()
-	conn, ok := instance.connections[auth.UserId]
-	instance.mutex.RUnlock()
+	conn, ok := instance.GetConnection(auth.UserId)
 	if !ok {
 		uc.logger.Error("sdpAnswer无法找到用户连接:", auth.UserId, roomId)
 		return v1.ErrorServiceError("连接失败")
@@ -188,7 +153,7 @@ func (uc *GameServerUseCase) AddICECandidate(_ context.Context, roomId int64, to
 		uc.logger.Error("addICE解析json错误:", err)
 		return v1.ErrorServiceError("连接失败")
 	}
-	err = conn.pc.AddICECandidate(candidateInit)
+	err = conn.AddICECandidate(candidateInit)
 	if err != nil {
 		uc.logger.Error("addICE错误:", err)
 		return v1.ErrorServiceError("addICE错误:", auth.UserId, roomId, err)
@@ -196,7 +161,7 @@ func (uc *GameServerUseCase) AddICECandidate(_ context.Context, roomId int64, to
 	return nil
 }
 
-func (uc *GameServerUseCase) getGameInstance(roomId int64, token string, auth *MemberAuthInfo) (*GameInstance, error) {
+func (uc *GameServerUseCase) getGameInstance(roomId int64, token string, auth *MemberAuthInfo) (*game.Instance, error) {
 	authInfo, err := uc.memberAuthRepo.GetAuthInfo(token, roomId)
 	if err != nil {
 		uc.logger.Error("获取授权错误:", err)
@@ -222,14 +187,12 @@ func (uc *GameServerUseCase) GetLocalICECandidate(_ context.Context, roomId int6
 	if err != nil {
 		return nil, err
 	}
-	instance.mutex.RLock()
-	conn, ok := instance.connections[auth.UserId]
-	instance.mutex.RUnlock()
+	conn, ok := instance.GetConnection(auth.UserId)
 	if !ok {
 		uc.logger.Error("无法找到用户连接:", auth.UserId, roomId)
 		return nil, v1.ErrorServiceError("连接失败")
 	}
-	return conn.getLocalICECandidates(), nil
+	return conn.GetLocalICECandidates(), nil
 }
 
 func (a *MemberAuthInfo) equals(other *MemberAuthInfo) bool {
@@ -244,9 +207,7 @@ func (uc *GameServerUseCase) Restart(ctx context.Context, params RestartParams) 
 		return v1.ErrorServiceError("游戏实例不存在")
 	}
 	uc.mutex.RUnlock()
-	instance.mutex.RLock()
-	defer instance.mutex.RUnlock()
-	_, ok = instance.connections[params.UserId]
+	_, ok = instance.GetConnection(params.UserId)
 	if !ok {
 		uc.logger.Error("无法找到用户连接:", params.UserId, params.RoomId)
 		return v1.ErrorServiceError("用户未连接")
@@ -258,7 +219,7 @@ func (uc *GameServerUseCase) Restart(ctx context.Context, params RestartParams) 
 	return instance.RestartEmulator(params.GameName, data, params.EmulatorType, params.EmulatorId, params.GameId)
 }
 
-func (uc *GameServerUseCase) createGameInstanceSession(gameInstance *GameInstance) (string, error) {
+func (uc *GameServerUseCase) createGameInstanceSession(gameInstance *game.Instance) (string, error) {
 	sessionKey, _, err := uc.consul.Session().Create(&api.SessionEntry{
 		TTL:      "10s",
 		Behavior: "delete",
@@ -267,10 +228,29 @@ func (uc *GameServerUseCase) createGameInstanceSession(gameInstance *GameInstanc
 		return "", err
 	}
 	go func() {
-		e := uc.consul.Session().RenewPeriodic("10s", sessionKey, &api.WriteOptions{}, gameInstance.doneChan)
+		e := uc.consul.Session().RenewPeriodic("10s", sessionKey, &api.WriteOptions{}, gameInstance.DoneChan)
 		if e != nil {
 			uc.logger.Error("session renew error:", e)
 		}
 	}()
 	return sessionKey, nil
+}
+
+func (uc *GameServerUseCase) SaveGame(_ context.Context, roomId, userId int64) (int64, int64, []byte, error) {
+	uc.mutex.RLock()
+	instance, ok := uc.gameInstances[roomId]
+	uc.mutex.RUnlock()
+	if !ok {
+		return 0, 0, nil, v1.ErrorServiceError("游戏实例不存在")
+	}
+	_, ok = instance.GetConnection(userId)
+	if !ok {
+		uc.logger.Error("无法找到用户连接:", userId, roomId)
+		return 0, 0, nil, v1.ErrorServiceError("用户未连接")
+	}
+	save, err := instance.SaveGame()
+	if err != nil {
+		return 0, 0, nil, err
+	}
+	return save.EmulatorId, save.GameId, save.Data, nil
 }

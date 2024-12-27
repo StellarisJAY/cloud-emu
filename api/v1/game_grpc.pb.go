@@ -27,6 +27,8 @@ const (
 	Game_AddIceCandidate_FullMethodName            = "/v1.Game/AddIceCandidate"
 	Game_GetIceCandidate_FullMethodName            = "/v1.Game/GetIceCandidate"
 	Game_RestartGameInstance_FullMethodName        = "/v1.Game/RestartGameInstance"
+	Game_SaveGame_FullMethodName                   = "/v1.Game/SaveGame"
+	Game_LoadSave_FullMethodName                   = "/v1.Game/LoadSave"
 )
 
 // GameClient is the client API for Game service.
@@ -41,6 +43,8 @@ type GameClient interface {
 	AddIceCandidate(ctx context.Context, in *GameSrvAddIceCandidateRequest, opts ...grpc.CallOption) (*GameSrvAddIceCandidateResponse, error)
 	GetIceCandidate(ctx context.Context, in *GetIceCandidateRequest, opts ...grpc.CallOption) (*GetIceCandidateResponse, error)
 	RestartGameInstance(ctx context.Context, in *RestartGameInstanceRequest, opts ...grpc.CallOption) (*RestartGameInstanceResponse, error)
+	SaveGame(ctx context.Context, in *GameSrvSaveGameRequest, opts ...grpc.CallOption) (*GameSrvSaveGameResponse, error)
+	LoadSave(ctx context.Context, in *GameSrvLoadSaveRequest, opts ...grpc.CallOption) (*GameSrvLoadSaveResponse, error)
 }
 
 type gameClient struct {
@@ -131,6 +135,26 @@ func (c *gameClient) RestartGameInstance(ctx context.Context, in *RestartGameIns
 	return out, nil
 }
 
+func (c *gameClient) SaveGame(ctx context.Context, in *GameSrvSaveGameRequest, opts ...grpc.CallOption) (*GameSrvSaveGameResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GameSrvSaveGameResponse)
+	err := c.cc.Invoke(ctx, Game_SaveGame_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gameClient) LoadSave(ctx context.Context, in *GameSrvLoadSaveRequest, opts ...grpc.CallOption) (*GameSrvLoadSaveResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GameSrvLoadSaveResponse)
+	err := c.cc.Invoke(ctx, Game_LoadSave_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GameServer is the server API for Game service.
 // All implementations must embed UnimplementedGameServer
 // for forward compatibility.
@@ -143,6 +167,8 @@ type GameServer interface {
 	AddIceCandidate(context.Context, *GameSrvAddIceCandidateRequest) (*GameSrvAddIceCandidateResponse, error)
 	GetIceCandidate(context.Context, *GetIceCandidateRequest) (*GetIceCandidateResponse, error)
 	RestartGameInstance(context.Context, *RestartGameInstanceRequest) (*RestartGameInstanceResponse, error)
+	SaveGame(context.Context, *GameSrvSaveGameRequest) (*GameSrvSaveGameResponse, error)
+	LoadSave(context.Context, *GameSrvLoadSaveRequest) (*GameSrvLoadSaveResponse, error)
 	mustEmbedUnimplementedGameServer()
 }
 
@@ -176,6 +202,12 @@ func (UnimplementedGameServer) GetIceCandidate(context.Context, *GetIceCandidate
 }
 func (UnimplementedGameServer) RestartGameInstance(context.Context, *RestartGameInstanceRequest) (*RestartGameInstanceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RestartGameInstance not implemented")
+}
+func (UnimplementedGameServer) SaveGame(context.Context, *GameSrvSaveGameRequest) (*GameSrvSaveGameResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SaveGame not implemented")
+}
+func (UnimplementedGameServer) LoadSave(context.Context, *GameSrvLoadSaveRequest) (*GameSrvLoadSaveResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LoadSave not implemented")
 }
 func (UnimplementedGameServer) mustEmbedUnimplementedGameServer() {}
 func (UnimplementedGameServer) testEmbeddedByValue()              {}
@@ -342,6 +374,42 @@ func _Game_RestartGameInstance_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Game_SaveGame_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GameSrvSaveGameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameServer).SaveGame(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Game_SaveGame_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServer).SaveGame(ctx, req.(*GameSrvSaveGameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Game_LoadSave_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GameSrvLoadSaveRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameServer).LoadSave(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Game_LoadSave_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServer).LoadSave(ctx, req.(*GameSrvLoadSaveRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Game_ServiceDesc is the grpc.ServiceDesc for Game service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -380,6 +448,14 @@ var Game_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RestartGameInstance",
 			Handler:    _Game_RestartGameInstance_Handler,
+		},
+		{
+			MethodName: "SaveGame",
+			Handler:    _Game_SaveGame_Handler,
+		},
+		{
+			MethodName: "LoadSave",
+			Handler:    _Game_LoadSave_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

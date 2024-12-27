@@ -188,6 +188,7 @@ import platform from "../util/platform.js";
 import EmulatorInfoDrawer from "../components/emulatorInfoDrawer.vue";
 import roomMemberAPI from "../api/roomMember.js";
 import router from "../router/index.js";
+import roomAPI from "../api/room.js";
 
 const MessageGameButtonPressed = 0
 const MessageGameButtonReleased = 1
@@ -449,8 +450,14 @@ export default {
     },
     onConnected() {
       message.success("连接成功");
+      roomAPI.getRoomDetail(this.roomId).then(resp=>{
+        this.roomDetail = resp.data;
+        this.initScreenButtons(this.roomDetail["emulatorId"]);
+      });
       dispatchEvent(new Event("webrtc-connected"));
       this.restartBtnDisabled = false;
+      this.saveBtnDisabled = false;
+      this.loadBtnDisabled = false;
     },
     onDisconnected() {
       message.warn("连接断开");
@@ -476,17 +483,15 @@ export default {
       dispatchEvent(new Event("saveListOpen"));
     },
     saveGame() {
-      const _this = this;
       this.saveBtnDisabled = true;
-      api.post("/game/save", {
+      api.post("/game-save/save", {
         "roomId": this.roomId,
       }).then(_ => {
-        return message.success("保存成功");
-      }).then(_ => {
-        _this.saveBtnDisabled = false;
-      }).catch(_ => {
-        message.error("保存失败");
-        _this.saveBtnDisabled = false;
+        message.success("保存成功");
+        this.saveBtnDisabled = false;
+      }).catch(resp => {
+        message.error(resp.message);
+        this.saveBtnDisabled = false;
       })
     },
 
@@ -659,8 +664,11 @@ export default {
       layout.forEach(item => {
         let button = document.createElement("button");
         button.type = "button";
-        button.className = "control-button";
+        button.classList.add("control-button");
         button.innerText = item.label;
+        button.style.width = "100%";
+        button.style.height = "100%";
+        button.style.backgroundColor = "#f8f3d4"
         button.addEventListener("mousedown", _=>this.sendAction(item["code"], MessageGameButtonPressed));
         button.addEventListener("mouseup", _=>this.sendAction(item["code"], MessageGameButtonReleased));
         button.addEventListener("touchstart", _=>this.sendAction(item["code"], MessageGameButtonPressed));
@@ -697,10 +705,14 @@ export default {
   width: 90%;
 }
 
+.toolbar-button:hover {
+  background-color: #811f33;
+}
+
 .control-button {
   width: 100%;
   height: 100%;
-  background-color: #f8f3d4;
+  background-color: #000;
 }
 
 #stats {

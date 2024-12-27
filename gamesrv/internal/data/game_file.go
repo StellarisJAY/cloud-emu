@@ -20,7 +20,7 @@ func NewGameFileRepo(data *Data) biz.GameFileRepo {
 	}
 }
 
-func (g *GameFileRepo) GetGameData(ctx context.Context, game string) ([]byte, error) {
+func (g *GameFileRepo) GetGameData(_ context.Context, game string) ([]byte, error) {
 	u, _ := url.Parse(game)
 	if u.Scheme != "mongodb" {
 		return nil, errors.New("file system not implemented")
@@ -39,29 +39,4 @@ func (g *GameFileRepo) GetGameData(ctx context.Context, game string) ([]byte, er
 		return nil, err
 	}
 	return buffer.Bytes(), nil
-}
-
-func (g *GameFileRepo) GetSavedGame(ctx context.Context, id int64) (*biz.GameSave, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (g *GameFileRepo) SaveGame(ctx context.Context, save *biz.GameSave) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (g *GameFileRepo) ListSaves(ctx context.Context, roomId int64, page, pageSize int32) ([]*biz.GameSave, int32, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (g *GameFileRepo) DeleteSave(ctx context.Context, saveId int64) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (g *GameFileRepo) GetExitSave(ctx context.Context, roomId int64) (*biz.GameSave, error) {
-	//TODO implement me
-	panic("implement me")
 }

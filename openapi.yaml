@@ -171,6 +171,95 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.ListGameResponse'
+    /api/v1/game-save:
+        get:
+            tags:
+                - GameSave
+            operationId: GameSave_ListGameSave
+            parameters:
+                - name: roomId
+                  in: query
+                  schema:
+                    type: string
+                - name: emulatorId
+                  in: query
+                  schema:
+                    type: string
+                - name: gameId
+                  in: query
+                  schema:
+                    type: string
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.ListGameSaveResponse'
+    /api/v1/game-save/load:
+        post:
+            tags:
+                - GameSave
+            operationId: GameSave_LoadSave
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.LoadSaveRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.LoadSaveResponse'
+    /api/v1/game-save/save:
+        post:
+            tags:
+                - GameSave
+            operationId: GameSave_SaveGame
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.SaveGameRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.SaveGameResponse'
+    /api/v1/game-save/{saveId}:
+        delete:
+            tags:
+                - GameSave
+            operationId: GameSave_DeleteGameSave
+            parameters:
+                - name: saveId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.DeleteGameSaveResponse'
     /api/v1/inbox/notifications:
         get:
             tags:
@@ -833,6 +922,14 @@ components:
                     format: int32
                 message:
                     type: string
+        v1.DeleteGameSaveResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
         v1.DeleteKeyboardBindingResponse:
             type: object
             properties:
@@ -879,6 +976,25 @@ components:
                 addTime:
                     type: string
                 customData:
+                    type: string
+        v1.GameSaveDto:
+            type: object
+            properties:
+                saveId:
+                    type: string
+                roomId:
+                    type: string
+                emulatorId:
+                    type: string
+                gameId:
+                    type: string
+                addTime:
+                    type: string
+                roomName:
+                    type: string
+                emulatorName:
+                    type: string
+                gameName:
                     type: string
         v1.GetRoomInstanceResponse:
             type: object
@@ -1039,6 +1155,21 @@ components:
                 total:
                     type: integer
                     format: int32
+        v1.ListGameSaveResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/v1.GameSaveDto'
+                total:
+                    type: integer
+                    format: int32
         v1.ListInboxNotificationResponse:
             type: object
             properties:
@@ -1114,6 +1245,19 @@ components:
                 total:
                     type: integer
                     format: int32
+        v1.LoadSaveRequest:
+            type: object
+            properties:
+                saveId:
+                    type: string
+        v1.LoadSaveResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
         v1.LoginRequest:
             type: object
             properties:
@@ -1280,6 +1424,19 @@ components:
                     type: boolean
                 customData:
                     type: string
+        v1.SaveGameRequest:
+            type: object
+            properties:
+                roomId:
+                    type: string
+        v1.SaveGameResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
         v1.SdpAnswerRequest:
             type: object
             properties:
@@ -1383,6 +1540,7 @@ components:
 tags:
     - name: ButtonLayout
     - name: Emulator
+    - name: GameSave
     - name: KeyboardBinding
     - name: Notification
     - name: Room

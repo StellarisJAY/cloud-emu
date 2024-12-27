@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "platform/api/v1;v1";
+
+service GameSave {
+  rpc ListGameSave(ListGameSaveRequest) returns (ListGameSaveResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/game-save"
+    };
+  }
+  rpc DeleteGameSave(DeleteGameSaveRequest) returns (DeleteGameSaveResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/game-save/{saveId}"
+    };
+  }
+  rpc LoadSave(LoadSaveRequest) returns (LoadSaveResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/game-save/load"
+      body: "*"
+    };
+  }
+  rpc SaveGame(SaveGameRequest) returns (SaveGameResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/game-save/save"
+      body: "*"
+    };
+  }
+}
+
+message GameSaveDto {
+  int64 saveId = 1;
+  int64 roomId = 2;
+  int64 emulatorId = 3;
+  int64 gameId = 4;
+  string addTime = 6;
+  string roomName = 7;
+  string emulatorName = 8;
+  string gameName = 9;
+}
+
+message ListGameSaveRequest {
+  int64 roomId = 1;
+  int64 emulatorId = 2;
+  int64 gameId = 3;
+  int32 page = 4;
+  int32 pageSize = 5;
+}
+
+message ListGameSaveResponse {
+  int32 code = 1;
+  string message = 2;
+  repeated GameSaveDto data = 3;
+  int32 total = 4;
+}
+
+message DeleteGameSaveRequest {
+  int64 saveId = 1;
+}
+
+message DeleteGameSaveResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message LoadSaveRequest {
+  int64 saveId = 1;
+}
+
+message LoadSaveResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message SaveGameRequest {
+  int64 roomId = 1;
+}
+
+message SaveGameResponse {
+  int32 code = 1;
+  string message = 2;
+}

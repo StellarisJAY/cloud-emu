@@ -19,7 +19,7 @@ import (
 // ProviderSet is data providers.
 var ProviderSet = wire.NewSet(NewData, NewRedisClient, NewUserRepo, NewRoomRepo, NewRoomInstanceRepo, NewAuthRepo,
 	NewGameServerRepo, NewRoomMemberRepo, NewNotificationRepo, NewUserEmailVerifyRepo, NewTransaction, NewEmulatorRepo,
-	NewEmulatorGameRepo, NewButtonLayoutRepo, NewKeyboardBindingRepo)
+	NewEmulatorGameRepo, NewButtonLayoutRepo, NewKeyboardBindingRepo, NewGameSaveRepo)
 
 // Data .
 type Data struct {
@@ -30,6 +30,8 @@ type Data struct {
 }
 
 type txKey struct{}
+
+const MongoDBName = ""
 
 func NewRedisClient(c *conf.Data) *redis.Client {
 	return redis.NewClient(&redis.Options{
