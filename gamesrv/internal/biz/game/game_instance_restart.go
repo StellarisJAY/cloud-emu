@@ -93,6 +93,10 @@ func (g *Instance) makeEmulatorOptions(emulatorName string, game string, gameDat
 		return emulator.MakeBaseEmulatorOptions(game, gameData, g.audioSampleRate, g.audioSampleChan, func(frame emulator.IFrame) {
 			g.RenderCallback(frame, nil)
 		})
+	case emulator.TypeDummy:
+		return emulator.MakeBaseEmulatorOptions(game, gameData, g.audioSampleRate, g.audioSampleChan, func(frame emulator.IFrame) {
+			g.RenderCallback(frame, nil)
+		})
 	default:
 		return nil, emulator.ErrorEmulatorNotSupported
 	}
