@@ -9,6 +9,7 @@ import (
 const (
 	TypeNESGO = "NESGO"
 	TypeChip8 = "CHIP8"
+	TypeDummy = "DUMMY"
 )
 
 // IFrame 模拟器输出画面接口
@@ -104,6 +105,8 @@ func MakeEmulator(emulatorType string, options IEmulatorOptions) (IEmulator, err
 	case TypeChip8:
 		e := makeChip8EmulatorAdapter(options)
 		return e, nil
+	case TypeDummy:
+		return MakeDummyAdapter(options)
 	default:
 		return nil, ErrorEmulatorNotSupported
 	}

@@ -8,6 +8,7 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/pion/webrtc/v3"
 	"image"
+	"os"
 	"sync"
 	"time"
 )
@@ -93,6 +94,19 @@ type Instance struct {
 	gameId         int64
 }
 
+var (
+	gopherFile []byte
+)
+
+func init() {
+	// TODO 从数据库加载文件
+	data, err := os.ReadFile("/home/xxjay/image/gopher.gif")
+	if err != nil {
+		panic(err)
+	}
+	gopherFile = data
+}
+
 // MakeGameInstance 创建初始的游戏实例，其中运行dummy模拟器，该模拟器只输出一个提示玩家选择游戏的单帧画面（后期考虑动画）
 func MakeGameInstance(roomId int64) (*Instance, error) {
 	instance := &Instance{
@@ -107,8 +121,19 @@ func MakeGameInstance(roomId int64) (*Instance, error) {
 		allConnCloseCallback: func(instance *Instance) {},
 		lastFrameTime:        time.Now(),
 	}
-	// 创建视频和音频编码器, dummy模拟器画面分辨率为256x240
-	videoEncoder, err := codec.NewVideoEncoder("vp8", 256, 240)
+
+	// 创建dummy模拟器，输出静止介绍画面
+	options, err := emulator.MakeBaseEmulatorOptions("gopher.gif", gopherFile, 0, instance.audioSampleChan, func(frame emulator.IFrame) {
+		instance.RenderCallback(frame, log.NewHelper(log.DefaultLogger))
+	})
+	e, err := emulator.MakeDummyAdapter(options)
+	if err != nil {
+		instance.videoEncoder.Close()
+		return nil, err
+	}
+	width, height := e.OutputResolution()
+	// 创建视频和音频编码器
+	videoEncoder, err := codec.NewVideoEncoder("vp8", width, height)
 	if err != nil {
 		return nil, err
 	}
@@ -118,11 +143,6 @@ func MakeGameInstance(roomId int64) (*Instance, error) {
 	}
 	instance.videoEncoder = videoEncoder
 	instance.audioEncoder = audioEncoder
-	// 创建dummy模拟器，输出静止介绍画面
-	options := emulator.MakeDummyOptions(func(frame emulator.IFrame) {
-		instance.RenderCallback(frame, log.NewHelper(log.DefaultLogger))
-	})
-	e := emulator.MakeDummyEmulator(options)
 	instance.e = e
 	if err := e.Start(); err != nil {
 		return nil, err
