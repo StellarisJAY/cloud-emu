@@ -53,6 +53,7 @@ type RoomInstance struct {
 	Status         int32     `json:"status"`
 	GameId         int64     `json:"gameId"`
 	SessionKey     string
+	EmulatorType   string
 }
 
 const (
@@ -88,7 +89,6 @@ type OpenRoomInstanceResult struct {
 
 // OpenRoomInstance 创建房间实例，并获取连接token
 // TODO 1. 游戏服务器负载均衡; 2. 房间实例记录实时更新; 3. 所有玩家连接断开后释放房间实例资源
-// old approach: etcd+lease
 func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int64, auth RoomMemberAuth) (*OpenRoomInstanceResult, error) {
 	result := &OpenRoomInstanceResult{}
 	err := uc.tm.Tx(ctx, func(ctx context.Context) error {
@@ -140,6 +140,7 @@ func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int6
 		})
 		u, _ := url.Parse(servers[0].Address)
 		port, _ := strconv.Atoi(u.Port())
+
 		instance = &RoomInstance{
 			RoomInstanceId: uc.snowflakeId.Generate().Int64(),
 			ServerIp:       u.Hostname(),
@@ -150,8 +151,25 @@ func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int6
 			RpcPort:        int32(port),
 		}
 
+		emulator, err := uc.emulatorRepo.GetByType(ctx, "DUMMY")
+		if err != nil || emulator == nil {
+			return v1.ErrorServiceError("无法获取默认模拟器配置")
+		}
+		instance.EmulatorId = emulator.EmulatorId
+		instance.EmulatorName = emulator.EmulatorName
+		instance.EmulatorType = emulator.EmulatorType
+
+		game, err := uc.emulatorGameRepo.GetByEmulatorIdAndName(ctx, instance.EmulatorId, "gopher.gif")
+		if err != nil || game == nil {
+			return v1.ErrorServiceError("无法获取默认游戏配置")
+		}
+		instance.GameId = game.GameId
+		gameData, err := uc.emulatorGameRepo.Download(ctx, game)
+		if err != nil || len(gameData) == 0 {
+			return v1.ErrorServiceError("无法获取默认游戏配置")
+		}
 		// 在游戏服务器创建房间实例，并获取连接token
-		token, sessionKey, err := uc.gameServerRepo.OpenRoomInstance(ctx, instance, auth)
+		token, sessionKey, err := uc.gameServerRepo.OpenRoomInstance(ctx, instance, auth, gameData)
 		if err != nil {
 			return v1.ErrorServiceError("创建房间实例出错", err)
 		}
@@ -306,15 +324,37 @@ func (uc *RoomInstanceUseCase) Restart(ctx context.Context, roomId, userId, emul
 		if game == nil || game.EmulatorId != emulatorId {
 			return v1.ErrorServiceError("重启失败，无法加载该游戏")
 		}
+		if game.EmulatorId != emulatorId {
+			return v1.ErrorServiceError("重启失败，无法加载该游戏")
+		}
 		emulator, _ := uc.emulatorRepo.GetById(ctx, emulatorId)
 		if emulator == nil {
 			return v1.ErrorServiceError("重启失败，模拟器不存在")
 		}
-		err = uc.gameServerRepo.RestartGameInstance(ctx, instance, userId, emulator.EmulatorType, game.GameName, game.Url, emulatorId, gameId)
+
+		params := RestartParams{
+			UserId:       userId,
+			EmulatorId:   emulatorId,
+			GameId:       gameId,
+			EmulatorType: emulator.EmulatorType,
+			GameName:     game.GameName,
+		}
+
+		// 重启后游戏发生改变，需要获取游戏文件并发送给游戏服务器
+		gameData, err := uc.emulatorGameRepo.Download(ctx, game)
+		if err != nil {
+			uc.logger.Error("重启下载游戏文件错误:", err)
+			return v1.ErrorServiceError("重启失败，无法加载该游戏")
+		}
+		params.GameData = gameData
+
+		// 游戏服务器重启模拟器
+		err = uc.gameServerRepo.RestartGameInstance(ctx, instance, params)
 		if err != nil {
 			uc.logger.Error("重启游戏实例错误:", err)
 			return v1.ErrorServiceError("无法重启，请检查模拟器连接")
 		}
+		// 更新房间实例信息
 		instance.EmulatorId = emulator.EmulatorId
 		instance.GameId = game.GameId
 		err = uc.repo.SaveRoomInstance(ctx, instance)

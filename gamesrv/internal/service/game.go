@@ -25,6 +25,10 @@ func (g *GameService) OpenGameInstance(ctx context.Context, request *v1.OpenGame
 			AppId:  request.Auth.AppId,
 			Ip:     request.Auth.Ip,
 		},
+		EmulatorId:   request.EmulatorId,
+		GameId:       request.GameId,
+		GameData:     request.GameData,
+		EmulatorType: request.EmulatorType,
 	}
 	token, sessionKey, err := g.uc.CreateRoomInstance(ctx, params)
 	if err != nil {
@@ -129,6 +133,7 @@ func (g *GameService) RestartGameInstance(ctx context.Context, request *v1.Resta
 		GameUrl:      request.GameUrl,
 		EmulatorId:   request.EmulatorId,
 		GameId:       request.GameId,
+		GameData:     request.GameData,
 	})
 	if err != nil {
 		return nil, err
@@ -153,6 +158,22 @@ func (g *GameService) SaveGame(ctx context.Context, request *v1.GameSrvSaveGameR
 }
 
 func (g *GameService) LoadSave(ctx context.Context, request *v1.GameSrvLoadSaveRequest) (*v1.GameSrvLoadSaveResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	err := g.uc.LoadSave(ctx, biz.LoadSaveParams{
+		RoomId:       request.RoomId,
+		UserId:       request.UserId,
+		EmulatorType: request.EmulatorType,
+		GameName:     request.GameName,
+		EmulatorId:   request.EmulatorId,
+		GameId:       request.GameId,
+		GameData:     request.GameData,
+		SaveData:     request.SaveData,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	return &v1.GameSrvLoadSaveResponse{
+		Code:    200,
+		Message: "加载成功",
+	}, nil
 }

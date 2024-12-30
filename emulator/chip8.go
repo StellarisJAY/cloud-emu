@@ -41,7 +41,7 @@ func (c *chip8EmulatorAdapter) Save() (IEmulatorSave, error) {
 	return nil, errors.New("不支持存档")
 }
 
-func (c *chip8EmulatorAdapter) LoadSave(save IEmulatorSave, gameFileRepo IGameFileRepo) error {
+func (c *chip8EmulatorAdapter) LoadSave(save IEmulatorSave) error {
 	return errors.New("不支持存档")
 }
 

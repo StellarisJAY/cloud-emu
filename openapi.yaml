@@ -1250,6 +1250,8 @@ components:
             properties:
                 saveId:
                     type: string
+                roomId:
+                    type: string
         v1.LoadSaveResponse:
             type: object
             properties:

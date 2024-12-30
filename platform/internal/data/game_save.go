@@ -10,8 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/gridfs"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"gorm.io/gorm"
-	"net/url"
-	"strings"
 	"time"
 )
 
@@ -29,6 +27,7 @@ type GameSaveEntity struct {
 }
 
 const GameSaveTableName = "game_save"
+const GameSaveBucketName = "game_save"
 
 func NewGameSaveRepo(d *Data) biz.GameSaveRepo {
 	return &GameSaveRepo{d: d}
@@ -47,10 +46,7 @@ func (g *GameSaveRepo) Create(ctx context.Context, save *biz.GameSave) error {
 }
 
 func (g *GameSaveRepo) Upload(ctx context.Context, save *biz.GameSave, data []byte) error {
-	u, _ := url.Parse(save.FileUrl)
-	database := u.Host
-	bucketName := strings.Split(u.Path, "/")[1]
-	bucket, err := g.getBucket(database, bucketName)
+	bucket, err := g.d.getGridFSBucket(MongoDBName, GameSaveBucketName)
 	if err != nil {
 		return err
 	}
@@ -58,13 +54,22 @@ func (g *GameSaveRepo) Upload(ctx context.Context, save *biz.GameSave, data []by
 }
 
 func (g *GameSaveRepo) Download(ctx context.Context, save *biz.GameSave) ([]byte, error) {
-	//TODO implement me
-	panic("implement me")
+	bucket, err := g.d.getGridFSBucket(MongoDBName, GameSaveBucketName)
+	if err != nil {
+		return nil, err
+	}
+	buffer := bytes.NewBuffer([]byte{})
+	_, err = bucket.DownloadToStream(save.SaveId, buffer)
+	if err != nil {
+		return nil, err
+	}
+	return buffer.Bytes(), nil
+
 }
 
 func (g *GameSaveRepo) List(ctx context.Context, query biz.GameSaveQuery, p *common.Pagination) ([]*biz.GameSave, error) {
 	var result []*biz.GameSave
-	d := g.d.DB(ctx).Table(GameSaveTableName + " gs").Select("gs.*, emulator_name, game_name, room_name").
+	d := g.d.DB(ctx).Table(GameSaveTableName + " gs").Select("gs.*, emulator_name, game_name, room_name, emulator_type").
 		Joins("INNER JOIN emulator e ON gs.emulator_id = e.emulator_id").
 		Joins("INNER JOIN sys_room sr ON sr.room_id = gs.room_id").
 		Joins("INNER JOIN emulator_game eg ON gs.game_id = eg.game_id")
@@ -109,6 +114,22 @@ func (g *GameSaveRepo) Get(ctx context.Context, saveId int64) (*biz.GameSave, er
 		}
 	}
 	return result, nil
+}
+
+func (g *GameSaveRepo) GetDetail(ctx context.Context, saveId int64) (*biz.GameSave, error) {
+	var result *biz.GameSave
+	err := g.d.DB(ctx).Table(GameSaveTableName+" gs").Select("gs.*, emulator_name, game_name, room_name, emulator_type").
+		Joins("INNER JOIN emulator e ON gs.emulator_id = e.emulator_id").
+		Joins("INNER JOIN sys_room sr ON sr.room_id = gs.room_id").
+		Joins("INNER JOIN emulator_game eg ON gs.game_id = eg.game_id").
+		Where("gs.save_id = ?", saveId).
+		WithContext(ctx).
+		Scan(&result).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	} else {
+		return result, err
+	}
 }
 
 func gameSaveBizToEntity(save *biz.GameSave) *GameSaveEntity {

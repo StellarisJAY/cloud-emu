@@ -17,6 +17,7 @@ type GameSave struct {
 	GameId       int64
 	RoomName     string
 	EmulatorName string
+	EmulatorType string
 	GameName     string
 	AddTime      time.Time
 	FileUrl      string
@@ -36,6 +37,7 @@ type GameSaveRepo interface {
 	Delete(ctx context.Context, saveId int64) error
 	DeleteFile(ctx context.Context, save *GameSave) error
 	Get(ctx context.Context, saveId int64) (*GameSave, error)
+	GetDetail(ctx context.Context, saveId int64) (*GameSave, error)
 }
 
 type GameSaveUseCase struct {
@@ -43,18 +45,23 @@ type GameSaveUseCase struct {
 	roomInstanceRepo RoomInstanceRepo
 	gameServerRepo   GameServerRepo
 	roomMemberRepo   RoomMemberRepo
+	emulatorGameRepo EmulatorGameRepo
+	emulatorRepo     EmulatorRepo
 	snowflake        *snowflake.Node
 	tm               Transaction
 	logger           *log.Helper
 }
 
 func NewGameSaveUseCase(gameSaveRepo GameSaveRepo, roomInstanceRepo RoomInstanceRepo, gameServerRepo GameServerRepo,
-	roomMemberRepo RoomMemberRepo, snowflake *snowflake.Node, tm Transaction, logger log.Logger) *GameSaveUseCase {
+	roomMemberRepo RoomMemberRepo, emulatorGameRepo EmulatorGameRepo, emulatorRepo EmulatorRepo, snowflake *snowflake.Node,
+	tm Transaction, logger log.Logger) *GameSaveUseCase {
 	return &GameSaveUseCase{
 		gameSaveRepo:     gameSaveRepo,
 		roomInstanceRepo: roomInstanceRepo,
 		gameServerRepo:   gameServerRepo,
 		roomMemberRepo:   roomMemberRepo,
+		emulatorGameRepo: emulatorGameRepo,
+		emulatorRepo:     emulatorRepo,
 		snowflake:        snowflake,
 		tm:               tm,
 		logger:           log.NewHelper(logger),
@@ -97,6 +104,12 @@ func (uc *GameSaveUseCase) SaveGame(ctx context.Context, roomId, userId int64) e
 		if ri == nil {
 			return v1.ErrorNotFound("房间不存在")
 		}
+
+		e, _ := uc.emulatorRepo.GetById(ctx, ri.EmulatorId)
+		if e == nil || !e.SupportSave {
+			return v1.ErrorServiceError("模拟器不支持存档功能")
+		}
+
 		// 游戏服务保存游戏，返回存档数据
 		emulatorId, gameId, saveData, err := uc.gameServerRepo.SaveGame(ctx, ri, roomId, userId)
 		if err != nil {
@@ -123,4 +136,55 @@ func (uc *GameSaveUseCase) SaveGame(ctx context.Context, roomId, userId int64) e
 		}
 		return nil
 	})
+}
+
+func (uc *GameSaveUseCase) LoadSave(ctx context.Context, roomId, userId int64, saveId int64) error {
+	rm, _ := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId)
+	if rm == nil || rm.Role != RoomMemberRoleHost {
+		return v1.ErrorAccessDenied("没有权限")
+	}
+	ri, _ := uc.roomInstanceRepo.GetRoomInstance(ctx, roomId)
+	if ri == nil {
+		return v1.ErrorNotFound("房间不存在")
+	}
+	save, err := uc.gameSaveRepo.GetDetail(ctx, saveId)
+	if err != nil {
+		uc.logger.Error("获取存档信息错误:", err)
+		return v1.ErrorServiceError("获取存档信息错误")
+	}
+	if save == nil {
+		return v1.ErrorNotFound("存档不存在")
+	}
+
+	params := LoadSaveParams{
+		UserId:       userId,
+		EmulatorId:   save.EmulatorId,
+		EmulatorType: save.EmulatorType,
+		GameId:       save.GameId,
+		GameName:     save.GameName,
+	}
+
+	// 加载存档数据
+	saveData, err := uc.gameSaveRepo.Download(ctx, save)
+	if err != nil {
+		uc.logger.Error("获取存档文件错误:", err)
+		return v1.ErrorServiceError("读取存档错误")
+	}
+	params.SaveData = saveData
+
+	// 存档模拟器与当前模拟器不同，或游戏不同，需要加载游戏文件并重启
+	if save.EmulatorId != ri.EmulatorId || save.GameId != ri.GameId {
+		gameData, err := uc.emulatorGameRepo.Download(ctx, &EmulatorGame{EmulatorId: save.EmulatorId, GameId: save.GameId})
+		if err != nil {
+			uc.logger.Error("获取游戏文件错误:", err)
+			return v1.ErrorServiceError("读取存档错误")
+		}
+		params.GameData = gameData
+	}
+
+	if err := uc.gameServerRepo.LoadSave(ctx, ri, params); err != nil {
+		uc.logger.Error("加载存档错误:", err)
+		return v1.ErrorServiceError("加载存档错误")
+	}
+	return nil
 }

@@ -104,16 +104,11 @@ export default {
           }
         });
         this.selectedEmulator = this.emulators.find(item => item.emulatorId === this.updateForm.emulatorId);
-        this.emulatorOptions.splice(0, 0, {label: "无", value: "0"});
         this.listGames();
       });
     },
 
     listGames() {
-      if (!this.selectedEmulator) {
-        this.emulatorGameOptions = [{label: "无", value: "0"}];
-        return;
-      }
       emulatorAPI.listGame(this.selectedEmulator.emulatorId).then(resp => {
         const data = resp.data;
         this.emulatorGames = data;
@@ -123,7 +118,13 @@ export default {
             value: item["gameId"]
           }
         });
-        this.emulatorGameOptions.splice(0, 0, {label: "无", value: "0"});
+        const game = this.emulatorGames.find(item => item.gameId === this.updateForm.gameId);
+        if (game) {
+          this.selectedGame = game;
+        }else {
+          this.updateForm.gameId = this.emulatorGames[0].gameId;
+          this.selectedGame = this.emulatorGames[0];
+        }
       })
     },
 
@@ -144,7 +145,7 @@ export default {
     },
 
     restart() {
-      if (this.updateForm.emulatorId === "0" || this.updateForm.gameId === "0") {
+      if (this.updateForm.emulatorId === null || this.updateForm.gameId === null) {
         message.warn("请先选择模拟器和游戏");
         return;
       }

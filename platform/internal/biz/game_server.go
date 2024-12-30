@@ -14,11 +14,30 @@ type RoomMemberAuth struct {
 	AppId  string
 }
 
+type RestartParams struct {
+	UserId       int64
+	EmulatorId   int64
+	GameId       int64
+	EmulatorType string
+	GameName     string
+	GameData     []byte
+}
+
+type LoadSaveParams struct {
+	UserId       int64
+	EmulatorId   int64
+	GameId       int64
+	EmulatorType string
+	GameName     string
+	GameData     []byte
+	SaveData     []byte
+}
+
 type GameServerRepo interface {
 	// ListActiveGameServers 服务发现 列出所有可用的游戏服务器
 	ListActiveGameServers(ctx context.Context) ([]*GameServer, error)
 	// OpenRoomInstance 在游戏服务器创建房间实例，返回创建实例用户的连接token和房间实例的心跳保活sessionKey
-	OpenRoomInstance(ctx context.Context, instance *RoomInstance, auth RoomMemberAuth) (string, string, error)
+	OpenRoomInstance(ctx context.Context, instance *RoomInstance, auth RoomMemberAuth, gameData []byte) (string, string, error)
 	// GetRoomInstanceToken 获取房间实例的连接token
 	GetRoomInstanceToken(ctx context.Context, instance *RoomInstance, roomId int64, auth RoomMemberAuth) (string, error)
 	// OpenGameConnection 创建连接，返回WebRTC的SDP Offer
@@ -30,7 +49,9 @@ type GameServerRepo interface {
 	// GetServerICECandidate 获取服务器ICE候选地址
 	GetServerICECandidate(ctx context.Context, instance *RoomInstance, token string, auth RoomMemberAuth) ([]string, error)
 	// RestartGameInstance 重启游戏实例
-	RestartGameInstance(ctx context.Context, instance *RoomInstance, userId int64, emulatorType, gameName, gameUrl string, emulatorId, gameId int64) error
+	RestartGameInstance(ctx context.Context, instance *RoomInstance, params RestartParams) error
 	// SaveGame 保存游戏
 	SaveGame(ctx context.Context, instance *RoomInstance, roomId, userId int64) (emulatorId, gameId int64, data []byte, err error)
+
+	LoadSave(ctx context.Context, instance *RoomInstance, params LoadSaveParams) error
 }

@@ -51,7 +51,7 @@ func (u *UserRepo) GetById(ctx context.Context, id int64) (*biz.User, error) {
 		return nil, err
 	}
 	if result != nil {
-		_ = u.cache.Set(ctx, userCacheKey(id), result, 0)
+		_ = u.cache.Set(ctx, userCacheKey(id), result, time.Hour)
 	}
 	return convertModelToBiz(result), nil
 }

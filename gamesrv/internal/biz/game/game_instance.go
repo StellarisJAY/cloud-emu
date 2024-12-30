@@ -8,7 +8,6 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/pion/webrtc/v3"
 	"image"
-	"os"
 	"sync"
 	"time"
 )
@@ -94,21 +93,8 @@ type Instance struct {
 	gameId         int64
 }
 
-var (
-	gopherFile []byte
-)
-
-func init() {
-	// TODO 从数据库加载文件
-	data, err := os.ReadFile("/home/xxjay/image/gopher.gif")
-	if err != nil {
-		panic(err)
-	}
-	gopherFile = data
-}
-
 // MakeGameInstance 创建初始的游戏实例，其中运行dummy模拟器，该模拟器只输出一个提示玩家选择游戏的单帧画面（后期考虑动画）
-func MakeGameInstance(roomId int64) (*Instance, error) {
+func MakeGameInstance(roomId, emulatorId, gameId int64, emulatorType string, gameData []byte) (*Instance, error) {
 	instance := &Instance{
 		RoomId:      roomId,
 		messageChan: make(chan *Message),
@@ -120,15 +106,16 @@ func MakeGameInstance(roomId int64) (*Instance, error) {
 		},
 		allConnCloseCallback: func(instance *Instance) {},
 		lastFrameTime:        time.Now(),
+		emulatorId:           emulatorId,
+		gameId:               gameId,
 	}
 
 	// 创建dummy模拟器，输出静止介绍画面
-	options, err := emulator.MakeBaseEmulatorOptions("gopher.gif", gopherFile, 0, instance.audioSampleChan, func(frame emulator.IFrame) {
+	options, err := emulator.MakeBaseEmulatorOptions("gopher.gif", gameData, 0, instance.audioSampleChan, func(frame emulator.IFrame) {
 		instance.RenderCallback(frame, log.NewHelper(log.DefaultLogger))
 	})
-	e, err := emulator.MakeDummyAdapter(options)
+	e, err := emulator.MakeEmulator(emulatorType, options)
 	if err != nil {
-		instance.videoEncoder.Close()
 		return nil, err
 	}
 	width, height := e.OutputResolution()
@@ -181,7 +168,7 @@ func (g *Instance) MessageHandler(ctx context.Context) {
 			case MsgSaveGame:
 				msg.resultChan <- g.handleSaveGame()
 			case MsgLoadSave:
-				// TODO 加载存档
+				msg.resultChan <- g.handleLoadSave(msg.Data.(*emulatorLoadSaveRequest))
 			case MsgRestartEmulator:
 				msg.resultChan <- g.handleRestartEmulator(msg.Data.(*emulatorRestartRequest))
 			case MsgChat:

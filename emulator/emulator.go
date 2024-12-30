@@ -40,7 +40,7 @@ type IEmulator interface {
 	// Save 保存游戏
 	Save() (IEmulatorSave, error)
 	// LoadSave 加载存档，如果需要切换游戏，使用gameFileRepo加载游戏文件
-	LoadSave(save IEmulatorSave, gameFileRepo IGameFileRepo) error
+	LoadSave(save IEmulatorSave) error
 	// Restart 重启模拟器
 	Restart(options IEmulatorOptions) error
 	// Stop 结束模拟器

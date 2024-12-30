@@ -36,7 +36,7 @@ func (g *GameServerRepo) ListActiveGameServers(ctx context.Context) ([]*biz.Game
 }
 
 // OpenRoomInstance 在选中的game服务器启动房间实例
-func (g *GameServerRepo) OpenRoomInstance(ctx context.Context, instance *biz.RoomInstance, auth biz.RoomMemberAuth) (string, string, error) {
+func (g *GameServerRepo) OpenRoomInstance(ctx context.Context, instance *biz.RoomInstance, auth biz.RoomMemberAuth, gameData []byte) (string, string, error) {
 	client, err := common.NewGRPCClient(instance.ServerIp, int(instance.RpcPort))
 	if err != nil {
 		return "", "", err
@@ -50,6 +50,10 @@ func (g *GameServerRepo) OpenRoomInstance(ctx context.Context, instance *biz.Roo
 			Ip:     auth.Ip,
 			AppId:  auth.AppId,
 		},
+		GameData:     gameData,
+		EmulatorType: instance.EmulatorType,
+		EmulatorId:   instance.EmulatorId,
+		GameId:       instance.GameId,
 	})
 	if err != nil {
 		return "", "", err
@@ -187,8 +191,7 @@ func (g *GameServerRepo) GetServerICECandidate(ctx context.Context, instance *bi
 	return resp.Candidates, nil
 }
 
-func (g *GameServerRepo) RestartGameInstance(ctx context.Context, instance *biz.RoomInstance, userId int64, emulatorType, gameName, gameUrl string,
-	emulatorId, gameId int64) error {
+func (g *GameServerRepo) RestartGameInstance(ctx context.Context, instance *biz.RoomInstance, params biz.RestartParams) error {
 	client, err := common.NewGRPCClient(instance.ServerIp, int(instance.RpcPort))
 	if err != nil {
 		return err
@@ -197,12 +200,12 @@ func (g *GameServerRepo) RestartGameInstance(ctx context.Context, instance *biz.
 	gameServer := v1.NewGameClient(client)
 	resp, err := gameServer.RestartGameInstance(ctx, &v1.RestartGameInstanceRequest{
 		RoomId:       instance.RoomId,
-		UserId:       userId,
-		EmulatorType: emulatorType,
-		GameName:     gameName,
-		GameUrl:      gameUrl,
-		EmulatorId:   emulatorId,
-		GameId:       gameId,
+		UserId:       params.UserId,
+		EmulatorType: params.EmulatorType,
+		GameName:     params.GameName,
+		EmulatorId:   params.EmulatorId,
+		GameId:       params.GameId,
+		GameData:     params.GameData,
 	})
 
 	if err != nil {
@@ -232,4 +235,30 @@ func (g *GameServerRepo) SaveGame(ctx context.Context, instance *biz.RoomInstanc
 		return 0, 0, nil, errors.New(int(resp.Code), "Service Error", resp.Message)
 	}
 	return resp.Data.EmulatorId, resp.Data.GameId, resp.Data.SaveData, nil
+}
+
+func (g *GameServerRepo) LoadSave(ctx context.Context, instance *biz.RoomInstance, params biz.LoadSaveParams) error {
+	client, err := common.NewGRPCClient(instance.ServerIp, int(instance.RpcPort))
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+	gameServer := v1.NewGameClient(client)
+	resp, err := gameServer.LoadSave(ctx, &v1.GameSrvLoadSaveRequest{
+		RoomId:       instance.RoomId,
+		UserId:       params.UserId,
+		EmulatorId:   params.EmulatorId,
+		EmulatorType: params.EmulatorType,
+		GameId:       params.GameId,
+		GameName:     params.GameName,
+		GameData:     params.GameData,
+		SaveData:     params.SaveData,
+	})
+	if err != nil {
+		return err
+	}
+	if resp.Code != 200 {
+		return errors.New(int(resp.Code), "Service Error", resp.Message)
+	}
+	return nil
 }

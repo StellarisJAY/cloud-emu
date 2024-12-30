@@ -6,6 +6,14 @@ import (
 	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/codec"
 )
 
+type emulatorRestartRequest struct {
+	game         string
+	gameData     []byte
+	emulatorType string
+	emulatorId   int64
+	gameId       int64
+}
+
 func (g *Instance) handleRestartEmulator(request *emulatorRestartRequest) ConsumerResult {
 	err := g.restartEmulator(request.game, request.gameData, request.emulatorType, request.emulatorId, request.gameId)
 	return ConsumerResult{Success: err == nil, Error: err}

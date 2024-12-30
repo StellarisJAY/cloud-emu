@@ -31,7 +31,7 @@ type Data struct {
 
 type txKey struct{}
 
-const MongoDBName = ""
+const MongoDBName = "cloud-emu"
 
 func NewRedisClient(c *conf.Data) *redis.Client {
 	return redis.NewClient(&redis.Options{

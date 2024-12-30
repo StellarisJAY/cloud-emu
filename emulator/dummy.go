@@ -44,7 +44,7 @@ func (d *DummyAdapter) Save() (IEmulatorSave, error) {
 	panic("implement me")
 }
 
-func (d *DummyAdapter) LoadSave(save IEmulatorSave, gameFileRepo IGameFileRepo) error {
+func (d *DummyAdapter) LoadSave(save IEmulatorSave) error {
 	//TODO implement me
 	panic("implement me")
 }

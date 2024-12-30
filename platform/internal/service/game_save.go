@@ -71,8 +71,17 @@ func (g *GameSaveService) DeleteGameSave(ctx context.Context, request *v1.Delete
 }
 
 func (g *GameSaveService) LoadSave(ctx context.Context, request *v1.LoadSaveRequest) (*v1.LoadSaveResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	c, _ := jwt.FromContext(ctx)
+	claims := c.(*biz.LoginClaims)
+	err := g.gameSaveUC.LoadSave(ctx, request.RoomId, claims.UserId, request.SaveId)
+	if err != nil {
+		e := errors.FromError(err)
+		return &v1.LoadSaveResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
+	}
+	return &v1.LoadSaveResponse{Code: 200, Message: "加载成功"}, nil
 }
 
 func (g *GameSaveService) SaveGame(ctx context.Context, request *v1.SaveGameRequest) (*v1.SaveGameResponse, error) {

@@ -33,6 +33,10 @@ message RoomMemberAuth {
 message OpenGameInstanceRequest {
   int64 roomId = 1;
   RoomMemberAuth auth = 2;
+  int64 emulatorId = 3;
+  int64 gameId = 4;
+  string emulatorType = 5;
+  bytes gameData = 6;
 }
 
 message OpenGameInstanceResponse {
@@ -122,6 +126,7 @@ message RestartGameInstanceRequest {
   string gameUrl = 5;
   int64 emulatorId = 6;
   int64 gameId = 7;
+  bytes gameData = 8;
 }
 
 message RestartGameInstanceResponse {
@@ -155,6 +160,7 @@ message GameSrvLoadSaveRequest {
   int64 emulatorId = 6;
   int64 gameId = 7;
   bytes saveData = 8;
+  bytes gameData = 9;
 }
 
 message GameSrvLoadSaveResponse {

@@ -67,7 +67,14 @@ export default {
       this.listSaves();
     },
     loadSavedGame(id) {
-
+      this.loadSaveBtnDisable = true;
+      api.post("/game-save/load", {"saveId": id,"roomId":this.roomId}).then(resp=>{
+        this.loadSaveBtnDisable = false;
+        message.success("读取存档成功");
+      }).catch(resp=>{
+        message.error(resp.message);
+        this.loadSaveBtnDisable = false;
+      });
     },
     deleteSavedGame(id) {
 

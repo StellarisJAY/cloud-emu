@@ -41,6 +41,8 @@ type EmulatorGameRepo interface {
 	Delete(ctx context.Context, gameId int64) error
 	DeleteFile(ctx context.Context, game *EmulatorGame) error
 	ListGame(ctx context.Context, query EmulatorGameQuery, p *common.Pagination) ([]*EmulatorGame, error)
+	Download(ctx context.Context, game *EmulatorGame) ([]byte, error)
+	GetByEmulatorIdAndName(ctx context.Context, emulatorId int64, name string) (*EmulatorGame, error)
 }
 
 type EmulatorGameUseCase struct {

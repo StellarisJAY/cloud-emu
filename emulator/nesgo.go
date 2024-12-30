@@ -116,7 +116,7 @@ func (n *NesEmulatorAdapter) Save() (IEmulatorSave, error) {
 	}, nil
 }
 
-func (n *NesEmulatorAdapter) LoadSave(save IEmulatorSave, gameFileRepo IGameFileRepo) error {
+func (n *NesEmulatorAdapter) LoadSave(save IEmulatorSave) error {
 	n.e.Pause()
 	defer n.e.Resume()
 LOOP:
@@ -127,27 +127,7 @@ LOOP:
 			break LOOP
 		}
 	}
-	// 如果游戏名称不同，需要加载新的游戏文件，并重启模拟器
-	if n.options.Game() != save.GameName() {
-		gameData, err := gameFileRepo.GetGameData(context.Background(), save.GameName())
-		if err != nil {
-			return err
-		}
-		oldOpts := n.options.(*NesEmulatorOptions)
-		err = n.Restart(&NesEmulatorOptions{
-			NesGame:               save.GameName(),
-			NesGameData:           gameData,
-			OutputAudioSampleRate: oldOpts.OutputAudioSampleRate,
-			OutputAudioSampleChan: oldOpts.OutputAudioSampleChan,
-			NesRenderCallback:     oldOpts.NesRenderCallback,
-		})
-		if err != nil {
-			return err
-		}
-		return n.e.Load(save.SaveData())
-	} else {
-		return n.e.Load(save.SaveData())
-	}
+	return n.e.Load(save.SaveData())
 }
 
 func (n *NesEmulatorAdapter) SubmitInput(controlId int, keyCode string, pressed bool) {
