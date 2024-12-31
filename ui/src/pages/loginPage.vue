@@ -59,15 +59,23 @@ export default {
             formState: {
                 userName: "",
                 password: "",
-            }
+            },
+            backUrl: "",
         }
+    },
+    created() {
+        this.backUrl = this.$route.query.back;
     },
     methods: {
         onFinish(_) {
             api.post("/login", this.formState)
                 .then(_ => {
                     message.success("登录成功")
-                    router.push("/home")
+                    if (this.backUrl) {
+                      router.push(this.backUrl);
+                    }else {
+                      router.push("/home")
+                    }
                 }).catch(_ => {
                     message.warn("登录失败，请检查用户名和密码");
                 })

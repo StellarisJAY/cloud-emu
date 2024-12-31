@@ -8,7 +8,7 @@ const user = {
         return await api.get("/login-user");
     },
     activateAccount: async function(code) {
-        return await api.pos("/account/activate", {code: code});
+        return await api.post("/account/activate", {code: code});
     }
 };
 

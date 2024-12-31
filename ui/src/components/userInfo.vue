@@ -18,7 +18,7 @@
       </a-form-item>
       <a-button type="primary">修改</a-button>
     </a-form>
-    <a-form v-if="userDetail.status === 1">
+    <a-form v-if="userDetail.status === 3">
       <a-form-item label="激活码">
         <a-input v-model:value="activationCode"></a-input>
       </a-form-item>
