@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
-	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/bwmarrin/snowflake"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-redsync/redsync/v4"
@@ -31,9 +30,7 @@ type RoomInstanceUseCase struct {
 type RoomInstanceRepo interface {
 	Create(ctx context.Context, roomInstance *RoomInstance) error
 	Update(ctx context.Context, roomInstance *RoomInstance) error
-	GetActiveInstanceByRoomId(ctx context.Context, roomId int64) (*RoomInstance, error)
-	ListInstanceByRoomId(ctx context.Context, roomId int64, p *common.Pagination) ([]*RoomInstance, error)
-	ListOnlineRoomMembers(ctx context.Context, roomInstance *RoomInstance) ([]*RoomMember, error)
+	ListOnlineRoomMembers(ctx context.Context, roomInstance *RoomInstance) ([]int64, error)
 	SaveRoomInstance(ctx context.Context, roomInstance *RoomInstance) error
 	GetRoomInstance(_ context.Context, roomId int64) (*RoomInstance, error)
 }
@@ -186,14 +183,6 @@ func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int6
 		return nil, err
 	}
 	return result, nil
-}
-
-func (uc *RoomInstanceUseCase) ListRoomGameHistory(ctx context.Context, roomId int64, p *common.Pagination) ([]*RoomInstance, error) {
-	instances, err := uc.repo.ListInstanceByRoomId(ctx, roomId, p)
-	if err != nil {
-		return nil, err
-	}
-	return instances, nil
 }
 
 func (uc *RoomInstanceUseCase) OpenGameConnection(ctx context.Context, roomId int64, token string, auth RoomMemberAuth) (string, error) {

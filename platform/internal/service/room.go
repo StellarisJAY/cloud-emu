@@ -174,3 +174,31 @@ func (r *RoomService) JoinRoom(ctx context.Context, request *v1.JoinRoomRequest)
 		Message: "加入成功",
 	}, nil
 }
+
+func (r *RoomService) DeleteRoom(ctx context.Context, request *v1.DeleteRoomRequest) (*v1.DeleteRoomResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r *RoomService) UpdateRoom(ctx context.Context, request *v1.UpdateRoomRequest) (*v1.UpdateRoomResponse, error) {
+	c, _ := jwt.FromContext(ctx)
+	claims := c.(*biz.LoginClaims)
+	room := &biz.Room{
+		RoomId:   request.RoomId,
+		RoomName: request.RoomName,
+		Password: request.Password,
+		JoinType: request.JoinType,
+	}
+	err := r.roomUC.UpdateRoom(ctx, room, claims.UserId)
+	if err != nil {
+		e := errors.FromError(err)
+		return &v1.UpdateRoomResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
+	}
+	return &v1.UpdateRoomResponse{
+		Code:    200,
+		Message: "修改成功",
+	}, nil
+}

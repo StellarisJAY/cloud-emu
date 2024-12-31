@@ -29,6 +29,7 @@ const (
 	Game_RestartGameInstance_FullMethodName        = "/v1.Game/RestartGameInstance"
 	Game_SaveGame_FullMethodName                   = "/v1.Game/SaveGame"
 	Game_LoadSave_FullMethodName                   = "/v1.Game/LoadSave"
+	Game_ListOnlineRoomMember_FullMethodName       = "/v1.Game/ListOnlineRoomMember"
 )
 
 // GameClient is the client API for Game service.
@@ -45,6 +46,7 @@ type GameClient interface {
 	RestartGameInstance(ctx context.Context, in *RestartGameInstanceRequest, opts ...grpc.CallOption) (*RestartGameInstanceResponse, error)
 	SaveGame(ctx context.Context, in *GameSrvSaveGameRequest, opts ...grpc.CallOption) (*GameSrvSaveGameResponse, error)
 	LoadSave(ctx context.Context, in *GameSrvLoadSaveRequest, opts ...grpc.CallOption) (*GameSrvLoadSaveResponse, error)
+	ListOnlineRoomMember(ctx context.Context, in *ListOnlineRoomMemberRequest, opts ...grpc.CallOption) (*ListOnlineRoomMemberResponse, error)
 }
 
 type gameClient struct {
@@ -155,6 +157,16 @@ func (c *gameClient) LoadSave(ctx context.Context, in *GameSrvLoadSaveRequest, o
 	return out, nil
 }
 
+func (c *gameClient) ListOnlineRoomMember(ctx context.Context, in *ListOnlineRoomMemberRequest, opts ...grpc.CallOption) (*ListOnlineRoomMemberResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListOnlineRoomMemberResponse)
+	err := c.cc.Invoke(ctx, Game_ListOnlineRoomMember_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GameServer is the server API for Game service.
 // All implementations must embed UnimplementedGameServer
 // for forward compatibility.
@@ -169,6 +181,7 @@ type GameServer interface {
 	RestartGameInstance(context.Context, *RestartGameInstanceRequest) (*RestartGameInstanceResponse, error)
 	SaveGame(context.Context, *GameSrvSaveGameRequest) (*GameSrvSaveGameResponse, error)
 	LoadSave(context.Context, *GameSrvLoadSaveRequest) (*GameSrvLoadSaveResponse, error)
+	ListOnlineRoomMember(context.Context, *ListOnlineRoomMemberRequest) (*ListOnlineRoomMemberResponse, error)
 	mustEmbedUnimplementedGameServer()
 }
 
@@ -208,6 +221,9 @@ func (UnimplementedGameServer) SaveGame(context.Context, *GameSrvSaveGameRequest
 }
 func (UnimplementedGameServer) LoadSave(context.Context, *GameSrvLoadSaveRequest) (*GameSrvLoadSaveResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LoadSave not implemented")
+}
+func (UnimplementedGameServer) ListOnlineRoomMember(context.Context, *ListOnlineRoomMemberRequest) (*ListOnlineRoomMemberResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListOnlineRoomMember not implemented")
 }
 func (UnimplementedGameServer) mustEmbedUnimplementedGameServer() {}
 func (UnimplementedGameServer) testEmbeddedByValue()              {}
@@ -410,6 +426,24 @@ func _Game_LoadSave_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Game_ListOnlineRoomMember_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListOnlineRoomMemberRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameServer).ListOnlineRoomMember(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Game_ListOnlineRoomMember_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServer).ListOnlineRoomMember(ctx, req.(*ListOnlineRoomMemberRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Game_ServiceDesc is the grpc.ServiceDesc for Game service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -456,6 +490,10 @@ var Game_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LoadSave",
 			Handler:    _Game_LoadSave_Handler,
+		},
+		{
+			MethodName: "ListOnlineRoomMember",
+			Handler:    _Game_ListOnlineRoomMember_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

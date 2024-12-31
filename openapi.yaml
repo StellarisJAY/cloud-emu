@@ -413,6 +413,23 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/v1.RegisterResponse'
     /api/v1/room:
+        put:
+            tags:
+                - Room
+            operationId: Room_UpdateRoom
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.UpdateRoomRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.UpdateRoomResponse'
         post:
             tags:
                 - Room
@@ -1483,6 +1500,26 @@ components:
                 binding:
                     type: string
         v1.UpdateKeyboardBindingResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+        v1.UpdateRoomRequest:
+            type: object
+            properties:
+                roomId:
+                    type: string
+                roomName:
+                    type: string
+                joinType:
+                    type: integer
+                    format: int32
+                password:
+                    type: string
+        v1.UpdateRoomResponse:
             type: object
             properties:
                 code:

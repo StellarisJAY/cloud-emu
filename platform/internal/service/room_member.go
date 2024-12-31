@@ -37,6 +37,7 @@ func (r *RoomMemberService) ListRoomMember(ctx context.Context, request *v1.List
 			NickName:     member.NickName,
 			Role:         member.Role,
 			AddTime:      member.AddTime.Format(time.DateTime),
+			Online:       member.Online,
 		})
 	}
 	return &v1.ListRoomMemberResponse{

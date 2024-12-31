@@ -10,6 +10,9 @@ const room = {
     getRoomDetail: async function(id) {
         return await api.get("/room/" + id);
     },
+    updateRoom: async function(room) {
+        return await api.put("/room", room);
+    }
 };
 
 export default room;

@@ -177,3 +177,15 @@ func (g *GameService) LoadSave(ctx context.Context, request *v1.GameSrvLoadSaveR
 		Message: "加载成功",
 	}, nil
 }
+
+func (g *GameService) ListOnlineRoomMember(ctx context.Context, request *v1.ListOnlineRoomMemberRequest) (*v1.ListOnlineRoomMemberResponse, error) {
+	memberIdList, err := g.uc.ListOnlineRoomMember(ctx, request.RoomId)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.ListOnlineRoomMemberResponse{
+		Code:          200,
+		Message:       "获取成功",
+		RoomMemberIds: memberIdList,
+	}, nil
+}

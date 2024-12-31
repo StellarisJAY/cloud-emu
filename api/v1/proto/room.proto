@@ -39,6 +39,12 @@ service Room {
       body: "*"
     };
   }
+  rpc UpdateRoom(UpdateRoomRequest) returns (UpdateRoomResponse) {
+    option (google.api.http) = {
+      put: "/api/v1/room"
+      body: "*"
+    };
+  }
 }
 
 message RoomDto {
@@ -113,6 +119,18 @@ message JoinRoomRequest {
 }
 
 message JoinRoomResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message UpdateRoomRequest {
+  int64 roomId = 1;
+  string roomName = 2;
+  int32 joinType = 3;
+  string password = 4;
+}
+
+message  UpdateRoomResponse {
   int32 code = 1;
   string message = 2;
 }

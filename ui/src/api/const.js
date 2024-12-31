@@ -86,7 +86,6 @@ const Configs = {
         roomJoinTypeEnum: [
             {"id": 1, "name": "公开"},
             {"id": 2, "name": "私有"},
-            {"id": 3, "name": "仅邀请"}
         ],
         userStatusEnum: [
             {"id": 1, "name": "可用"},

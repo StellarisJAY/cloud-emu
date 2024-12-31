@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/biz"
 	"github.com/hashicorp/consul/api"
-	"gorm.io/gorm"
 	"time"
 )
 
@@ -48,41 +48,23 @@ func (r *RoomInstanceRepo) Update(ctx context.Context, roomInstance *biz.RoomIns
 		Error
 }
 
-func (r *RoomInstanceRepo) GetActiveInstanceByRoomId(ctx context.Context, roomId int64) (*biz.RoomInstance, error) {
-	var result *biz.RoomInstance
-	err := r.data.DB(ctx).Table(RoomInstanceTableName+" ri").
-		Select("ri.*, e.emulator_name").
-		Joins("LEFT JOIN emulator e ON ri.emulator_id = e.emulator_id").
-		Where("ri.room_id = ?", roomId).
-		Where("ri.status = ?", biz.RoomInstanceStatusActive).
-		Scan(&result).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
-	}
+func (r *RoomInstanceRepo) ListOnlineRoomMembers(ctx context.Context, roomInstance *biz.RoomInstance) ([]int64, error) {
+	client, err := common.NewGRPCClient(roomInstance.ServerIp, int(roomInstance.RpcPort))
 	if err != nil {
 		return nil, err
 	}
-	return result, nil
-}
-
-func (r *RoomInstanceRepo) ListInstanceByRoomId(ctx context.Context, roomId int64, p *common.Pagination) ([]*biz.RoomInstance, error) {
-	var result []*biz.RoomInstance
-	err := r.data.DB(ctx).Table(RoomInstanceTableName+" ri").
-		Select("ri.*", "emulator_name").
-		Joins("LEFT JOIN emulator e ON ri.emulator_id = e.emulator_id").
-		Where("ri.room_id = ?", roomId).
-		Where("ri.status = ?", biz.RoomInstanceStatusActive).
-		Scopes(common.WithPagination(p)).Debug().
-		Scan(&result).Error
+	defer client.Close()
+	gameCli := v1.NewGameClient(client)
+	resp, err := gameCli.ListOnlineRoomMember(ctx, &v1.ListOnlineRoomMemberRequest{
+		RoomId: roomInstance.RoomId,
+	})
 	if err != nil {
 		return nil, err
 	}
-	return result, nil
-}
-
-func (r *RoomInstanceRepo) ListOnlineRoomMembers(ctx context.Context, roomInstance *biz.RoomInstance) ([]*biz.RoomMember, error) {
-	// TODO 从游戏服务器获取房间实例在线成员
-	return nil, nil
+	if resp.Code != 200 {
+		return nil, errors.New(resp.Message)
+	}
+	return resp.RoomMemberIds, nil
 }
 
 func (r *RoomInstanceRepo) SaveRoomInstance(_ context.Context, roomInstance *biz.RoomInstance) error {

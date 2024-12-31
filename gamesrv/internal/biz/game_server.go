@@ -283,3 +283,13 @@ func (uc *GameServerUseCase) LoadSave(_ context.Context, params LoadSaveParams) 
 	err := instance.LoadSave(params.EmulatorId, params.GameId, params.EmulatorType, params.GameName, params.GameData, params.SaveData)
 	return err
 }
+
+func (uc *GameServerUseCase) ListOnlineRoomMember(_ context.Context, roomId int64) ([]int64, error) {
+	uc.mutex.RLock()
+	instance, ok := uc.gameInstances[roomId]
+	uc.mutex.RUnlock()
+	if !ok {
+		return nil, v1.ErrorServiceError("游戏实例不存在")
+	}
+	return instance.GetOnlineUsers(), nil
+}

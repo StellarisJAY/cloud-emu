@@ -326,3 +326,13 @@ func (g *Instance) filterConnection(filter func(*Connection) bool) []*Connection
 	}
 	return result
 }
+
+func (g *Instance) GetOnlineUsers() []int64 {
+	g.mutex.RLock()
+	defer g.mutex.RUnlock()
+	result := make([]int64, 0, len(g.connections))
+	for userId := range g.connections {
+		result = append(result, userId)
+	}
+	return result
+}

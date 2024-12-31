@@ -17,6 +17,7 @@ service Game {
   rpc RestartGameInstance(RestartGameInstanceRequest) returns (RestartGameInstanceResponse) {}
   rpc SaveGame(GameSrvSaveGameRequest) returns (GameSrvSaveGameResponse) {}
   rpc LoadSave(GameSrvLoadSaveRequest) returns (GameSrvLoadSaveResponse) {}
+  rpc ListOnlineRoomMember(ListOnlineRoomMemberRequest) returns (ListOnlineRoomMemberResponse) {}
 }
 
 message GetGameInstanceResult {
@@ -166,4 +167,14 @@ message GameSrvLoadSaveRequest {
 message GameSrvLoadSaveResponse {
   int32 code = 1;
   string message = 2;
+}
+
+message ListOnlineRoomMemberRequest {
+  int64 roomId = 1;
+}
+
+message ListOnlineRoomMemberResponse {
+  int32 code = 1;
+  string message = 2;
+  repeated int64 roomMemberIds = 3;
 }

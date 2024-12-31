@@ -199,3 +199,24 @@ func (r *RoomUseCase) Join(ctx context.Context, roomId int64, userId int64, pass
 		return nil
 	})
 }
+
+func (r *RoomUseCase) UpdateRoom(ctx context.Context, room *Room, userId int64) error {
+	return r.tm.Tx(ctx, func(ctx context.Context) error {
+		rm, _ := r.roomMemberRepo.GetByRoomAndUser(ctx, room.RoomId, userId)
+		if rm == nil || rm.Role != RoomMemberRoleHost {
+			return v1.ErrorAccessDenied("没有权限修改房间")
+		}
+		if room.JoinType == RoomJoinTypePassword {
+			if room.Password == "" {
+				return errors.BadRequest("Bad Request", "请填写房间密码")
+			}
+			hash := sha256.Sum256([]byte(room.Password))
+			room.Password = hex.EncodeToString(hash[:])
+		}
+		if err := r.repo.Update(ctx, room); err != nil {
+			r.logger.Error("修改房间错误 ", err)
+			return v1.ErrorServiceError("修改房间错误")
+		}
+		return nil
+	})
+}

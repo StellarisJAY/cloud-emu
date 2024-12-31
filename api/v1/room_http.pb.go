@@ -25,6 +25,7 @@ const OperationRoomGetRoom = "/v1.Room/GetRoom"
 const OperationRoomJoinRoom = "/v1.Room/JoinRoom"
 const OperationRoomListAllRooms = "/v1.Room/ListAllRooms"
 const OperationRoomListMyRooms = "/v1.Room/ListMyRooms"
+const OperationRoomUpdateRoom = "/v1.Room/UpdateRoom"
 
 type RoomHTTPServer interface {
 	CreateRoom(context.Context, *CreateRoomRequest) (*CreateRoomResponse, error)
@@ -33,6 +34,7 @@ type RoomHTTPServer interface {
 	JoinRoom(context.Context, *JoinRoomRequest) (*JoinRoomResponse, error)
 	ListAllRooms(context.Context, *ListRoomRequest) (*ListRoomResponse, error)
 	ListMyRooms(context.Context, *ListRoomRequest) (*ListRoomResponse, error)
+	UpdateRoom(context.Context, *UpdateRoomRequest) (*UpdateRoomResponse, error)
 }
 
 func RegisterRoomHTTPServer(s *http.Server, srv RoomHTTPServer) {
@@ -43,6 +45,7 @@ func RegisterRoomHTTPServer(s *http.Server, srv RoomHTTPServer) {
 	r.GET("/api/v1/room/{id}", _Room_GetRoom0_HTTP_Handler(srv))
 	r.DELETE("/api/v1/room/{roomId}", _Room_DeleteRoom0_HTTP_Handler(srv))
 	r.POST("/api/v1/room/join", _Room_JoinRoom0_HTTP_Handler(srv))
+	r.PUT("/api/v1/room", _Room_UpdateRoom0_HTTP_Handler(srv))
 }
 
 func _Room_ListMyRooms0_HTTP_Handler(srv RoomHTTPServer) func(ctx http.Context) error {
@@ -171,6 +174,28 @@ func _Room_JoinRoom0_HTTP_Handler(srv RoomHTTPServer) func(ctx http.Context) err
 	}
 }
 
+func _Room_UpdateRoom0_HTTP_Handler(srv RoomHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in UpdateRoomRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationRoomUpdateRoom)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.UpdateRoom(ctx, req.(*UpdateRoomRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*UpdateRoomResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 type RoomHTTPClient interface {
 	CreateRoom(ctx context.Context, req *CreateRoomRequest, opts ...http.CallOption) (rsp *CreateRoomResponse, err error)
 	DeleteRoom(ctx context.Context, req *DeleteRoomRequest, opts ...http.CallOption) (rsp *DeleteRoomResponse, err error)
@@ -178,6 +203,7 @@ type RoomHTTPClient interface {
 	JoinRoom(ctx context.Context, req *JoinRoomRequest, opts ...http.CallOption) (rsp *JoinRoomResponse, err error)
 	ListAllRooms(ctx context.Context, req *ListRoomRequest, opts ...http.CallOption) (rsp *ListRoomResponse, err error)
 	ListMyRooms(ctx context.Context, req *ListRoomRequest, opts ...http.CallOption) (rsp *ListRoomResponse, err error)
+	UpdateRoom(ctx context.Context, req *UpdateRoomRequest, opts ...http.CallOption) (rsp *UpdateRoomResponse, err error)
 }
 
 type RoomHTTPClientImpl struct {
@@ -260,6 +286,19 @@ func (c *RoomHTTPClientImpl) ListMyRooms(ctx context.Context, in *ListRoomReques
 	opts = append(opts, http.Operation(OperationRoomListMyRooms))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *RoomHTTPClientImpl) UpdateRoom(ctx context.Context, in *UpdateRoomRequest, opts ...http.CallOption) (*UpdateRoomResponse, error) {
+	var out UpdateRoomResponse
+	pattern := "/api/v1/room"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationRoomUpdateRoom))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

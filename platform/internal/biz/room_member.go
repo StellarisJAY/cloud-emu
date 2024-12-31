@@ -81,9 +81,9 @@ func (uc *RoomMemberUseCase) ListRoomMembers(ctx context.Context, roomId int64) 
 	// 获取在线成员列表
 	onlineMembers, _ := uc.roomInstanceRepo.ListOnlineRoomMembers(ctx, roomInstance)
 	if len(onlineMembers) > 0 {
-		for _, member := range onlineMembers {
+		for _, uid := range onlineMembers {
 			idx := slices.IndexFunc(members, func(item *RoomMember) bool {
-				return item.RoomMemberId == member.RoomMemberId
+				return item.UserId == uid
 			})
 			if idx >= 0 {
 				members[idx].Online = true
