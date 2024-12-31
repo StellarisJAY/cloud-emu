@@ -20,6 +20,7 @@ var _ = binding.EncodeURL
 const _ = http.SupportPackageIsVersion1
 
 const OperationUserActivateAccount = "/v1.User/ActivateAccount"
+const OperationUserGetLoginUserDetail = "/v1.User/GetLoginUserDetail"
 const OperationUserGetUserDetail = "/v1.User/GetUserDetail"
 const OperationUserListUser = "/v1.User/ListUser"
 const OperationUserLogin = "/v1.User/Login"
@@ -27,6 +28,7 @@ const OperationUserRegister = "/v1.User/Register"
 
 type UserHTTPServer interface {
 	ActivateAccount(context.Context, *ActivateAccountRequest) (*ActivateAccountResponse, error)
+	GetLoginUserDetail(context.Context, *GetLoginUserDetailRequest) (*GetLoginUserDetailResponse, error)
 	GetUserDetail(context.Context, *GetUserDetailRequest) (*GetUserDetailResponse, error)
 	ListUser(context.Context, *ListUserRequest) (*ListUserResponse, error)
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
@@ -40,6 +42,7 @@ func RegisterUserHTTPServer(s *http.Server, srv UserHTTPServer) {
 	r.POST("/api/v1/account/activate", _User_ActivateAccount0_HTTP_Handler(srv))
 	r.GET("/api/v1/user", _User_ListUser0_HTTP_Handler(srv))
 	r.GET("/api/v1/user/{userId}", _User_GetUserDetail0_HTTP_Handler(srv))
+	r.GET("/api/v1/login-user", _User_GetLoginUserDetail0_HTTP_Handler(srv))
 }
 
 func _User_Register0_HTTP_Handler(srv UserHTTPServer) func(ctx http.Context) error {
@@ -149,8 +152,28 @@ func _User_GetUserDetail0_HTTP_Handler(srv UserHTTPServer) func(ctx http.Context
 	}
 }
 
+func _User_GetLoginUserDetail0_HTTP_Handler(srv UserHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetLoginUserDetailRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationUserGetLoginUserDetail)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetLoginUserDetail(ctx, req.(*GetLoginUserDetailRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetLoginUserDetailResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 type UserHTTPClient interface {
 	ActivateAccount(ctx context.Context, req *ActivateAccountRequest, opts ...http.CallOption) (rsp *ActivateAccountResponse, err error)
+	GetLoginUserDetail(ctx context.Context, req *GetLoginUserDetailRequest, opts ...http.CallOption) (rsp *GetLoginUserDetailResponse, err error)
 	GetUserDetail(ctx context.Context, req *GetUserDetailRequest, opts ...http.CallOption) (rsp *GetUserDetailResponse, err error)
 	ListUser(ctx context.Context, req *ListUserRequest, opts ...http.CallOption) (rsp *ListUserResponse, err error)
 	Login(ctx context.Context, req *LoginRequest, opts ...http.CallOption) (rsp *LoginResponse, err error)
@@ -172,6 +195,19 @@ func (c *UserHTTPClientImpl) ActivateAccount(ctx context.Context, in *ActivateAc
 	opts = append(opts, http.Operation(OperationUserActivateAccount))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *UserHTTPClientImpl) GetLoginUserDetail(ctx context.Context, in *GetLoginUserDetailRequest, opts ...http.CallOption) (*GetLoginUserDetailResponse, error) {
+	var out GetLoginUserDetailResponse
+	pattern := "/api/v1/login-user"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationUserGetLoginUserDetail))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

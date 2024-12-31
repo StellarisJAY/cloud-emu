@@ -394,6 +394,18 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.LoginResponse'
+    /api/v1/login-user:
+        get:
+            tags:
+                - User
+            operationId: User_GetLoginUserDetail
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.GetLoginUserDetailResponse'
     /api/v1/register:
         post:
             tags:
@@ -1013,6 +1025,16 @@ components:
                     type: string
                 gameName:
                     type: string
+        v1.GetLoginUserDetailResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/v1.UserDetailDto'
         v1.GetRoomInstanceResponse:
             type: object
             properties:

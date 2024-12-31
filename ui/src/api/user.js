@@ -4,6 +4,12 @@ const user = {
     listUser: async function(query) {
         return await api.get("/user", query);
     },
+    getLoginUserDetail: async function() {
+        return await api.get("/login-user");
+    },
+    activateAccount: async function(code) {
+        return await api.pos("/account/activate", {code: code});
+    }
 };
 
 export default user;

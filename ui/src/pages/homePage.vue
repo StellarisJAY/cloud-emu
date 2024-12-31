@@ -5,6 +5,7 @@
                 <a-menu-item key="1">我的房间</a-menu-item>
                 <a-menu-item key="2">加入房间</a-menu-item>
                 <a-menu-item key="3">通知</a-menu-item>
+                <a-menu-item key="4">个人</a-menu-item>
                 <a-menu-item key="5" @click="logout">注销</a-menu-item>
             </a-menu>
         </a-layout-header>
@@ -14,6 +15,7 @@
                 <RoomList v-if="headerSelectedKeys[0] === '1'" :joined="true" />
                 <RoomList v-else-if="headerSelectedKeys[0] === '2'" :joined="false"></RoomList>
                 <NotificationList v-else-if="headerSelectedKeys[0] === '3'"></NotificationList>
+                <UserInfo v-else-if="headerSelectedKeys[0] === '4'"/>
             </a-col>
         </a-row>
     </a-layout>
@@ -26,6 +28,8 @@ import RoomList from "../components/roomList.vue";
 import router from "../router/index.js";
 import tokenStorage from "../api/token.js";
 import NotificationList from "../components/notificationList.vue";
+import UserInfo from "../components/userInfo.vue";
+
 export default {
     components: {
         ALayout: Layout,
@@ -38,6 +42,7 @@ export default {
         ACard: Card,
         RoomList: RoomList,
         NotificationList: NotificationList,
+        UserInfo: UserInfo,
     },
     data() {
         return {

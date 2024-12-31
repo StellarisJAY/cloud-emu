@@ -19,11 +19,12 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	User_Register_FullMethodName        = "/v1.User/Register"
-	User_Login_FullMethodName           = "/v1.User/Login"
-	User_ActivateAccount_FullMethodName = "/v1.User/ActivateAccount"
-	User_ListUser_FullMethodName        = "/v1.User/ListUser"
-	User_GetUserDetail_FullMethodName   = "/v1.User/GetUserDetail"
+	User_Register_FullMethodName           = "/v1.User/Register"
+	User_Login_FullMethodName              = "/v1.User/Login"
+	User_ActivateAccount_FullMethodName    = "/v1.User/ActivateAccount"
+	User_ListUser_FullMethodName           = "/v1.User/ListUser"
+	User_GetUserDetail_FullMethodName      = "/v1.User/GetUserDetail"
+	User_GetLoginUserDetail_FullMethodName = "/v1.User/GetLoginUserDetail"
 )
 
 // UserClient is the client API for User service.
@@ -35,6 +36,7 @@ type UserClient interface {
 	ActivateAccount(ctx context.Context, in *ActivateAccountRequest, opts ...grpc.CallOption) (*ActivateAccountResponse, error)
 	ListUser(ctx context.Context, in *ListUserRequest, opts ...grpc.CallOption) (*ListUserResponse, error)
 	GetUserDetail(ctx context.Context, in *GetUserDetailRequest, opts ...grpc.CallOption) (*GetUserDetailResponse, error)
+	GetLoginUserDetail(ctx context.Context, in *GetLoginUserDetailRequest, opts ...grpc.CallOption) (*GetLoginUserDetailResponse, error)
 }
 
 type userClient struct {
@@ -95,6 +97,16 @@ func (c *userClient) GetUserDetail(ctx context.Context, in *GetUserDetailRequest
 	return out, nil
 }
 
+func (c *userClient) GetLoginUserDetail(ctx context.Context, in *GetLoginUserDetailRequest, opts ...grpc.CallOption) (*GetLoginUserDetailResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetLoginUserDetailResponse)
+	err := c.cc.Invoke(ctx, User_GetLoginUserDetail_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServer is the server API for User service.
 // All implementations must embed UnimplementedUserServer
 // for forward compatibility.
@@ -104,6 +116,7 @@ type UserServer interface {
 	ActivateAccount(context.Context, *ActivateAccountRequest) (*ActivateAccountResponse, error)
 	ListUser(context.Context, *ListUserRequest) (*ListUserResponse, error)
 	GetUserDetail(context.Context, *GetUserDetailRequest) (*GetUserDetailResponse, error)
+	GetLoginUserDetail(context.Context, *GetLoginUserDetailRequest) (*GetLoginUserDetailResponse, error)
 	mustEmbedUnimplementedUserServer()
 }
 
@@ -128,6 +141,9 @@ func (UnimplementedUserServer) ListUser(context.Context, *ListUserRequest) (*Lis
 }
 func (UnimplementedUserServer) GetUserDetail(context.Context, *GetUserDetailRequest) (*GetUserDetailResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserDetail not implemented")
+}
+func (UnimplementedUserServer) GetLoginUserDetail(context.Context, *GetLoginUserDetailRequest) (*GetLoginUserDetailResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLoginUserDetail not implemented")
 }
 func (UnimplementedUserServer) mustEmbedUnimplementedUserServer() {}
 func (UnimplementedUserServer) testEmbeddedByValue()              {}
@@ -240,6 +256,24 @@ func _User_GetUserDetail_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _User_GetLoginUserDetail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLoginUserDetailRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServer).GetLoginUserDetail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: User_GetLoginUserDetail_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServer).GetLoginUserDetail(ctx, req.(*GetLoginUserDetailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // User_ServiceDesc is the grpc.ServiceDesc for User service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -266,6 +300,10 @@ var User_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserDetail",
 			Handler:    _User_GetUserDetail_Handler,
+		},
+		{
+			MethodName: "GetLoginUserDetail",
+			Handler:    _User_GetLoginUserDetail_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

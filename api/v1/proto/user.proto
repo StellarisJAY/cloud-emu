@@ -39,6 +39,12 @@ service User {
       get: "/api/v1/user/{userId}"
     };
   }
+
+  rpc GetLoginUserDetail(GetLoginUserDetailRequest) returns (GetLoginUserDetailResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/login-user"
+    };
+  }
 }
 
 message RegisterRequest {
@@ -113,6 +119,14 @@ message GetUserDetailRequest {
 }
 
 message GetUserDetailResponse {
+  int32 code = 1;
+  string message = 2;
+  UserDetailDto data = 3;
+}
+
+message GetLoginUserDetailRequest {}
+
+message GetLoginUserDetailResponse {
   int32 code = 1;
   string message = 2;
   UserDetailDto data = 3;

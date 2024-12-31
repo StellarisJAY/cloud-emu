@@ -67,7 +67,7 @@ export default {
     data() {
         return {
             formState: {
-                name: "",
+                userName: "",
                 password: "",
                 confirmPassword: "",
               email: "",

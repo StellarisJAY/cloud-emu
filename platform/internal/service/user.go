@@ -133,3 +133,30 @@ func (u *UserService) GetUserDetail(ctx context.Context, request *v1.GetUserDeta
 		},
 	}, nil
 }
+
+func (u *UserService) GetLoginUserDetail(ctx context.Context, _ *v1.GetLoginUserDetailRequest) (*v1.GetLoginUserDetailResponse, error) {
+	c, _ := jwt.FromContext(ctx)
+	claims := c.(*biz.LoginClaims)
+	user, err := u.uuc.GetById(ctx, claims.UserId)
+	if err != nil {
+		e := errors.FromError(err)
+		return &v1.GetLoginUserDetailResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
+	}
+	return &v1.GetLoginUserDetailResponse{
+		Code:    200,
+		Message: "查询成功",
+		Data: &v1.UserDetailDto{
+			UserId:   user.UserId,
+			UserName: user.UserName,
+			NickName: user.NickName,
+			AddTime:  user.AddTime.Format(time.DateTime),
+			Status:   user.Status,
+			Email:    user.Email,
+			Phone:    user.Phone,
+			Role:     user.Role,
+		},
+	}, nil
+}

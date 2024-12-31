@@ -817,6 +817,107 @@ func (x *GetUserDetailResponse) GetData() *UserDetailDto {
 	return nil
 }
 
+type GetLoginUserDetailRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *GetLoginUserDetailRequest) Reset() {
+	*x = GetLoginUserDetailRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_user_proto_msgTypes[12]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetLoginUserDetailRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetLoginUserDetailRequest) ProtoMessage() {}
+
+func (x *GetLoginUserDetailRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_proto_msgTypes[12]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetLoginUserDetailRequest.ProtoReflect.Descriptor instead.
+func (*GetLoginUserDetailRequest) Descriptor() ([]byte, []int) {
+	return file_user_proto_rawDescGZIP(), []int{12}
+}
+
+type GetLoginUserDetailResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Code    int32          `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	Data    *UserDetailDto `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+}
+
+func (x *GetLoginUserDetailResponse) Reset() {
+	*x = GetLoginUserDetailResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_user_proto_msgTypes[13]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetLoginUserDetailResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetLoginUserDetailResponse) ProtoMessage() {}
+
+func (x *GetLoginUserDetailResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_proto_msgTypes[13]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetLoginUserDetailResponse.ProtoReflect.Descriptor instead.
+func (*GetLoginUserDetailResponse) Descriptor() ([]byte, []int) {
+	return file_user_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *GetLoginUserDetailResponse) GetCode() int32 {
+	if x != nil {
+		return x.Code
+	}
+	return 0
+}
+
+func (x *GetLoginUserDetailResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *GetLoginUserDetailResponse) GetData() *UserDetailDto {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
 var File_user_proto protoreflect.FileDescriptor
 
 var file_user_proto_rawDesc = []byte{
@@ -902,7 +1003,16 @@ var file_user_proto_rawDesc = []byte{
 	0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x25, 0x0a, 0x04,
 	0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x76, 0x31, 0x2e,
 	0x55, 0x73, 0x65, 0x72, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x44, 0x74, 0x6f, 0x52, 0x04, 0x64,
-	0x61, 0x74, 0x61, 0x32, 0xc5, 0x03, 0x0a, 0x04, 0x55, 0x73, 0x65, 0x72, 0x12, 0x52, 0x0a, 0x08,
+	0x61, 0x74, 0x61, 0x22, 0x1b, 0x0a, 0x19, 0x47, 0x65, 0x74, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x55,
+	0x73, 0x65, 0x72, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x22, 0x71, 0x0a, 0x1a, 0x47, 0x65, 0x74, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x55, 0x73, 0x65, 0x72,
+	0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x12,
+	0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x04, 0x63, 0x6f,
+	0x64, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x25, 0x0a, 0x04,
+	0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x76, 0x31, 0x2e,
+	0x55, 0x73, 0x65, 0x72, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x44, 0x74, 0x6f, 0x52, 0x04, 0x64,
+	0x61, 0x74, 0x61, 0x32, 0xb6, 0x04, 0x0a, 0x04, 0x55, 0x73, 0x65, 0x72, 0x12, 0x52, 0x0a, 0x08,
 	0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x12, 0x13, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65,
 	0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x14, 0x2e,
 	0x76, 0x31, 0x2e, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f,
@@ -930,9 +1040,16 @@ var file_user_proto_rawDesc = []byte{
 	0x74, 0x1a, 0x19, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x55, 0x73, 0x65, 0x72, 0x44, 0x65,
 	0x74, 0x61, 0x69, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x1d, 0x82, 0xd3,
 	0xe4, 0x93, 0x02, 0x17, 0x12, 0x15, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x75, 0x73,
-	0x65, 0x72, 0x2f, 0x7b, 0x75, 0x73, 0x65, 0x72, 0x49, 0x64, 0x7d, 0x42, 0x14, 0x5a, 0x12, 0x70,
-	0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72, 0x6d, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x3b, 0x76,
-	0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x72, 0x2f, 0x7b, 0x75, 0x73, 0x65, 0x72, 0x49, 0x64, 0x7d, 0x12, 0x6f, 0x0a, 0x12, 0x47,
+	0x65, 0x74, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x55, 0x73, 0x65, 0x72, 0x44, 0x65, 0x74, 0x61, 0x69,
+	0x6c, 0x12, 0x1d, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x55,
+	0x73, 0x65, 0x72, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x1e, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x55, 0x73,
+	0x65, 0x72, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x22, 0x1a, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x14, 0x12, 0x12, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76,
+	0x31, 0x2f, 0x6c, 0x6f, 0x67, 0x69, 0x6e, 0x2d, 0x75, 0x73, 0x65, 0x72, 0x42, 0x14, 0x5a, 0x12,
+	0x70, 0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72, 0x6d, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x3b,
+	0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -947,39 +1064,44 @@ func file_user_proto_rawDescGZIP() []byte {
 	return file_user_proto_rawDescData
 }
 
-var file_user_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_user_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_user_proto_goTypes = []any{
-	(*RegisterRequest)(nil),         // 0: v1.RegisterRequest
-	(*RegisterResponse)(nil),        // 1: v1.RegisterResponse
-	(*LoginRequest)(nil),            // 2: v1.LoginRequest
-	(*LoginResponse)(nil),           // 3: v1.LoginResponse
-	(*ActivateAccountRequest)(nil),  // 4: v1.ActivateAccountRequest
-	(*ActivateAccountResponse)(nil), // 5: v1.ActivateAccountResponse
-	(*UserDto)(nil),                 // 6: v1.UserDto
-	(*ListUserRequest)(nil),         // 7: v1.ListUserRequest
-	(*ListUserResponse)(nil),        // 8: v1.ListUserResponse
-	(*UserDetailDto)(nil),           // 9: v1.UserDetailDto
-	(*GetUserDetailRequest)(nil),    // 10: v1.GetUserDetailRequest
-	(*GetUserDetailResponse)(nil),   // 11: v1.GetUserDetailResponse
+	(*RegisterRequest)(nil),            // 0: v1.RegisterRequest
+	(*RegisterResponse)(nil),           // 1: v1.RegisterResponse
+	(*LoginRequest)(nil),               // 2: v1.LoginRequest
+	(*LoginResponse)(nil),              // 3: v1.LoginResponse
+	(*ActivateAccountRequest)(nil),     // 4: v1.ActivateAccountRequest
+	(*ActivateAccountResponse)(nil),    // 5: v1.ActivateAccountResponse
+	(*UserDto)(nil),                    // 6: v1.UserDto
+	(*ListUserRequest)(nil),            // 7: v1.ListUserRequest
+	(*ListUserResponse)(nil),           // 8: v1.ListUserResponse
+	(*UserDetailDto)(nil),              // 9: v1.UserDetailDto
+	(*GetUserDetailRequest)(nil),       // 10: v1.GetUserDetailRequest
+	(*GetUserDetailResponse)(nil),      // 11: v1.GetUserDetailResponse
+	(*GetLoginUserDetailRequest)(nil),  // 12: v1.GetLoginUserDetailRequest
+	(*GetLoginUserDetailResponse)(nil), // 13: v1.GetLoginUserDetailResponse
 }
 var file_user_proto_depIdxs = []int32{
 	6,  // 0: v1.ListUserResponse.data:type_name -> v1.UserDto
 	9,  // 1: v1.GetUserDetailResponse.data:type_name -> v1.UserDetailDto
-	0,  // 2: v1.User.Register:input_type -> v1.RegisterRequest
-	2,  // 3: v1.User.Login:input_type -> v1.LoginRequest
-	4,  // 4: v1.User.ActivateAccount:input_type -> v1.ActivateAccountRequest
-	7,  // 5: v1.User.ListUser:input_type -> v1.ListUserRequest
-	10, // 6: v1.User.GetUserDetail:input_type -> v1.GetUserDetailRequest
-	1,  // 7: v1.User.Register:output_type -> v1.RegisterResponse
-	3,  // 8: v1.User.Login:output_type -> v1.LoginResponse
-	5,  // 9: v1.User.ActivateAccount:output_type -> v1.ActivateAccountResponse
-	8,  // 10: v1.User.ListUser:output_type -> v1.ListUserResponse
-	11, // 11: v1.User.GetUserDetail:output_type -> v1.GetUserDetailResponse
-	7,  // [7:12] is the sub-list for method output_type
-	2,  // [2:7] is the sub-list for method input_type
-	2,  // [2:2] is the sub-list for extension type_name
-	2,  // [2:2] is the sub-list for extension extendee
-	0,  // [0:2] is the sub-list for field type_name
+	9,  // 2: v1.GetLoginUserDetailResponse.data:type_name -> v1.UserDetailDto
+	0,  // 3: v1.User.Register:input_type -> v1.RegisterRequest
+	2,  // 4: v1.User.Login:input_type -> v1.LoginRequest
+	4,  // 5: v1.User.ActivateAccount:input_type -> v1.ActivateAccountRequest
+	7,  // 6: v1.User.ListUser:input_type -> v1.ListUserRequest
+	10, // 7: v1.User.GetUserDetail:input_type -> v1.GetUserDetailRequest
+	12, // 8: v1.User.GetLoginUserDetail:input_type -> v1.GetLoginUserDetailRequest
+	1,  // 9: v1.User.Register:output_type -> v1.RegisterResponse
+	3,  // 10: v1.User.Login:output_type -> v1.LoginResponse
+	5,  // 11: v1.User.ActivateAccount:output_type -> v1.ActivateAccountResponse
+	8,  // 12: v1.User.ListUser:output_type -> v1.ListUserResponse
+	11, // 13: v1.User.GetUserDetail:output_type -> v1.GetUserDetailResponse
+	13, // 14: v1.User.GetLoginUserDetail:output_type -> v1.GetLoginUserDetailResponse
+	9,  // [9:15] is the sub-list for method output_type
+	3,  // [3:9] is the sub-list for method input_type
+	3,  // [3:3] is the sub-list for extension type_name
+	3,  // [3:3] is the sub-list for extension extendee
+	0,  // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_user_proto_init() }
@@ -1132,6 +1254,30 @@ func file_user_proto_init() {
 				return nil
 			}
 		}
+		file_user_proto_msgTypes[12].Exporter = func(v any, i int) any {
+			switch v := v.(*GetLoginUserDetailRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_user_proto_msgTypes[13].Exporter = func(v any, i int) any {
+			switch v := v.(*GetLoginUserDetailResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1139,7 +1285,7 @@ func file_user_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_user_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   12,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
