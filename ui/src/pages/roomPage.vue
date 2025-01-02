@@ -402,26 +402,22 @@ export default {
           "roomId": this.roomId,
           "token": this.connectToken,
           "iceCandidate": s,
+        }).then(_ => {
+          this.getRemoteCandidate();
         });
       });
       // 发送answer之后的candidate直接发送给远端
       pc.onicecandidate = ev => {
         if (ev.candidate) {
           const s = JSON.stringify(ev.candidate);
+          console.log(ev.candidate);
           api.post("/room-instance/ice-candidate", {
             "roomId": this.roomId,
             "token": this.connectToken,
             "iceCandidate": s,
           }).then(_ => {
-            return api.get("/room-instance/ice-candidate", {"roomId": this.roomId});
-          }).then(resp => {
-            console.log(resp);
-            resp.data.forEach(candidate => {
-              const c = JSON.parse(candidate);
-              console.log("remote candidate: ", c);
-              pc.addIceCandidate(c);
-            });
-          })
+            this.getRemoteCandidate();
+          });
         }
       }
       // data channel
@@ -432,6 +428,16 @@ export default {
         ev.channel.onclose = _ => this.onDataChannelClose();
       };
       this.rtcSession = rtcSession;
+    },
+
+    getRemoteCandidate() {
+      api.get("/room-instance/ice-candidate", {"roomId": this.roomId, "token": this.connectToken}).then(resp=>{
+        resp.data.forEach(candidate => {
+          const c = JSON.parse(candidate);
+          console.log("remote candidate: ", c);
+          this.rtcSession.pc.addIceCandidate(c);
+        });
+      });
     },
 
     onPeerConnStateChange(_) {
