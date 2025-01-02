@@ -103,7 +103,13 @@ export default {
             value: item["emulatorId"]
           }
         });
-        this.selectedEmulator = this.emulators.find(item => item.emulatorId === this.updateForm.emulatorId);
+        const emulator = this.emulators.find(item => item.emulatorId === this.updateForm.emulatorId);
+        if (emulator) {
+          this.selectedEmulator = emulator;
+        }else {
+          this.selectedEmulator = this.emulators[0];
+          this.updateForm.emulatorId = this.emulators[0].emulatorId;
+        }
         this.listGames();
       });
     },
@@ -134,6 +140,7 @@ export default {
         this.updateForm.emulatorId = this.roomDetail.emulatorId;
         this.updateForm.gameId = this.roomDetail.gameId;
         this.selectedEmulator = this.emulators.find(item => item.emulatorId === this.updateForm.emulatorId);
+        this.selectedGame = this.emulatorGames.find(item => item.gameId === this.updateForm.gameId);
       });
     },
 
