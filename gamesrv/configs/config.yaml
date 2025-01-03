@@ -23,3 +23,11 @@ registry:
   userName: helloworld
   password: helloworld
   namespaceId: public
+webrtc:
+  iceServers:
+    - url: stun:localhost:3478
+      username:
+      credential:
+    - url: turn:localhost:3478
+      username: username
+      credential: password

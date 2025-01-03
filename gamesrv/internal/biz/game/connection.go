@@ -3,6 +3,7 @@ package game
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/conf"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/pion/webrtc/v3"
 	"sync"
@@ -20,13 +21,17 @@ type Connection struct {
 }
 
 // NewConnection 新建一个连接, 返回WebRTC SDP offer
-func (g *Instance) NewConnection(userId int64, stunServer string) (*Connection, string, error) {
+func (g *Instance) NewConnection(userId int64, iceServers []*conf.ICEServer) (*Connection, string, error) {
+	servers := make([]webrtc.ICEServer, len(iceServers))
+	for i, server := range iceServers {
+		servers[i] = webrtc.ICEServer{
+			URLs:       []string{server.Url},
+			Username:   server.Username,
+			Credential: server.Credential,
+		}
+	}
 	pc, err := webrtc.NewPeerConnection(webrtc.Configuration{
-		ICEServers: []webrtc.ICEServer{
-			{
-				URLs: []string{stunServer}, // STUN服务器地址，用于获取本地ICE候选地址
-			},
-		},
+		ICEServers: servers,
 	})
 	if err != nil {
 		return nil, "", fmt.Errorf("new peer connection error: %v", err)

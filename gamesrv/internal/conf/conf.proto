@@ -9,6 +9,7 @@ message Bootstrap {
   Server server = 1;
   Data data = 2;
   Registry registry = 3;
+  WebRTC webrtc = 4;
 }
 
 message Server {
@@ -53,4 +54,14 @@ message Registry {
   string password = 4;
   string namespaceId = 5;
   string scheme = 6;
+}
+
+message ICEServer {
+  string url = 1;
+  string username = 2;
+  string credential = 3;
+}
+
+message WebRTC {
+  repeated ICEServer iceServers = 1;
 }

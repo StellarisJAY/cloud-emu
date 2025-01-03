@@ -345,11 +345,11 @@ export default {
           {
             urls: globalConfigs.StunServer,
           },
-          // {
-          //   urls: globalConfigs.TurnServer.Host,
-          //   username: globalConfigs.TurnServer.Username,
-          //   credential: globalConfigs.TurnServer.Password,
-          // }
+          {
+            urls: globalConfigs.TurnServer.Host,
+            username: globalConfigs.TurnServer.Username,
+            credential: globalConfigs.TurnServer.Password,
+          }
         ],
         iceTransportPolicy: "all",
       });

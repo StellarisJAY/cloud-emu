@@ -23,7 +23,7 @@ import (
 // Injectors from wire.go:
 
 // wireApp init kratos application.
-func wireApp(confServer *conf.Server, confData *conf.Data, registry *conf.Registry, logger log.Logger) (*kratos.App, func(), error) {
+func wireApp(confServer *conf.Server, confData *conf.Data, registry *conf.Registry, webRTC *conf.WebRTC, logger log.Logger) (*kratos.App, func(), error) {
 	dataData, cleanup, err := data.NewData(confData, logger)
 	if err != nil {
 		return nil, nil, err
@@ -31,7 +31,7 @@ func wireApp(confServer *conf.Server, confData *conf.Data, registry *conf.Regist
 	gameFileRepo := data.NewGameFileRepo(dataData)
 	memberAuthRepo := data.NewMemberAuthRepo(dataData)
 	client := server.NewConsulClient(registry)
-	gameServerUseCase := biz.NewGameServerUseCase(gameFileRepo, memberAuthRepo, logger, client)
+	gameServerUseCase := biz.NewGameServerUseCase(gameFileRepo, memberAuthRepo, logger, client, webRTC)
 	gameServer := service.NewGameService(gameServerUseCase)
 	grpcServer := server.NewGRPCServer(confServer, gameServer, logger)
 	registrar := server.NewRegistrar(registry)

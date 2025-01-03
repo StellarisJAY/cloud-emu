@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/biz/game"
+	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/conf"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/uuid"
 	"github.com/hashicorp/consul/api"
@@ -23,6 +24,7 @@ type GameServerUseCase struct {
 	mutex          *sync.RWMutex
 	logger         *log.Helper
 	consul         *api.Client
+	webrtcConf     *conf.WebRTC
 }
 
 type CreateRoomInstanceParams struct {
@@ -58,7 +60,8 @@ type LoadSaveParams struct {
 	SaveData     []byte
 }
 
-func NewGameServerUseCase(gameFileRepo GameFileRepo, memberAuthRepo MemberAuthRepo, logger log.Logger, consul *api.Client) *GameServerUseCase {
+func NewGameServerUseCase(gameFileRepo GameFileRepo, memberAuthRepo MemberAuthRepo, logger log.Logger, consul *api.Client,
+	webrtcConf *conf.WebRTC) *GameServerUseCase {
 	return &GameServerUseCase{
 		gameFileRepo:   gameFileRepo,
 		memberAuthRepo: memberAuthRepo,
@@ -66,6 +69,7 @@ func NewGameServerUseCase(gameFileRepo GameFileRepo, memberAuthRepo MemberAuthRe
 		mutex:          &sync.RWMutex{},
 		gameInstances:  make(map[int64]*game.Instance),
 		consul:         consul,
+		webrtcConf:     webrtcConf,
 	}
 }
 
@@ -118,7 +122,7 @@ func (uc *GameServerUseCase) OpenGameConnection(_ context.Context, roomId int64,
 		return "", v1.ErrorAccessDenied("连接失败，游戏实例不存在")
 	}
 	// TODO stun server config
-	_, sdpOffer, err := instance.NewConnection(auth.UserId, "stun:43.138.153.172:3478")
+	_, sdpOffer, err := instance.NewConnection(auth.UserId, uc.webrtcConf.IceServers)
 	if err != nil {
 		uc.logger.Error("创建连接出错:", err)
 		return "", v1.ErrorServiceError("连接失败，创建连接出错")
