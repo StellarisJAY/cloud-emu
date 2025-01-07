@@ -297,3 +297,13 @@ func (uc *GameServerUseCase) ListOnlineRoomMember(_ context.Context, roomId int6
 	}
 	return instance.GetOnlineUsers(), nil
 }
+
+func (uc *GameServerUseCase) GetControllerPlayers(_ context.Context, roomId int64) ([]game.ControllerPlayer, error) {
+	uc.mutex.RLock()
+	instance, ok := uc.gameInstances[roomId]
+	uc.mutex.RUnlock()
+	if !ok {
+		return nil, v1.ErrorServiceError("游戏实例不存在")
+	}
+	return instance.GetControllerPlayers(), nil
+}

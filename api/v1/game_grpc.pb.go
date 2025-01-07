@@ -30,6 +30,8 @@ const (
 	Game_SaveGame_FullMethodName                   = "/v1.Game/SaveGame"
 	Game_LoadSave_FullMethodName                   = "/v1.Game/LoadSave"
 	Game_ListOnlineRoomMember_FullMethodName       = "/v1.Game/ListOnlineRoomMember"
+	Game_GetControllerPlayers_FullMethodName       = "/v1.Game/GetControllerPlayers"
+	Game_SetControllerPlayer_FullMethodName        = "/v1.Game/SetControllerPlayer"
 )
 
 // GameClient is the client API for Game service.
@@ -47,6 +49,8 @@ type GameClient interface {
 	SaveGame(ctx context.Context, in *GameSrvSaveGameRequest, opts ...grpc.CallOption) (*GameSrvSaveGameResponse, error)
 	LoadSave(ctx context.Context, in *GameSrvLoadSaveRequest, opts ...grpc.CallOption) (*GameSrvLoadSaveResponse, error)
 	ListOnlineRoomMember(ctx context.Context, in *ListOnlineRoomMemberRequest, opts ...grpc.CallOption) (*ListOnlineRoomMemberResponse, error)
+	GetControllerPlayers(ctx context.Context, in *GameSrvGetControllerPlayersRequest, opts ...grpc.CallOption) (*GameSrvGetControllerPlayersResponse, error)
+	SetControllerPlayer(ctx context.Context, in *GameSrvSetControllerPlayerRequest, opts ...grpc.CallOption) (*GameSrvSetControllerPlayerResponse, error)
 }
 
 type gameClient struct {
@@ -167,6 +171,26 @@ func (c *gameClient) ListOnlineRoomMember(ctx context.Context, in *ListOnlineRoo
 	return out, nil
 }
 
+func (c *gameClient) GetControllerPlayers(ctx context.Context, in *GameSrvGetControllerPlayersRequest, opts ...grpc.CallOption) (*GameSrvGetControllerPlayersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GameSrvGetControllerPlayersResponse)
+	err := c.cc.Invoke(ctx, Game_GetControllerPlayers_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gameClient) SetControllerPlayer(ctx context.Context, in *GameSrvSetControllerPlayerRequest, opts ...grpc.CallOption) (*GameSrvSetControllerPlayerResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GameSrvSetControllerPlayerResponse)
+	err := c.cc.Invoke(ctx, Game_SetControllerPlayer_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GameServer is the server API for Game service.
 // All implementations must embed UnimplementedGameServer
 // for forward compatibility.
@@ -182,6 +206,8 @@ type GameServer interface {
 	SaveGame(context.Context, *GameSrvSaveGameRequest) (*GameSrvSaveGameResponse, error)
 	LoadSave(context.Context, *GameSrvLoadSaveRequest) (*GameSrvLoadSaveResponse, error)
 	ListOnlineRoomMember(context.Context, *ListOnlineRoomMemberRequest) (*ListOnlineRoomMemberResponse, error)
+	GetControllerPlayers(context.Context, *GameSrvGetControllerPlayersRequest) (*GameSrvGetControllerPlayersResponse, error)
+	SetControllerPlayer(context.Context, *GameSrvSetControllerPlayerRequest) (*GameSrvSetControllerPlayerResponse, error)
 	mustEmbedUnimplementedGameServer()
 }
 
@@ -224,6 +250,12 @@ func (UnimplementedGameServer) LoadSave(context.Context, *GameSrvLoadSaveRequest
 }
 func (UnimplementedGameServer) ListOnlineRoomMember(context.Context, *ListOnlineRoomMemberRequest) (*ListOnlineRoomMemberResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListOnlineRoomMember not implemented")
+}
+func (UnimplementedGameServer) GetControllerPlayers(context.Context, *GameSrvGetControllerPlayersRequest) (*GameSrvGetControllerPlayersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetControllerPlayers not implemented")
+}
+func (UnimplementedGameServer) SetControllerPlayer(context.Context, *GameSrvSetControllerPlayerRequest) (*GameSrvSetControllerPlayerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetControllerPlayer not implemented")
 }
 func (UnimplementedGameServer) mustEmbedUnimplementedGameServer() {}
 func (UnimplementedGameServer) testEmbeddedByValue()              {}
@@ -444,6 +476,42 @@ func _Game_ListOnlineRoomMember_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Game_GetControllerPlayers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GameSrvGetControllerPlayersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameServer).GetControllerPlayers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Game_GetControllerPlayers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServer).GetControllerPlayers(ctx, req.(*GameSrvGetControllerPlayersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Game_SetControllerPlayer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GameSrvSetControllerPlayerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameServer).SetControllerPlayer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Game_SetControllerPlayer_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServer).SetControllerPlayer(ctx, req.(*GameSrvSetControllerPlayerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Game_ServiceDesc is the grpc.ServiceDesc for Game service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -494,6 +562,14 @@ var Game_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListOnlineRoomMember",
 			Handler:    _Game_ListOnlineRoomMember_Handler,
+		},
+		{
+			MethodName: "GetControllerPlayers",
+			Handler:    _Game_GetControllerPlayers_Handler,
+		},
+		{
+			MethodName: "SetControllerPlayer",
+			Handler:    _Game_SetControllerPlayer_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

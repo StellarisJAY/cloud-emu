@@ -262,3 +262,30 @@ func (g *GameServerRepo) LoadSave(ctx context.Context, instance *biz.RoomInstanc
 	}
 	return nil
 }
+
+func (g *GameServerRepo) GetControllerPlayers(ctx context.Context, instance *biz.RoomInstance) ([]*biz.ControllerPlayer, error) {
+	client, err := common.NewGRPCClient(instance.ServerIp, int(instance.RpcPort))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+	gameServer := v1.NewGameClient(client)
+	resp, err := gameServer.GetControllerPlayers(ctx, &v1.GameSrvGetControllerPlayersRequest{
+		RoomId: instance.RoomId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if resp.Code != 200 {
+		return nil, errors.New(int(resp.Code), "Service Error", resp.Message)
+	}
+	result := make([]*biz.ControllerPlayer, len(resp.Data))
+	for i, player := range resp.Data {
+		result[i] = &biz.ControllerPlayer{
+			UserId:       player.UserId,
+			ControllerId: player.ControllerId,
+			Label:        player.Label,
+		}
+	}
+	return result, nil
+}

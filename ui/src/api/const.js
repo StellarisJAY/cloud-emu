@@ -80,6 +80,27 @@ const Configs = {
             {"label": "F", "code": "F", "slot": "r5"},
             {"label": "0", "code": "0", "slot": "r4"},
         ],
+        "1234": [{"label": "←", "code": "Left", "slot": "l4"},
+            {"label": "→", "code": "Right", "slot": "l6"},
+            {"label": "↑", "code": "Up", "slot": "l2"},
+            {"label": "↓", "code": "Down", "slot": "l8"},
+            {"label": "A", "code": "A", "slot": "r1"},
+            {"label": "B", "code": "B", "slot": "r7"},
+            {"label": "Select", "code": "Select", "slot": "r3"},
+            {"label": "Start", "code": "Start", "slot": "r9"}],
+    },
+
+    emulatorControllers: {
+        "NESGO": [
+            {controllerId: 1, label: "玩家1"},
+            {controllerId: 2, label: "玩家2"}
+        ],
+        "DUMMY": [
+            {controllerId: 1, label: "控制器"},
+        ],
+        "CHIP8": [
+            {controllerId: 1, label: "控制器"},
+        ]
     },
 
     enums: {

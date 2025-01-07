@@ -52,6 +52,19 @@ service RoomInstance {
       body: "*"
     };
   }
+
+  rpc GetControllerPlayers(GetControllerPlayersRequest) returns (GetControllerPlayersResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/room-instance/controller-players"
+    };
+  }
+
+  rpc SetControllerPlayer(SetControllerPlayerRequest) returns (SetControllerPlayerResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/room-instance/controller-players"
+      body: "*"
+    };
+  }
 }
 
 message RoomInstanceDto {
@@ -149,4 +162,31 @@ message RestartRoomInstanceRequest {
 message RestartRoomInstanceResponse {
   int32 code = 1;
   string message = 2;
+}
+
+message GetControllerPlayersRequest {
+  int64 roomId = 1;
+}
+
+message ControllerPlayer {
+  int64 userId = 1;
+  string label = 2;
+  int32 controllerId = 3;
+}
+
+message GetControllerPlayersResponse {
+  int32 code = 1;
+  string message = 2;
+  repeated ControllerPlayer data = 3;
+}
+
+message SetControllerPlayerRequest {
+  int64 roomId = 1;
+  repeated ControllerPlayer data = 2;
+}
+
+message SetControllerPlayerResponse {
+  int32 code = 1;
+  string message = 2;
+  repeated ControllerPlayer data = 3;
 }

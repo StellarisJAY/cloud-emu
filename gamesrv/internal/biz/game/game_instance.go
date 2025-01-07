@@ -2,7 +2,6 @@ package game
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/StellrisJAY/cloud-emu/emulator"
 	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/codec"
 	"github.com/go-kratos/kratos/v2/log"
@@ -19,19 +18,19 @@ const (
 	MsgChat
 	MsgNewConn
 	MsgCloseConn
-	MsgSetController1
-	MsgSetController2
-	MsgResetController
 	MsgPeerConnected
 	MsgPauseEmulator
 	MsgResumeEmulator
 	MsgSaveGame
 	MsgLoadSave
 	MsgRestartEmulator
-	MsgPing
-	MsgSetGraphicOptions
-	MsgSetEmulatorSpeed
-	MsgEmulatorRestart
+	MsgPing              byte = 14
+	MsgSetGraphicOptions byte = 15
+	MsgSetEmulatorSpeed  byte = 16
+	MsgEmulatorRestart   byte = 17
+	MsgSetController     byte = 18
+	MsgResetController   byte = 19
+	MsgGetController     byte = 20
 )
 
 const (
@@ -71,8 +70,6 @@ type Instance struct {
 	audioSampleRate      int
 	audioEncoder         codec.IAudioEncoder
 	audioSampleChan      chan float32             // audioSampleChan 音频输出channel
-	controller1          int64                    // controller1 模拟器P1控制权玩家
-	controller2          int64                    // controller2 模拟器P2控制权玩家
 	messageChan          chan *Message            // 消息接收通道，单线程处理多个客户端发送的消息
 	Cancel               context.CancelFunc       // 消息接收和音频接收取消函数
 	connections          map[int64]*Connection    // 连接列表
@@ -91,6 +88,7 @@ type Instance struct {
 	DoneChan       chan struct{}
 	emulatorId     int64
 	gameId         int64
+	controllerMap  map[int64]int
 }
 
 // MakeGameInstance 创建初始的游戏实例，其中运行dummy模拟器，该模拟器只输出一个提示玩家选择游戏的单帧画面（后期考虑动画）
@@ -159,12 +157,6 @@ func (g *Instance) MessageHandler(ctx context.Context) {
 				g.handlePeerConnected(msg.Data.(*Connection))
 			case MsgCloseConn:
 				g.handleMsgCloseConn(msg.Data.(*Connection))
-			case MsgSetController1:
-				msg.resultChan <- g.handleSetController(msg.Data.(int64), 0)
-			case MsgSetController2:
-				msg.resultChan <- g.handleSetController(msg.Data.(int64), 1)
-			case MsgResetController:
-				msg.resultChan <- g.handleResetController(msg.Data.(int64))
 			case MsgSaveGame:
 				msg.resultChan <- g.handleSaveGame()
 			case MsgLoadSave:
@@ -177,6 +169,14 @@ func (g *Instance) MessageHandler(ctx context.Context) {
 				msg.resultChan <- g.setGraphicOptions(msg.Data.(*GraphicOptions))
 			case MsgSetEmulatorSpeed:
 				msg.resultChan <- g.setEmulatorSpeed(msg.Data.(float64))
+			case MsgSetController:
+			case MsgResetController:
+			case MsgGetController:
+				players := g.getControllerPlayer()
+				msg.resultChan <- ConsumerResult{
+					Success: true,
+					Data:    players,
+				}
 			default:
 			}
 		}
@@ -262,58 +262,6 @@ func (g *Instance) handleMsgCloseConn(conn *Connection) {
 	if len(active) == 0 {
 		_ = g.e.Pause()
 		g.allConnCloseCallback(g)
-	}
-}
-
-// handlePlayerControl 玩家控制消息处理
-// TODO 某些模拟器有玩家1和玩家2，需要区分控制权限
-func (g *Instance) handlePlayerControl(keyCode string, action byte, _ int64) {
-	g.e.SubmitInput(1, keyCode, action == MsgPlayerControlButtonPressed)
-}
-
-func (g *Instance) handleSetController(playerId int64, id int) ConsumerResult {
-	g.mutex.RLock()
-	defer g.mutex.RUnlock()
-	if _, ok := g.connections[playerId]; !ok {
-		return ConsumerResult{Success: false}
-	}
-	if id == 0 {
-		g.controller1 = playerId
-		if g.controller2 == playerId {
-			g.controller2 = 0
-		}
-	} else {
-		g.controller2 = playerId
-		if g.controller1 == playerId {
-			g.controller1 = 0
-		}
-	}
-	return ConsumerResult{Success: true}
-}
-
-func (g *Instance) handleResetController(playerId int64) ConsumerResult {
-	g.mutex.RLock()
-	defer g.mutex.RUnlock()
-	if _, ok := g.connections[playerId]; !ok {
-		return ConsumerResult{Success: false}
-	}
-	if g.controller1 == playerId {
-		g.controller1 = 0
-	}
-	if g.controller2 == playerId {
-		g.controller2 = 0
-	}
-	return ConsumerResult{Success: true}
-}
-
-// handleChat 聊天消息处理, 广播给所有数据通道
-func (g *Instance) handleChat(msg *Message) {
-	g.mutex.RLock()
-	defer g.mutex.RUnlock()
-	resp := &Message{Type: MsgChat, From: msg.From, To: 0, Data: msg.Data}
-	for _, conn := range g.connections {
-		raw, _ := json.Marshal(resp)
-		_ = conn.dataChannel.Send(raw)
 	}
 }
 

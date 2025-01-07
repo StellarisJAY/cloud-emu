@@ -73,3 +73,16 @@ func (c *chip8EmulatorAdapter) SetCPUBoostRate(f float64) float64 {
 func (c *chip8EmulatorAdapter) OutputResolution() (width, height int) {
 	return 64, 32
 }
+
+func (c *chip8EmulatorAdapter) MultiController() bool {
+	return false
+}
+
+func (c *chip8EmulatorAdapter) ControllerInfos() []ControllerInfo {
+	return []ControllerInfo{
+		{
+			ControllerId: 1,
+			Label:        "控制器",
+		},
+	}
+}

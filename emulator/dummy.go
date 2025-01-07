@@ -82,3 +82,16 @@ func (d *DummyAdapter) SetCPUBoostRate(f float64) float64 {
 func (d *DummyAdapter) OutputResolution() (width, height int) {
 	return d.e.Width, d.e.Height
 }
+
+func (d *DummyAdapter) MultiController() bool {
+	return false
+}
+
+func (d *DummyAdapter) ControllerInfos() []ControllerInfo {
+	return []ControllerInfo{
+		{
+			ControllerId: 1,
+			Label:        "控制器",
+		},
+	}
+}

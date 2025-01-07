@@ -494,6 +494,40 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.OpenGameConnectionResponse'
+    /api/v1/room-instance/controller-players:
+        get:
+            tags:
+                - RoomInstance
+            operationId: RoomInstance_GetControllerPlayers
+            parameters:
+                - name: roomId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.GetControllerPlayersResponse'
+        post:
+            tags:
+                - RoomInstance
+            operationId: RoomInstance_SetControllerPlayer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.SetControllerPlayerRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.SetControllerPlayerResponse'
     /api/v1/room-instance/history:
         get:
             tags:
@@ -884,6 +918,16 @@ components:
                     type: string
                 layout:
                     type: string
+        v1.ControllerPlayer:
+            type: object
+            properties:
+                userId:
+                    type: string
+                label:
+                    type: string
+                controllerId:
+                    type: integer
+                    format: int32
         v1.CreateButtonLayoutRequest:
             type: object
             properties:
@@ -1025,6 +1069,18 @@ components:
                     type: string
                 gameName:
                     type: string
+        v1.GetControllerPlayersResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/v1.ControllerPlayer'
         v1.GetLoginUserDetailResponse:
             type: object
             properties:
@@ -1495,6 +1551,27 @@ components:
                     format: int32
                 message:
                     type: string
+        v1.SetControllerPlayerRequest:
+            type: object
+            properties:
+                roomId:
+                    type: string
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/v1.ControllerPlayer'
+        v1.SetControllerPlayerResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/v1.ControllerPlayer'
         v1.UpdateButtonLayoutRequest:
             type: object
             properties:

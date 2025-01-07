@@ -10,6 +10,7 @@ const (
 	TypeNESGO = "NESGO"
 	TypeChip8 = "CHIP8"
 	TypeDummy = "DUMMY"
+	TypeGoboy = "GOBOY"
 )
 
 // IFrame 模拟器输出画面接口
@@ -27,6 +28,11 @@ type IFrame interface {
 type IGameFileRepo interface {
 	// GetGameData 获取游戏文件数据
 	GetGameData(ctx context.Context, game string) ([]byte, error)
+}
+
+type ControllerInfo struct {
+	ControllerId int
+	Label        string
 }
 
 // IEmulator 模拟器接口层，用于适配更多种类的模拟器
@@ -54,6 +60,9 @@ type IEmulator interface {
 	SetCPUBoostRate(float64) float64
 	// OutputResolution 获取模拟器输出分辨率
 	OutputResolution() (width, height int)
+
+	MultiController() bool
+	ControllerInfos() []ControllerInfo
 }
 
 // IEmulatorOptions 模拟器选项接口
@@ -107,6 +116,8 @@ func MakeEmulator(emulatorType string, options IEmulatorOptions) (IEmulator, err
 		return e, nil
 	case TypeDummy:
 		return MakeDummyAdapter(options)
+	case TypeGoboy:
+		return newGoboyAdapter(options)
 	default:
 		return nil, ErrorEmulatorNotSupported
 	}

@@ -18,6 +18,8 @@ service Game {
   rpc SaveGame(GameSrvSaveGameRequest) returns (GameSrvSaveGameResponse) {}
   rpc LoadSave(GameSrvLoadSaveRequest) returns (GameSrvLoadSaveResponse) {}
   rpc ListOnlineRoomMember(ListOnlineRoomMemberRequest) returns (ListOnlineRoomMemberResponse) {}
+  rpc GetControllerPlayers(GameSrvGetControllerPlayersRequest) returns (GameSrvGetControllerPlayersResponse) {}
+  rpc SetControllerPlayer(GameSrvSetControllerPlayerRequest) returns (GameSrvSetControllerPlayerResponse) {}
 }
 
 message GetGameInstanceResult {
@@ -177,4 +179,31 @@ message ListOnlineRoomMemberResponse {
   int32 code = 1;
   string message = 2;
   repeated int64 roomMemberIds = 3;
+}
+
+message GameSrvGetControllerPlayersRequest {
+  int64 roomId = 1;
+}
+
+message GameSrvControllerPlayer {
+  int64 userId = 1;
+  string label = 2;
+  int32 controllerId = 3;
+}
+
+message GameSrvGetControllerPlayersResponse {
+  int32 code = 1;
+  string message = 2;
+  repeated GameSrvControllerPlayer data = 3;
+}
+
+message GameSrvSetControllerPlayerRequest {
+  int64 roomId = 1;
+  repeated GameSrvControllerPlayer controllerPlayers = 2;
+}
+
+message GameSrvSetControllerPlayerResponse {
+  int32 code = 1;
+  string message = 2;
+  repeated GameSrvControllerPlayer data = 3;
 }

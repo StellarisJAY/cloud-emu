@@ -26,6 +26,8 @@ const (
 	RoomInstance_AddIceCandidate_FullMethodName       = "/v1.RoomInstance/AddIceCandidate"
 	RoomInstance_GetServerIceCandidate_FullMethodName = "/v1.RoomInstance/GetServerIceCandidate"
 	RoomInstance_RestartRoomInstance_FullMethodName   = "/v1.RoomInstance/RestartRoomInstance"
+	RoomInstance_GetControllerPlayers_FullMethodName  = "/v1.RoomInstance/GetControllerPlayers"
+	RoomInstance_SetControllerPlayer_FullMethodName   = "/v1.RoomInstance/SetControllerPlayer"
 )
 
 // RoomInstanceClient is the client API for RoomInstance service.
@@ -39,6 +41,8 @@ type RoomInstanceClient interface {
 	AddIceCandidate(ctx context.Context, in *AddIceCandidateRequest, opts ...grpc.CallOption) (*AddIceCandidateResponse, error)
 	GetServerIceCandidate(ctx context.Context, in *GetServerIceCandidateRequest, opts ...grpc.CallOption) (*GetServerIceCandidateResponse, error)
 	RestartRoomInstance(ctx context.Context, in *RestartRoomInstanceRequest, opts ...grpc.CallOption) (*RestartRoomInstanceResponse, error)
+	GetControllerPlayers(ctx context.Context, in *GetControllerPlayersRequest, opts ...grpc.CallOption) (*GetControllerPlayersResponse, error)
+	SetControllerPlayer(ctx context.Context, in *SetControllerPlayerRequest, opts ...grpc.CallOption) (*SetControllerPlayerResponse, error)
 }
 
 type roomInstanceClient struct {
@@ -119,6 +123,26 @@ func (c *roomInstanceClient) RestartRoomInstance(ctx context.Context, in *Restar
 	return out, nil
 }
 
+func (c *roomInstanceClient) GetControllerPlayers(ctx context.Context, in *GetControllerPlayersRequest, opts ...grpc.CallOption) (*GetControllerPlayersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetControllerPlayersResponse)
+	err := c.cc.Invoke(ctx, RoomInstance_GetControllerPlayers_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *roomInstanceClient) SetControllerPlayer(ctx context.Context, in *SetControllerPlayerRequest, opts ...grpc.CallOption) (*SetControllerPlayerResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetControllerPlayerResponse)
+	err := c.cc.Invoke(ctx, RoomInstance_SetControllerPlayer_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RoomInstanceServer is the server API for RoomInstance service.
 // All implementations must embed UnimplementedRoomInstanceServer
 // for forward compatibility.
@@ -130,6 +154,8 @@ type RoomInstanceServer interface {
 	AddIceCandidate(context.Context, *AddIceCandidateRequest) (*AddIceCandidateResponse, error)
 	GetServerIceCandidate(context.Context, *GetServerIceCandidateRequest) (*GetServerIceCandidateResponse, error)
 	RestartRoomInstance(context.Context, *RestartRoomInstanceRequest) (*RestartRoomInstanceResponse, error)
+	GetControllerPlayers(context.Context, *GetControllerPlayersRequest) (*GetControllerPlayersResponse, error)
+	SetControllerPlayer(context.Context, *SetControllerPlayerRequest) (*SetControllerPlayerResponse, error)
 	mustEmbedUnimplementedRoomInstanceServer()
 }
 
@@ -160,6 +186,12 @@ func (UnimplementedRoomInstanceServer) GetServerIceCandidate(context.Context, *G
 }
 func (UnimplementedRoomInstanceServer) RestartRoomInstance(context.Context, *RestartRoomInstanceRequest) (*RestartRoomInstanceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RestartRoomInstance not implemented")
+}
+func (UnimplementedRoomInstanceServer) GetControllerPlayers(context.Context, *GetControllerPlayersRequest) (*GetControllerPlayersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetControllerPlayers not implemented")
+}
+func (UnimplementedRoomInstanceServer) SetControllerPlayer(context.Context, *SetControllerPlayerRequest) (*SetControllerPlayerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetControllerPlayer not implemented")
 }
 func (UnimplementedRoomInstanceServer) mustEmbedUnimplementedRoomInstanceServer() {}
 func (UnimplementedRoomInstanceServer) testEmbeddedByValue()                      {}
@@ -308,6 +340,42 @@ func _RoomInstance_RestartRoomInstance_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RoomInstance_GetControllerPlayers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetControllerPlayersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomInstanceServer).GetControllerPlayers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoomInstance_GetControllerPlayers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomInstanceServer).GetControllerPlayers(ctx, req.(*GetControllerPlayersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RoomInstance_SetControllerPlayer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetControllerPlayerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomInstanceServer).SetControllerPlayer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoomInstance_SetControllerPlayer_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomInstanceServer).SetControllerPlayer(ctx, req.(*SetControllerPlayerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RoomInstance_ServiceDesc is the grpc.ServiceDesc for RoomInstance service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -342,6 +410,14 @@ var RoomInstance_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RestartRoomInstance",
 			Handler:    _RoomInstance_RestartRoomInstance_Handler,
+		},
+		{
+			MethodName: "GetControllerPlayers",
+			Handler:    _RoomInstance_GetControllerPlayers_Handler,
+		},
+		{
+			MethodName: "SetControllerPlayer",
+			Handler:    _RoomInstance_SetControllerPlayer_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

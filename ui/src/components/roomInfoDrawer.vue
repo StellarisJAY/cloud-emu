@@ -42,6 +42,10 @@
     </a-list>
     <a-button @click="openUserPicker" type="primary" :disabled="!currentUserIsHost">邀请用户</a-button>
     <UserPicker :visible="userPickerOpen"/>
+    <a-divider>模拟器控制权限</a-divider>
+    <a-form-item :label="item.label" v-for="item in controllerPlayers">
+      <a-select :options="memberOptions" :disabled="!currentUserIsHost" v-model:value="item.userId" @change="onControllerPlayerChange"></a-select>
+    </a-form-item>
   </div>
 </template>
 
@@ -62,6 +66,7 @@ import constants from "../api/const.js";
 import roomAPI from "../api/room.js";
 import roomMemberAPI from "../api/roomMember.js";
 import UserPicker from "./userPicker.vue";
+import api from "../api/request.js";
 
 export default {
   props: {
@@ -101,6 +106,9 @@ export default {
       roomDetail: null,
       userPickerOpen: false,
       updateRoomBtnDisabled: false,
+
+      controllerPlayers: [],
+      memberOptions: [],
     }
   },
   created() {
@@ -108,16 +116,21 @@ export default {
     this.getUserRoomMember();
     this.listRoomMembers();
     this.getRoomDetail();
+    this.getControllerPlayers();
     addEventListener("memberDrawerOpen", _ => {
       this.getUserRoomMember();
       this.listRoomMembers();
       this.getRoomDetail();
+      this.getControllerPlayers();
     });
   },
   methods: {
     listRoomMembers: async function () {
       const resp = await roomMemberAPI.listRoomMember(this.roomId);
       this.roomMembers = resp.data;
+      this.roomMembers.forEach(item=>{
+        this.memberOptions.push({"label": item.nickName, "value": item.userId});
+      })
     },
 
     updateRoom() {
@@ -170,6 +183,14 @@ export default {
       if (pickedUsers && pickedUsers.length > 0) {
         this.inviteUsers(pickedUsers);
       }
+    },
+    getControllerPlayers() {
+      api.get("/room-instance/controller-players", {roomId: this.roomId}).then(resp=>{
+        this.controllerPlayers = resp.data;
+      });
+    },
+    onControllerPlayerChange(ev) {
+      // TODO set controller player
     },
   }
 }

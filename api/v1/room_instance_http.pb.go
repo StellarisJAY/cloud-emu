@@ -20,21 +20,25 @@ var _ = binding.EncodeURL
 const _ = http.SupportPackageIsVersion1
 
 const OperationRoomInstanceAddIceCandidate = "/v1.RoomInstance/AddIceCandidate"
+const OperationRoomInstanceGetControllerPlayers = "/v1.RoomInstance/GetControllerPlayers"
 const OperationRoomInstanceGetRoomInstance = "/v1.RoomInstance/GetRoomInstance"
 const OperationRoomInstanceGetServerIceCandidate = "/v1.RoomInstance/GetServerIceCandidate"
 const OperationRoomInstanceListGameHistory = "/v1.RoomInstance/ListGameHistory"
 const OperationRoomInstanceOpenGameConnection = "/v1.RoomInstance/OpenGameConnection"
 const OperationRoomInstanceRestartRoomInstance = "/v1.RoomInstance/RestartRoomInstance"
 const OperationRoomInstanceSdpAnswer = "/v1.RoomInstance/SdpAnswer"
+const OperationRoomInstanceSetControllerPlayer = "/v1.RoomInstance/SetControllerPlayer"
 
 type RoomInstanceHTTPServer interface {
 	AddIceCandidate(context.Context, *AddIceCandidateRequest) (*AddIceCandidateResponse, error)
+	GetControllerPlayers(context.Context, *GetControllerPlayersRequest) (*GetControllerPlayersResponse, error)
 	GetRoomInstance(context.Context, *GetRoomInstanceRequest) (*GetRoomInstanceResponse, error)
 	GetServerIceCandidate(context.Context, *GetServerIceCandidateRequest) (*GetServerIceCandidateResponse, error)
 	ListGameHistory(context.Context, *ListGameHistoryRequest) (*ListGameHistoryResponse, error)
 	OpenGameConnection(context.Context, *OpenGameConnectionRequest) (*OpenGameConnectionResponse, error)
 	RestartRoomInstance(context.Context, *RestartRoomInstanceRequest) (*RestartRoomInstanceResponse, error)
 	SdpAnswer(context.Context, *SdpAnswerRequest) (*SdpAnswerResponse, error)
+	SetControllerPlayer(context.Context, *SetControllerPlayerRequest) (*SetControllerPlayerResponse, error)
 }
 
 func RegisterRoomInstanceHTTPServer(s *http.Server, srv RoomInstanceHTTPServer) {
@@ -46,6 +50,8 @@ func RegisterRoomInstanceHTTPServer(s *http.Server, srv RoomInstanceHTTPServer) 
 	r.POST("/api/v1/room-instance/ice-candidate", _RoomInstance_AddIceCandidate0_HTTP_Handler(srv))
 	r.GET("/api/v1/room-instance/ice-candidate", _RoomInstance_GetServerIceCandidate0_HTTP_Handler(srv))
 	r.POST("/api/v1/room-instance/restart", _RoomInstance_RestartRoomInstance0_HTTP_Handler(srv))
+	r.GET("/api/v1/room-instance/controller-players", _RoomInstance_GetControllerPlayers0_HTTP_Handler(srv))
+	r.POST("/api/v1/room-instance/controller-players", _RoomInstance_SetControllerPlayer0_HTTP_Handler(srv))
 }
 
 func _RoomInstance_GetRoomInstance0_HTTP_Handler(srv RoomInstanceHTTPServer) func(ctx http.Context) error {
@@ -193,14 +199,57 @@ func _RoomInstance_RestartRoomInstance0_HTTP_Handler(srv RoomInstanceHTTPServer)
 	}
 }
 
+func _RoomInstance_GetControllerPlayers0_HTTP_Handler(srv RoomInstanceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetControllerPlayersRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationRoomInstanceGetControllerPlayers)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetControllerPlayers(ctx, req.(*GetControllerPlayersRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetControllerPlayersResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _RoomInstance_SetControllerPlayer0_HTTP_Handler(srv RoomInstanceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in SetControllerPlayerRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationRoomInstanceSetControllerPlayer)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.SetControllerPlayer(ctx, req.(*SetControllerPlayerRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*SetControllerPlayerResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 type RoomInstanceHTTPClient interface {
 	AddIceCandidate(ctx context.Context, req *AddIceCandidateRequest, opts ...http.CallOption) (rsp *AddIceCandidateResponse, err error)
+	GetControllerPlayers(ctx context.Context, req *GetControllerPlayersRequest, opts ...http.CallOption) (rsp *GetControllerPlayersResponse, err error)
 	GetRoomInstance(ctx context.Context, req *GetRoomInstanceRequest, opts ...http.CallOption) (rsp *GetRoomInstanceResponse, err error)
 	GetServerIceCandidate(ctx context.Context, req *GetServerIceCandidateRequest, opts ...http.CallOption) (rsp *GetServerIceCandidateResponse, err error)
 	ListGameHistory(ctx context.Context, req *ListGameHistoryRequest, opts ...http.CallOption) (rsp *ListGameHistoryResponse, err error)
 	OpenGameConnection(ctx context.Context, req *OpenGameConnectionRequest, opts ...http.CallOption) (rsp *OpenGameConnectionResponse, err error)
 	RestartRoomInstance(ctx context.Context, req *RestartRoomInstanceRequest, opts ...http.CallOption) (rsp *RestartRoomInstanceResponse, err error)
 	SdpAnswer(ctx context.Context, req *SdpAnswerRequest, opts ...http.CallOption) (rsp *SdpAnswerResponse, err error)
+	SetControllerPlayer(ctx context.Context, req *SetControllerPlayerRequest, opts ...http.CallOption) (rsp *SetControllerPlayerResponse, err error)
 }
 
 type RoomInstanceHTTPClientImpl struct {
@@ -218,6 +267,19 @@ func (c *RoomInstanceHTTPClientImpl) AddIceCandidate(ctx context.Context, in *Ad
 	opts = append(opts, http.Operation(OperationRoomInstanceAddIceCandidate))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *RoomInstanceHTTPClientImpl) GetControllerPlayers(ctx context.Context, in *GetControllerPlayersRequest, opts ...http.CallOption) (*GetControllerPlayersResponse, error) {
+	var out GetControllerPlayersResponse
+	pattern := "/api/v1/room-instance/controller-players"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationRoomInstanceGetControllerPlayers))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -294,6 +356,19 @@ func (c *RoomInstanceHTTPClientImpl) SdpAnswer(ctx context.Context, in *SdpAnswe
 	pattern := "/api/v1/room-instance/sdp-answer"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationRoomInstanceSdpAnswer))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *RoomInstanceHTTPClientImpl) SetControllerPlayer(ctx context.Context, in *SetControllerPlayerRequest, opts ...http.CallOption) (*SetControllerPlayerResponse, error) {
+	var out SetControllerPlayerResponse
+	pattern := "/api/v1/room-instance/controller-players"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationRoomInstanceSetControllerPlayer))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {

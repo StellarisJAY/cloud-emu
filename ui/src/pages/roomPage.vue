@@ -434,8 +434,9 @@ export default {
       api.get("/room-instance/ice-candidate", {"roomId": this.roomId, "token": this.connectToken}).then(resp=>{
         resp.data.forEach(candidate => {
           const c = JSON.parse(candidate);
-          console.log("remote candidate: ", c);
-          this.rtcSession.pc.addIceCandidate(c);
+          if (c && candidate !== "") {
+            this.rtcSession.pc.addIceCandidate(c);
+          }
         });
       });
     },

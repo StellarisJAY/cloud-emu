@@ -185,6 +185,23 @@ func (n *NesEmulatorAdapter) OutputResolution() (width, height int) {
 	return ppu.WIDTH, ppu.HEIGHT
 }
 
+func (n *NesEmulatorAdapter) MultiController() bool {
+	return true
+}
+
+func (n *NesEmulatorAdapter) ControllerInfos() []ControllerInfo {
+	return []ControllerInfo{
+		{
+			ControllerId: 1,
+			Label:        "玩家1",
+		},
+		{
+			ControllerId: 2,
+			Label:        "玩家2",
+		},
+	}
+}
+
 func makeNESEmulator(options IEmulatorOptions) (*nes.Emulator, error) {
 	configs := config.Config{
 		Game:               options.Game(),

@@ -97,11 +97,7 @@ func (g *Instance) makeEmulatorOptions(emulatorName string, game string, gameDat
 		return emulator.MakeNesEmulatorOptions(game, gameData, g.audioSampleRate, g.audioSampleChan, func(frame emulator.IFrame) {
 			g.RenderCallback(frame, nil)
 		}), nil
-	case emulator.TypeChip8:
-		return emulator.MakeBaseEmulatorOptions(game, gameData, g.audioSampleRate, g.audioSampleChan, func(frame emulator.IFrame) {
-			g.RenderCallback(frame, nil)
-		})
-	case emulator.TypeDummy:
+	case emulator.TypeChip8, emulator.TypeDummy, emulator.TypeGoboy:
 		return emulator.MakeBaseEmulatorOptions(game, gameData, g.audioSampleRate, g.audioSampleChan, func(frame emulator.IFrame) {
 			g.RenderCallback(frame, nil)
 		})

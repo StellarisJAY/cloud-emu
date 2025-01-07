@@ -77,7 +77,15 @@ export default {
       });
     },
     deleteSavedGame(id) {
-
+      this.loadSaveBtnDisable = true;
+      api.delete("/game-save/" + id).then(resp=>{
+        this.loadSaveBtnDisable = false;
+        message.success(resp["message"]);
+        this.listSaves();
+      }).catch(resp=>{
+        this.loadSaveBtnDisable = false;
+        message.error(resp.message);
+      })
     },
   }
 }

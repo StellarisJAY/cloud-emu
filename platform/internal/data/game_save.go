@@ -45,7 +45,7 @@ func (g *GameSaveRepo) Create(ctx context.Context, save *biz.GameSave) error {
 	return g.d.DB(ctx).Table(GameSaveTableName).Create(gameSaveBizToEntity(save)).WithContext(ctx).Error
 }
 
-func (g *GameSaveRepo) Upload(ctx context.Context, save *biz.GameSave, data []byte) error {
+func (g *GameSaveRepo) Upload(_ context.Context, save *biz.GameSave, data []byte) error {
 	bucket, err := g.d.getGridFSBucket(MongoDBName, GameSaveBucketName)
 	if err != nil {
 		return err
@@ -53,7 +53,7 @@ func (g *GameSaveRepo) Upload(ctx context.Context, save *biz.GameSave, data []by
 	return bucket.UploadFromStreamWithID(save.SaveId, getGameSaveNameForGridFS(save.SaveId), bytes.NewReader(data))
 }
 
-func (g *GameSaveRepo) Download(ctx context.Context, save *biz.GameSave) ([]byte, error) {
+func (g *GameSaveRepo) Download(_ context.Context, save *biz.GameSave) ([]byte, error) {
 	bucket, err := g.d.getGridFSBucket(MongoDBName, GameSaveBucketName)
 	if err != nil {
 		return nil, err
@@ -94,13 +94,19 @@ func (g *GameSaveRepo) List(ctx context.Context, query biz.GameSaveQuery, p *com
 }
 
 func (g *GameSaveRepo) Delete(ctx context.Context, saveId int64) error {
-	//TODO implement me
-	panic("implement me")
+	return g.d.DB(ctx).Table(GameSaveTableName).
+		Where("save_id = ?", saveId).
+		Delete(&GameSaveEntity{}).
+		WithContext(ctx).
+		Error
 }
 
-func (g *GameSaveRepo) DeleteFile(ctx context.Context, save *biz.GameSave) error {
-	//TODO implement me
-	panic("implement me")
+func (g *GameSaveRepo) DeleteFile(_ context.Context, save *biz.GameSave) error {
+	bucket, err := g.d.getGridFSBucket(MongoDBName, GameSaveBucketName)
+	if err != nil {
+		return err
+	}
+	return bucket.Delete(save.SaveId)
 }
 
 func (g *GameSaveRepo) Get(ctx context.Context, saveId int64) (*biz.GameSave, error) {

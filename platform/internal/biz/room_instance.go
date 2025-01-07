@@ -358,3 +358,11 @@ func (uc *RoomInstanceUseCase) Restart(ctx context.Context, roomId, userId, emul
 func openRoomInstanceMutexName(roomId int64) string {
 	return fmt.Sprintf("/room_instance/open/%d", roomId)
 }
+
+func (uc *RoomInstanceUseCase) GetControllerPlayers(ctx context.Context, roomId int64) ([]*ControllerPlayer, error) {
+	ri, _ := uc.repo.GetRoomInstance(ctx, roomId)
+	if ri == nil {
+		return nil, v1.ErrorNotFound("房间不存在")
+	}
+	return uc.gameServerRepo.GetControllerPlayers(ctx, ri)
+}

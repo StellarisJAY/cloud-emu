@@ -33,6 +33,12 @@ type LoadSaveParams struct {
 	SaveData     []byte
 }
 
+type ControllerPlayer struct {
+	ControllerId int32
+	Label        string
+	UserId       int64
+}
+
 type GameServerRepo interface {
 	// ListActiveGameServers 服务发现 列出所有可用的游戏服务器
 	ListActiveGameServers(ctx context.Context) ([]*GameServer, error)
@@ -54,4 +60,6 @@ type GameServerRepo interface {
 	SaveGame(ctx context.Context, instance *RoomInstance, roomId, userId int64) (emulatorId, gameId int64, data []byte, err error)
 
 	LoadSave(ctx context.Context, instance *RoomInstance, params LoadSaveParams) error
+
+	GetControllerPlayers(ctx context.Context, instance *RoomInstance) ([]*ControllerPlayer, error)
 }

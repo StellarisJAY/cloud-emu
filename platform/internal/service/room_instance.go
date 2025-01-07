@@ -164,3 +164,27 @@ func (r *RoomInstanceService) RestartRoomInstance(ctx context.Context, request *
 		Message: "重启成功",
 	}, nil
 }
+
+func (r *RoomInstanceService) GetControllerPlayers(ctx context.Context, request *v1.GetControllerPlayersRequest) (*v1.GetControllerPlayersResponse, error) {
+	cps, err := r.uc.GetControllerPlayers(ctx, request.RoomId)
+	if err != nil {
+		e := errors.FromError(err)
+		return &v1.GetControllerPlayersResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
+	}
+	result := make([]*v1.ControllerPlayer, len(cps))
+	for i, cp := range cps {
+		result[i] = &v1.ControllerPlayer{
+			UserId:       cp.UserId,
+			ControllerId: cp.ControllerId,
+			Label:        cp.Label,
+		}
+	}
+	return &v1.GetControllerPlayersResponse{
+		Code:    200,
+		Message: "获取成功",
+		Data:    result,
+	}, nil
+}

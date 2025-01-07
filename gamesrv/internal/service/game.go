@@ -189,3 +189,23 @@ func (g *GameService) ListOnlineRoomMember(ctx context.Context, request *v1.List
 		RoomMemberIds: memberIdList,
 	}, nil
 }
+
+func (g *GameService) GetControllerPlayers(ctx context.Context, request *v1.GameSrvGetControllerPlayersRequest) (*v1.GameSrvGetControllerPlayersResponse, error) {
+	cps, err := g.uc.GetControllerPlayers(ctx, request.RoomId)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*v1.GameSrvControllerPlayer, len(cps))
+	for i, cp := range cps {
+		result[i] = &v1.GameSrvControllerPlayer{
+			UserId:       cp.UserId,
+			ControllerId: int32(cp.ControllerId),
+			Label:        cp.Label,
+		}
+	}
+	return &v1.GameSrvGetControllerPlayersResponse{
+		Code:    200,
+		Message: "获取成功",
+		Data:    result,
+	}, nil
+}
