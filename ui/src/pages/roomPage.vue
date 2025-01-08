@@ -96,7 +96,7 @@ const tourSteps = [
               :disabled="connectBtnDisabled">连接</a-button>
           </a-col>
           <a-col :span="12">
-            <a-button ref="refRestart" class="toolbar-button" type="primary"
+            <a-button ref="refRestart" class="toolbar-button" type="primary" :disabled="emulatorBtnDisabled"
               @click="openEmulatorInfoDrawer">模拟器/游戏</a-button>
           </a-col>
           <a-col :span="6">
@@ -229,8 +229,8 @@ export default {
       connectBtnDisabled: false,
       saveBtnDisabled: true,
       loadBtnDisabled: true,
-      restartBtnDisabled: true,
       chatBtnDisabled: true,
+      emulatorBtnDisabled: true,
       selectedGame: "",
       configs: {
         controlButtonMapping: {
@@ -462,9 +462,9 @@ export default {
         this.initScreenButtons(this.roomDetail["emulatorType"]);
       });
       dispatchEvent(new Event("webrtc-connected"));
-      this.restartBtnDisabled = false;
       this.saveBtnDisabled = false;
       this.loadBtnDisabled = false;
+      this.emulatorBtnDisabled = false;
     },
     onDisconnected() {
       message.warn("连接断开");
@@ -472,10 +472,11 @@ export default {
       this.destroyScreenButtons();
       this.rtcSession.pc.close();
       this.saveBtnDisabled = true;
-      this.restartBtnDisabled = true;
       this.loadBtnDisabled = true;
       this.chatBtnDisabled = true;
       this.graphicOptionsDisabled = true;
+      this.emulatorBtnDisabled = true;
+      this.connectBtnDisabled = false;
     },
     sendAction(code, pressed) {
       const msg = JSON.stringify({

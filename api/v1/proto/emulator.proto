@@ -36,6 +36,8 @@ message GameDto {
   int32 size = 4;
   string addTime = 5;
   string customData = 6;
+  string emulatorName = 7;
+  string emulatorType = 8;
 }
 
 message ListEmulatorRequest {

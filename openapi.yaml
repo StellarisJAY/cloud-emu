@@ -1050,6 +1050,10 @@ components:
                     type: string
                 customData:
                     type: string
+                emulatorName:
+                    type: string
+                emulatorType:
+                    type: string
         v1.GameSaveDto:
             type: object
             properties:

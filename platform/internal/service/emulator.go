@@ -67,12 +67,14 @@ func (e *EmulatorService) ListGame(ctx context.Context, request *v1.ListGameRequ
 	result := make([]*v1.GameDto, len(games))
 	for i, game := range games {
 		result[i] = &v1.GameDto{
-			EmulatorId: game.EmulatorId,
-			GameName:   game.GameName,
-			GameId:     game.GameId,
-			Size:       game.Size,
-			CustomData: game.CustomData,
-			AddTime:    game.AddTime.Format(time.DateTime),
+			EmulatorId:   game.EmulatorId,
+			GameName:     game.GameName,
+			GameId:       game.GameId,
+			Size:         game.Size,
+			CustomData:   game.CustomData,
+			AddTime:      game.AddTime.Format(time.DateTime),
+			EmulatorName: game.EmulatorName,
+			EmulatorType: game.EmulatorType,
 		}
 	}
 	return &v1.ListGameResponse{

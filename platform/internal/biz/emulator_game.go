@@ -18,15 +18,17 @@ import (
 )
 
 type EmulatorGame struct {
-	GameId      int64
-	EmulatorId  int64
-	GameName    string
-	Size        int32
-	AddTime     time.Time
-	CustomData  string
-	AddUser     int64
-	AddUserName string
-	Url         string
+	GameId       int64
+	EmulatorId   int64
+	GameName     string
+	Size         int32
+	AddTime      time.Time
+	CustomData   string
+	AddUser      int64
+	AddUserName  string
+	Url          string
+	EmulatorName string
+	EmulatorType string
 }
 
 type EmulatorGameQuery struct {
@@ -96,7 +98,25 @@ func (uc *EmulatorGameUseCase) Upload(c http.Context) error {
 		return errors.New(401, "Unauthorized", "token无效")
 	}
 
-	return uc.upload(c, &EmulatorGame{GameName: gameName, EmulatorId: emulatorId}, data, claims.UserId)
+	if err := uc.upload(c, &EmulatorGame{GameName: gameName, EmulatorId: emulatorId}, data, claims.UserId); err != nil {
+		er := errors.FromError(err)
+		_ = c.JSON(200, struct {
+			Message string `json:"message"`
+			Code    int    `json:"code"`
+		}{
+			Message: er.Message,
+			Code:    int(er.Code),
+		})
+	} else {
+		_ = c.JSON(200, struct {
+			Message string `json:"message"`
+			Code    int    `json:"code"`
+		}{
+			Message: "上传成功",
+			Code:    200,
+		})
+	}
+	return nil
 }
 
 func (uc *EmulatorGameUseCase) upload(ctx context.Context, game *EmulatorGame, data []byte, userId int64) error {

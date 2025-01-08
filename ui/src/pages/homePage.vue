@@ -6,6 +6,7 @@
                 <a-menu-item key="2">加入房间</a-menu-item>
                 <a-menu-item key="3">通知</a-menu-item>
                 <a-menu-item key="4">个人</a-menu-item>
+                <a-menu-item key="6" v-if="isAdmin">游戏列表</a-menu-item>
                 <a-menu-item key="5" @click="logout">注销</a-menu-item>
             </a-menu>
         </a-layout-header>
@@ -16,6 +17,7 @@
                 <RoomList v-else-if="headerSelectedKeys[0] === '2'" :joined="false"></RoomList>
                 <NotificationList v-else-if="headerSelectedKeys[0] === '3'"></NotificationList>
                 <UserInfo v-else-if="headerSelectedKeys[0] === '4'"/>
+                <AdminGameList v-else-if="headerSelectedKeys[0] === '6'"></AdminGameList>
             </a-col>
         </a-row>
     </a-layout>
@@ -29,9 +31,13 @@ import router from "../router/index.js";
 import tokenStorage from "../api/token.js";
 import NotificationList from "../components/notificationList.vue";
 import UserInfo from "../components/userInfo.vue";
+import AdminInfo from "../components/adminGameList.vue";
+import userAPI from "../api/user.js";
+import AdminGameList from "../components/adminGameList.vue";
 
 export default {
     components: {
+      AdminGameList,
         ALayout: Layout,
         ALayoutHeader: Layout.Header,
         AMenu: Menu,
@@ -43,13 +49,20 @@ export default {
         RoomList: RoomList,
         NotificationList: NotificationList,
         UserInfo: UserInfo,
+        AdminInfo: AdminInfo,
     },
     data() {
         return {
-            headerSelectedKeys: ['1']
+            headerSelectedKeys: ['1'],
+            isAdmin: false,
         }
     },
-    methods: {
+    created() {
+      userAPI.getLoginUserDetail().then(res=>{
+          this.isAdmin = res.data.role === 2;
+      });
+    },
+  methods: {
         logout: function () {
             tokenStorage.delToken();
             router.push("/login");

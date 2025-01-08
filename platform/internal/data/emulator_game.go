@@ -70,9 +70,12 @@ func (e *EmulatorGameRepo) DeleteFile(ctx context.Context, game *biz.EmulatorGam
 
 func (e *EmulatorGameRepo) ListGame(ctx context.Context, query biz.EmulatorGameQuery, p *common.Pagination) ([]*biz.EmulatorGame, error) {
 	var result []*biz.EmulatorGame
-	d := e.data.DB(ctx).Table(EmulatorGameTableName).WithContext(ctx)
+	d := e.data.DB(ctx).Table(EmulatorGameTableName).
+		Select("emulator_game.*, emulator_name, emulator_type").
+		WithContext(ctx).
+		Joins("INNER JOIN emulator ON emulator_game.emulator_id = emulator.emulator_id")
 	if query.EmulatorId != 0 {
-		d = d.Where("emulator_id = ?", query.EmulatorId)
+		d = d.Where("emulator_game.emulator_id = ?", query.EmulatorId)
 	}
 	if query.GameName != "" {
 		d = d.Where("game_name LIKE ?", "%"+query.GameName+"%")
