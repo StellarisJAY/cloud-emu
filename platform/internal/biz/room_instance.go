@@ -346,6 +346,8 @@ func (uc *RoomInstanceUseCase) Restart(ctx context.Context, roomId, userId, emul
 		// 更新房间实例信息
 		instance.EmulatorId = emulator.EmulatorId
 		instance.GameId = game.GameId
+		instance.EmulatorName = emulator.EmulatorName
+		instance.EmulatorType = emulator.EmulatorType
 		err = uc.repo.SaveRoomInstance(ctx, instance)
 		if err != nil {
 			uc.logger.Error("重启更新房间实例错误:", err)

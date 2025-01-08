@@ -67,22 +67,24 @@ func (g *Instance) RestartEmulator(game string, gameData []byte, emulatorType st
 	result := <-ch
 	close(ch)
 	if result.Success {
-		g.onRestartSuccess(emulatorId, gameId)
+		g.onRestartSuccess(emulatorId, gameId, emulatorType)
 		return nil
 	} else {
 		return result.Error
 	}
 }
 
-func (g *Instance) onRestartSuccess(emulatorId, gameId int64) {
+func (g *Instance) onRestartSuccess(emulatorId, gameId int64, emulatorType string) {
 	g.mutex.RLock()
 	defer g.mutex.RUnlock()
 	content := &struct {
-		EmulatorId int64
-		GameId     int64
+		EmulatorId   int64
+		GameId       int64
+		EmulatorType string
 	}{
-		EmulatorId: emulatorId,
-		GameId:     gameId,
+		EmulatorId:   emulatorId,
+		GameId:       gameId,
+		EmulatorType: emulatorType,
 	}
 	msg := &Message{Type: MsgEmulatorRestart, Data: content}
 	raw, _ := json.Marshal(msg)

@@ -1482,6 +1482,8 @@ components:
                     type: string
                 gameName:
                     type: string
+                emulatorType:
+                    type: string
         v1.RoomInstanceDto:
             type: object
             properties:

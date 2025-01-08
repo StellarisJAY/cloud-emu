@@ -11,6 +11,17 @@ type chip8EmulatorAdapter struct {
 	cancel context.CancelFunc
 }
 
+func init() {
+	supportedEmulators[TypeChip8] = Info{
+		EmulatorType:           TypeChip8,
+		Provider:               "https://github.com/StellrisJAY/cloud-emu",
+		Description:            "CHIP-8 模拟器",
+		Name:                   "CHIP-8",
+		SupportSave:            false,
+		SupportGraphicSettings: false,
+	}
+}
+
 func makeChip8EmulatorAdapter(options IEmulatorOptions) IEmulator {
 	e := chip8.NewEmulator(options.GameData(), func(frame *chip8.Frame) {
 		options.FrameConsumer()(frame)

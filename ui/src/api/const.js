@@ -54,7 +54,7 @@ const Configs = {
     },
 
     defaultButtonLayouts: {
-        "1":[{"label": "←", "code": "Left", "slot": "l4"},
+        "NESGO":[{"label": "←", "code": "Left", "slot": "l4"},
             {"label": "→", "code": "Right", "slot": "l6"},
             {"label": "↑", "code": "Up", "slot": "l2"},
             {"label": "↓", "code": "Down", "slot": "l8"},
@@ -62,7 +62,7 @@ const Configs = {
             {"label": "B", "code": "B", "slot": "r7"},
             {"label": "Select", "code": "Select", "slot": "r3"},
             {"label": "Start", "code": "Start", "slot": "r9"}],
-        "2": [
+        "CHIP8": [
             {"label": "1", "code": "1", "slot": "l1"},
             {"label": "2", "code": "2", "slot": "l2"},
             {"label": "3", "code": "3", "slot": "l3"},
@@ -80,7 +80,7 @@ const Configs = {
             {"label": "F", "code": "F", "slot": "r5"},
             {"label": "0", "code": "0", "slot": "r4"},
         ],
-        "1234": [{"label": "←", "code": "Left", "slot": "l4"},
+        "GOBOY": [{"label": "←", "code": "Left", "slot": "l4"},
             {"label": "→", "code": "Right", "slot": "l6"},
             {"label": "↑", "code": "Up", "slot": "l2"},
             {"label": "↓", "code": "Down", "slot": "l8"},

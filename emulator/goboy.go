@@ -18,6 +18,17 @@ type GoboyAdapter struct {
 	game          string
 }
 
+func init() {
+	supportedEmulators[TypeGoboy] = Info{
+		EmulatorType:           TypeGoboy,
+		Provider:               "https://github.com/Humpheh/goboy",
+		Description:            "GameBoy 模拟器",
+		Name:                   "GoBoy",
+		SupportSave:            false,
+		SupportGraphicSettings: false,
+	}
+}
+
 func newGoboyAdapter(options IEmulatorOptions) (IEmulator, error) {
 	// goboy 只能从文件系统读取rom，所以需要先把rom文件缓存到本地
 	cacheGameFile(options.Game(), options.GameData())

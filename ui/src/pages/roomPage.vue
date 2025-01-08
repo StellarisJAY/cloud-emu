@@ -459,7 +459,7 @@ export default {
       message.success("连接成功");
       roomAPI.getRoomDetail(this.roomId).then(resp=>{
         this.roomDetail = resp.data;
-        this.initScreenButtons(this.roomDetail["emulatorId"]);
+        this.initScreenButtons(this.roomDetail["emulatorType"]);
       });
       dispatchEvent(new Event("webrtc-connected"));
       this.restartBtnDisabled = false;
@@ -586,7 +586,7 @@ export default {
         case MessageRestart:
           message.info("模拟器重启");
           this.destroyScreenButtons();
-          this.initScreenButtons(msgObj["data"]["EmulatorId"]);
+          this.initScreenButtons(msgObj["data"]["EmulatorType"]);
           break;
         default:
           break
@@ -665,9 +665,10 @@ export default {
       });
     },
 
-    initScreenButtons: function(emulatorId) {
+    initScreenButtons: function(emulatorType) {
       // 初始化时使用默认布局
-      const layout = globalConfigs.defaultButtonLayouts[emulatorId];
+      const layout = globalConfigs.defaultButtonLayouts[emulatorType];
+      if (!layout) return;
       layout.forEach(item => {
         let button = document.createElement("button");
         button.type = "button";

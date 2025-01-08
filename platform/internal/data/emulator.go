@@ -5,22 +5,63 @@ import (
 	"errors"
 	"fmt"
 	"github.com/StellrisJAY/cloud-emu/common"
+	"github.com/StellrisJAY/cloud-emu/emulator"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/biz"
+	"github.com/bwmarrin/snowflake"
+	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 )
 
 type EmulatorRepo struct {
-	data  *Data
-	cache *common.Cache[biz.Emulator]
+	data      *Data
+	cache     *common.Cache[biz.Emulator]
+	snowflake *snowflake.Node
 }
 
 const EmulatorTableName = "emulator"
 
-func NewEmulatorRepo(data *Data) biz.EmulatorRepo {
-	return &EmulatorRepo{
-		data:  data,
-		cache: common.NewCache[biz.Emulator](data.redis),
+func NewEmulatorRepo(data *Data, snowflake *snowflake.Node) biz.EmulatorRepo {
+	e := &EmulatorRepo{
+		data:      data,
+		cache:     common.NewCache[biz.Emulator](data.redis),
+		snowflake: snowflake,
 	}
+	if err := e.init(); err != nil {
+		panic(err)
+	}
+	return e
+}
+
+func (e *EmulatorRepo) init() error {
+	emulators := emulator.GetSupportedEmulators()
+	if len(emulators) == 0 {
+		panic("no supported emulator found")
+	}
+	for _, em := range emulators {
+		emu := &biz.Emulator{
+			EmulatorId:            e.snowflake.Generate().Int64(),
+			EmulatorName:          em.Name,
+			EmulatorType:          em.EmulatorType,
+			Provider:              em.Provider,
+			Description:           em.Description,
+			SupportSave:           em.SupportSave,
+			SupportGraphicSetting: em.SupportGraphicSettings,
+		}
+		err := e.data.db.Table(EmulatorTableName).Create(emu).Error
+		if err != nil {
+			var merr *mysql.MySQLError
+			if errors.As(err, &merr) && merr.Number == 1062 {
+				continue
+			}
+			if errors.Is(err, gorm.ErrDuplicatedKey) {
+				continue
+			} else {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func (e *EmulatorRepo) cacheKey(id int64) string {

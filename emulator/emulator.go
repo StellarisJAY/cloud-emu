@@ -13,6 +13,10 @@ const (
 	TypeGoboy = "GOBOY"
 )
 
+var (
+	supportedEmulators = make(map[string]Info)
+)
+
 // IFrame 模拟器输出画面接口
 type IFrame interface {
 	// Width 画面宽度
@@ -101,6 +105,15 @@ type BaseFrame struct {
 	image  *image.YCbCr
 	width  int
 	height int
+}
+
+type Info struct {
+	EmulatorType           string
+	Provider               string
+	Description            string
+	Name                   string
+	SupportSave            bool
+	SupportGraphicSettings bool
 }
 
 var (
@@ -195,4 +208,12 @@ func (b *BaseEmulatorOptions) AudioSampleChan() chan float32 {
 
 func (b *BaseEmulatorOptions) FrameConsumer() func(frame IFrame) {
 	return b.frameConsumer
+}
+
+func GetSupportedEmulators() []Info {
+	var infos []Info
+	for _, v := range supportedEmulators {
+		infos = append(infos, v)
+	}
+	return infos
 }

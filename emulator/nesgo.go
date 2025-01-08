@@ -29,6 +29,17 @@ type NesFrameAdapter struct {
 	frame *ppu.Frame
 }
 
+func init() {
+	supportedEmulators[TypeNESGO] = Info{
+		EmulatorType:           TypeNESGO,
+		Provider:               "https://github.com/StellrisJAY/cloud-emu",
+		Description:            "NES模拟器",
+		Name:                   "NESGO",
+		SupportSave:            true,
+		SupportGraphicSettings: true,
+	}
+}
+
 func MakeNesEmulatorOptions(game string, gameData []byte, audioSampleRate int, audioChan chan float32, renderCallback func(frame IFrame)) IEmulatorOptions {
 	return &NesEmulatorOptions{
 		NesGame:               game,

@@ -49,7 +49,7 @@ func wireApp(confServer *conf.Server, confData *conf.Data, auth *conf.Auth, regi
 	roomServer := service.NewRoomService(roomUseCase, roomMemberUseCase)
 	discovery := server.NewDiscovery(registry)
 	gameServerRepo := data.NewGameServerRepo(dataData, discovery)
-	emulatorRepo := data.NewEmulatorRepo(dataData)
+	emulatorRepo := data.NewEmulatorRepo(dataData, node)
 	emulatorGameRepo := data.NewEmulatorGameRepo(dataData)
 	roomInstanceUseCase := biz.NewRoomInstanceUseCase(roomInstanceRepo, node, redsync, gameServerRepo, roomRepo, roomMemberRepo, transaction, emulatorRepo, emulatorGameRepo, logger)
 	roomInstanceServer := service.NewRoomInstanceService(roomInstanceUseCase)

@@ -10,6 +10,17 @@ type DummyAdapter struct {
 	cancelFunc context.CancelFunc
 }
 
+func init() {
+	supportedEmulators[TypeDummy] = Info{
+		EmulatorType:           TypeDummy,
+		Provider:               "https://github.com/StellrisJAY/cloud-emu/",
+		Description:            "播放gif文件的dummy模拟器",
+		Name:                   "Dummy",
+		SupportSave:            false,
+		SupportGraphicSettings: false,
+	}
+}
+
 func MakeDummyAdapter(options IEmulatorOptions) (IEmulator, error) {
 	e, err := dummy.MakeDummyEmulator(options.GameData(), func(frame *dummy.Frame) {
 		options.FrameConsumer()(frame)

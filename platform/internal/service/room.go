@@ -154,6 +154,7 @@ func (r *RoomService) GetRoom(ctx context.Context, request *v1.GetRoomRequest) (
 			EmulatorName: room.EmulatorName,
 			GameId:       room.GameId,
 			GameName:     room.GameName,
+			EmulatorType: room.EmulatorType,
 		},
 	}, nil
 }
