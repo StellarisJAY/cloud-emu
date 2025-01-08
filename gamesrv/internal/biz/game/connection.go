@@ -153,7 +153,7 @@ func (c *Connection) GetLocalICECandidates() []string {
 	defer c.mutex.Unlock()
 	result := make([]string, len(c.localCandidates))
 	for i, candidate := range c.localCandidates {
-		bytes, _ := json.Marshal(candidate)
+		bytes, _ := json.Marshal(candidate.ToJSON())
 		result[i] = string(bytes)
 	}
 	return result
