@@ -10,6 +10,7 @@ message Bootstrap {
   Data data = 2;
   Auth auth = 3;
   Registry registry = 4;
+  Smtp smtp = 5;
 }
 
 message Server {
@@ -58,4 +59,12 @@ message Registry {
   string password = 4;
   string namespaceId = 5;
   string scheme = 6;
+}
+
+message Smtp {
+  string addr = 1;
+  string userName = 2;
+  string password = 3;
+  string host = 4;
+  string from = 5;
 }

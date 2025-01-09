@@ -14,6 +14,7 @@ import (
 	"github.com/go-kratos/kratos/v2/transport/http"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/handlers"
+	"time"
 )
 
 func NewWhiteListMatcher() selector.MatchFunc {
@@ -34,6 +35,7 @@ func NewHTTPServer(c *conf.Server, ac *conf.Auth, userSrv v1.UserServer, roomSrv
 	emulatorServer v1.EmulatorServer, emulatorGameUC *biz.EmulatorGameUseCase, buttonLayoutServer v1.ButtonLayoutServer,
 	keyboardBindingServer v1.KeyboardBindingServer, gameSaveServer v1.GameSaveServer, logger log.Logger) *http.Server {
 	var opts = []http.ServerOption{
+		http.Timeout(3 * time.Second),
 		http.Middleware(
 			recovery.Recovery(),
 			selector.Server( // jwt 验证

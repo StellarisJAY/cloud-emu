@@ -7,6 +7,7 @@ import (
 	"fmt"
 	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/StellrisJAY/cloud-emu/common"
+	"github.com/StellrisJAY/cloud-emu/platform/internal/util"
 	"github.com/bwmarrin/snowflake"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
@@ -51,6 +52,7 @@ type UserUseCase struct {
 	ar                  AuthRepo
 	snowflakeId         *snowflake.Node
 	userEmailVerifyRepo UserEmailVerifyRepo
+	eh                  *util.EmailHelper
 	tm                  Transaction
 	logger              *log.Helper
 }
@@ -88,8 +90,16 @@ type LoginClaims struct {
 }
 
 func NewUserUseCase(repo UserRepo, ar AuthRepo, snowflakeId *snowflake.Node, userEmailVerifyRepo UserEmailVerifyRepo,
-	tm Transaction, logger log.Logger) *UserUseCase {
-	return &UserUseCase{repo: repo, snowflakeId: snowflakeId, ar: ar, userEmailVerifyRepo: userEmailVerifyRepo, tm: tm, logger: log.NewHelper(logger)}
+	eh *util.EmailHelper, tm Transaction, logger log.Logger) *UserUseCase {
+	return &UserUseCase{
+		repo:                repo,
+		snowflakeId:         snowflakeId,
+		ar:                  ar,
+		userEmailVerifyRepo: userEmailVerifyRepo,
+		tm:                  tm,
+		logger:              log.NewHelper(logger),
+		eh:                  eh,
+	}
 }
 
 func (uc *UserUseCase) Register(ctx context.Context, user *User) error {
@@ -113,11 +123,15 @@ func (uc *UserUseCase) Register(ctx context.Context, user *User) error {
 			AddTime: time.Now().Local(),
 			Code:    uc.newVerifyCode(),
 		}
+		// 发送邮箱验证码
+		if err := uc.eh.Send(user.Email, "cloudemu", "您的注册验证码为:"+verify.Code); err != nil {
+			uc.logger.Error("注册用户发送邮件错误:", err)
+			return v1.ErrorServiceError("注册用户出错")
+		}
 		if err := uc.userEmailVerifyRepo.Create(ctx, &verify); err != nil {
 			uc.logger.Error("注册用户错误:", err)
 			return v1.ErrorServiceError("注册用户出错")
 		}
-		// TODO 发送邮箱验证码
 		return nil
 	})
 }

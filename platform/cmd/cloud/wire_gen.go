@@ -25,7 +25,7 @@ import (
 // Injectors from wire.go:
 
 // wireApp init kratos application.
-func wireApp(confServer *conf.Server, confData *conf.Data, auth *conf.Auth, registry *conf.Registry, logger log.Logger) (*kratos.App, func(), error) {
+func wireApp(confServer *conf.Server, confData *conf.Data, auth *conf.Auth, registry *conf.Registry, smtp *conf.Smtp, logger log.Logger) (*kratos.App, func(), error) {
 	client := data.NewRedisClient(confData)
 	apiClient := server.NewConsulClient(registry)
 	dataData, cleanup, err := data.NewData(confData, client, logger, apiClient)
@@ -36,8 +36,9 @@ func wireApp(confServer *conf.Server, confData *conf.Data, auth *conf.Auth, regi
 	authRepo := data.NewAuthRepo(auth)
 	node := util.NewSnowflakeGenerator(confServer)
 	userEmailVerifyRepo := data.NewUserEmailVerifyRepo(dataData)
+	emailHelper := util.NewEmailHelper(smtp)
 	transaction := data.NewTransaction(dataData)
-	userUseCase := biz.NewUserUseCase(userRepo, authRepo, node, userEmailVerifyRepo, transaction, logger)
+	userUseCase := biz.NewUserUseCase(userRepo, authRepo, node, userEmailVerifyRepo, emailHelper, transaction, logger)
 	userServer := service.NewUserService(userUseCase)
 	roomRepo := data.NewRoomRepo(dataData, node)
 	roomMemberRepo := data.NewRoomMemberRepo(dataData)

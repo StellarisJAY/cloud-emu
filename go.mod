@@ -9,6 +9,7 @@ require (
 	github.com/go-kratos/kratos/contrib/registry/nacos/v2 v2.0.0-20241105072421-f8b97f675b32
 	github.com/go-kratos/kratos/v2 v2.8.2
 	github.com/go-redsync/redsync/v4 v4.13.0
+	github.com/go-sql-driver/mysql v1.8.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/golang/protobuf v1.5.4
 	github.com/google/uuid v1.6.0
@@ -46,7 +47,6 @@ require (
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-playground/form/v4 v4.2.0 // indirect
-	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect

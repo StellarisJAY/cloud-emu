@@ -25,3 +25,9 @@ registry:
   username: helloworld
   password: helloworld
   namespaceId: public
+smtp:
+  addr: smtp.qq.com:465
+  userName: YourEmail
+  password: YourEmailAuth
+  host: smtp.qq.com
+  from: cloudemu <YourEmail>

@@ -64,13 +64,14 @@ export default {
   },
   methods: {
     getUserDetail() {
-      console.log(this.userDetail);
       userAPI.getLoginUserDetail().then(resp=>{
         this.userDetail = resp.data;
       });
     },
     activateAccount() {
-      userAPI.activateAccount(this.activationCode).then(resp=>{message.success("激活成功")});
+      userAPI.activateAccount(this.activationCode)
+          .then(resp=>{message.success("激活成功");this.getUserDetail();})
+          .catch(_=>message.error("激活失败"));
     },
   }
 }
