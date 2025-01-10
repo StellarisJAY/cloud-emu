@@ -9,18 +9,18 @@ server:
 data:
   database:
     driver: mysql
-    source: root:12345678@tcp(localhost:3306)/cloudemu_base?parseTime=True&loc=Local
+    source: root:12345678@tcp(172.17.0.1:3306)/cloudemu_base?parseTime=True&loc=Local
   redis:
-    addr: 127.0.0.1:6379
+    addr: 172.17.0.1:6379
     read_timeout: 0.2s
     write_timeout: 0.2s
   mongodb:
-    host: 127.0.0.1:27017
+    host: 172.17.0.1:27017
 auth:
   secret: abcd1234ddde123
 registry:
   scheme: consul
-  serverIp: localhost
+  serverIp: 172.17.0.1
   port: 8500
   username: helloworld
   password: helloworld
