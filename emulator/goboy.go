@@ -2,7 +2,7 @@ package emulator
 
 import (
 	"context"
-	"github.com/Humpheh/goboy/pkg/gb"
+	"github.com/StellrisJAY/cloud-emu/emulator/goboy/gb"
 	"image"
 	"image/color"
 	"os"
@@ -10,7 +10,7 @@ import (
 )
 
 type GoboyAdapter struct {
-	gb            *gb.Gameboy
+	gb            *gb.Gameboy // origin:  https://github.com/Humpheh/goboy
 	cancel        context.CancelFunc
 	ticker        *time.Ticker
 	frame         *GoboyFrame
