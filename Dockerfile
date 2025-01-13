@@ -9,6 +9,11 @@ COPY ./emulator /opt/cloudemu/emulator
 COPY ./platform /opt/cloudemu/platform
 
 ENV GOPROXY https://goproxy.cn,direct
+RUN rm -r /etc/apt/sources.list.d
+RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm main contrib non-free non-free-firmware" >> /etc/apt/sources.list
+RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-updates main contrib non-free non-free-firmware" >> /etc/apt/sources.list
+RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-backports main contrib non-free non-free-firmware" >> /etc/apt/sources.list
+RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian-security bookworm-security main contrib" >> /etc/apt/sources.list
 RUN apt update
 RUN apt install -y libx264-dev libvpx-dev libopusfile-dev libogg-dev
 RUN go mod tidy
@@ -17,6 +22,11 @@ RUN cd /opt/cloudemu/platform && make build
 
 # gamesrv服务依赖部分C语言库，需要和编译环境版本保持一致
 FROM debian:bookworm-slim AS gamesrv
+RUN rm -r /etc/apt/sources.list.d
+RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm main contrib non-free non-free-firmware" >> /etc/apt/sources.list
+RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-updates main contrib non-free non-free-firmware" >> /etc/apt/sources.list
+RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-backports main contrib non-free non-free-firmware" >> /etc/apt/sources.list
+RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian-security bookworm-security main contrib" >> /etc/apt/sources.list
 RUN apt update
 RUN apt install -y libx264-dev libvpx-dev libopusfile-dev libogg-dev
 ENV TZ Asia/Shanghai
