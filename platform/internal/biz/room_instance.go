@@ -100,6 +100,7 @@ func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int6
 		mutex := uc.redsync.NewMutex(mutexName, redsync.WithExpiry(OpenRoomInstanceMutexExpire))
 		// 分布式锁，防止同时创建房间实例
 		if err := mutex.Lock(); err != nil {
+			uc.logger.Error("创建房间实例分布式锁错误:", err)
 			return v1.ErrorServiceError("创建房间实例出错")
 		}
 		defer mutex.Unlock()

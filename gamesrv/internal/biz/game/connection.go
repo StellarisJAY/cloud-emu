@@ -20,18 +20,43 @@ type Connection struct {
 	mutex           *sync.Mutex            // ICE候选地址 锁
 }
 
-// NewConnection 新建一个连接, 返回WebRTC SDP offer
-func (g *Instance) NewConnection(userId int64, iceServers []*conf.ICEServer) (*Connection, string, error) {
-	servers := make([]webrtc.ICEServer, len(iceServers))
-	for i, server := range iceServers {
+type ConnectionFactory struct {
+	api        *webrtc.API
+	iceServers []webrtc.ICEServer
+}
+
+func NewConnectionFactory(c *conf.WebRTC) *ConnectionFactory {
+	if c.PortMin <= 0 || c.PortMax > 65535 {
+		panic("invalid port range")
+	}
+	servers := make([]webrtc.ICEServer, len(c.IceServers))
+	for i, server := range c.IceServers {
 		servers[i] = webrtc.ICEServer{
 			URLs:       []string{server.Url},
 			Username:   server.Username,
 			Credential: server.Credential,
 		}
 	}
-	pc, err := webrtc.NewPeerConnection(webrtc.Configuration{
-		ICEServers: servers,
+	setting := webrtc.SettingEngine{}
+	// 设置允许的UDP端口范围
+	if err := setting.SetEphemeralUDPPortRange(uint16(c.PortMin), uint16(c.PortMax)); err != nil {
+		panic(err)
+	}
+	media := webrtc.MediaEngine{}
+	if err := media.RegisterDefaultCodecs(); err != nil {
+		panic(err)
+	}
+	api := webrtc.NewAPI(webrtc.WithSettingEngine(setting), webrtc.WithMediaEngine(&media))
+	return &ConnectionFactory{
+		api:        api,
+		iceServers: servers,
+	}
+}
+
+// NewConnection PeerConn工厂创建新连接
+func (cf *ConnectionFactory) NewConnection(userId int64, g *Instance) (*Connection, string, error) {
+	pc, err := cf.api.NewPeerConnection(webrtc.Configuration{
+		ICEServers: cf.iceServers,
 	})
 	if err != nil {
 		return nil, "", fmt.Errorf("new peer connection error: %v", err)

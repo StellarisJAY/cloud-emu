@@ -8,6 +8,7 @@ package main
 
 import (
 	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/biz"
+	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/biz/game"
 	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/conf"
 	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/data"
 	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/server"
@@ -31,7 +32,8 @@ func wireApp(confServer *conf.Server, confData *conf.Data, registry *conf.Regist
 	gameFileRepo := data.NewGameFileRepo(dataData)
 	memberAuthRepo := data.NewMemberAuthRepo(dataData)
 	client := server.NewConsulClient(registry)
-	gameServerUseCase := biz.NewGameServerUseCase(gameFileRepo, memberAuthRepo, logger, client, webRTC)
+	connectionFactory := game.NewConnectionFactory(webRTC)
+	gameServerUseCase := biz.NewGameServerUseCase(gameFileRepo, memberAuthRepo, logger, client, connectionFactory)
 	gameServer := service.NewGameService(gameServerUseCase)
 	grpcServer := server.NewGRPCServer(confServer, gameServer, logger)
 	registrar := server.NewRegistrar(registry)

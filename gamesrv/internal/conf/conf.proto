@@ -38,6 +38,8 @@ message Data {
     string addr = 2;
     google.protobuf.Duration read_timeout = 3;
     google.protobuf.Duration write_timeout = 4;
+    string username = 5;
+    string password = 6;
   }
   message Mongodb {
     string host = 1;
@@ -63,5 +65,7 @@ message ICEServer {
 }
 
 message WebRTC {
-  repeated ICEServer iceServers = 1;
+  int32 portMin = 1;
+  int32 portMax = 2;
+  repeated ICEServer iceServers = 3;
 }
