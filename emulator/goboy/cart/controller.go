@@ -234,7 +234,7 @@ func NewCart(rom []byte, filename string) *Cart {
 
 	switch mbcFlag {
 	case 0x3, 0x6, 0x9, 0xD, 0xF, 0x10, 0x13, 0x17, 0x1B, 0x1E, 0xFF:
-		cartridge.initGameSaves()
+		//cartridge.initGameSaves()
 	}
 	return &cartridge
 }

@@ -81,13 +81,19 @@ func (g *GoboyAdapter) Resume() error {
 }
 
 func (g *GoboyAdapter) Save() (IEmulatorSave, error) {
-	//TODO implement me
-	panic("implement me")
+	save := g.gb.Memory.Cart.BankingController.GetSaveData()
+	if len(save) == 0 {
+		return nil, nil
+	}
+	return &BaseEmulatorSave{
+		Game: g.game,
+		Data: save,
+	}, nil
 }
 
 func (g *GoboyAdapter) LoadSave(save IEmulatorSave) error {
-	//TODO implement me
-	panic("implement me")
+	g.gb.Memory.Cart.BankingController.LoadSaveData(save.SaveData())
+	return nil
 }
 
 func (g *GoboyAdapter) Restart(options IEmulatorOptions) error {
@@ -110,34 +116,35 @@ func (g *GoboyAdapter) Stop() error {
 	return nil
 }
 
-func (g *GoboyAdapter) SubmitInput(controllerId int, keyCode string, pressed bool) {
-	directionMask, buttonMask := byte(0b11101111), byte(0b11011111)
+func (g *GoboyAdapter) SubmitInput(_ int, keyCode string, pressed bool) {
+	input := gb.ButtonInput{}
+	key := byte(255)
 	switch keyCode {
 	case "Right":
-		g.gb.InputMask &= directionMask
-		g.setButtonBit(0, pressed)
+		key = gb.ButtonRight
 	case "Left":
-		g.gb.InputMask &= directionMask
-		g.setButtonBit(1, pressed)
+		key = gb.ButtonLeft
 	case "Down":
-		g.gb.InputMask &= directionMask
-		g.setButtonBit(2, pressed)
+		key = gb.ButtonDown
 	case "Up":
-		g.gb.InputMask &= directionMask
-		g.setButtonBit(3, pressed)
+		key = gb.ButtonUp
 	case "A":
-		g.gb.InputMask &= buttonMask
-		g.setButtonBit(0, pressed)
+		key = byte(gb.ButtonA)
 	case "B":
-		g.gb.InputMask &= buttonMask
-		g.setButtonBit(1, pressed)
+		key = gb.ButtonB
 	case "Select":
-		g.gb.InputMask &= buttonMask
-		g.setButtonBit(2, pressed)
+		key = gb.ButtonSelect
 	case "Start":
-		g.gb.InputMask &= buttonMask
-		g.setButtonBit(3, pressed)
+		key = gb.ButtonStart
 	}
+	if key != 255 {
+		if pressed {
+			input.Pressed = []gb.Button{gb.Button(key)}
+		} else {
+			input.Released = []gb.Button{gb.Button(key)}
+		}
+	}
+	g.gb.ProcessInput(input)
 }
 
 func (g *GoboyAdapter) setButtonBit(bit byte, pressed bool) {
