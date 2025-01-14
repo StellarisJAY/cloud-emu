@@ -1,16 +1,15 @@
 package emulator
 
 import (
-	"context"
 	"errors"
 	"image"
 )
 
 const (
-	TypeNESGO = "NESGO"
-	TypeChip8 = "CHIP8"
-	TypeDummy = "DUMMY"
-	TypeGoboy = "GOBOY"
+	CodeNesgo = "NESGO"
+	CodeChip8 = "CHIP8"
+	CodeDummy = "DUMMY"
+	CodeGoboy = "GOBOY"
 )
 
 var (
@@ -27,11 +26,6 @@ type IFrame interface {
 	YCbCr() *image.YCbCr
 	// Read 读取画面数据， func() 用于释放资源
 	Read() (image.Image, func(), error)
-}
-
-type IGameFileRepo interface {
-	// GetGameData 获取游戏文件数据
-	GetGameData(ctx context.Context, game string) ([]byte, error)
 }
 
 type ControllerInfo struct {
@@ -114,22 +108,20 @@ type Info struct {
 	Name                   string
 	SupportSave            bool
 	SupportGraphicSettings bool
+	EmulatorCode           string
 }
 
 var (
 	ErrorEmulatorNotSupported = errors.New("emulator not supported")
 )
 
-func MakeEmulator(emulatorType string, options IEmulatorOptions) (IEmulator, error) {
-	switch emulatorType {
-	case TypeNESGO:
+func MakeEmulator(emulatorCode string, options IEmulatorOptions) (IEmulator, error) {
+	switch emulatorCode {
+	case CodeNesgo:
 		return makeNESEmulatorAdapter(options)
-	case TypeChip8:
-		e := makeChip8EmulatorAdapter(options)
-		return e, nil
-	case TypeDummy:
+	case CodeDummy:
 		return MakeDummyAdapter(options)
-	case TypeGoboy:
+	case CodeGoboy:
 		return newGoboyAdapter(options)
 	default:
 		return nil, ErrorEmulatorNotSupported

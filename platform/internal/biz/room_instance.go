@@ -51,6 +51,7 @@ type RoomInstance struct {
 	GameId         int64     `json:"gameId"`
 	SessionKey     string
 	EmulatorType   string
+	EmulatorCode   string
 }
 
 const (
@@ -156,8 +157,9 @@ func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int6
 		instance.EmulatorId = emulator.EmulatorId
 		instance.EmulatorName = emulator.EmulatorName
 		instance.EmulatorType = emulator.EmulatorType
+		instance.EmulatorCode = emulator.EmulatorCode
 
-		game, err := uc.emulatorGameRepo.GetByEmulatorIdAndName(ctx, instance.EmulatorId, "gopher.gif")
+		game, err := uc.emulatorGameRepo.GetByEmulatorTypeAndName(ctx, instance.EmulatorType, "gopher.gif")
 		if err != nil || game == nil {
 			return v1.ErrorServiceError("无法获取默认游戏配置")
 		}
@@ -310,24 +312,23 @@ func (uc *RoomInstanceUseCase) Restart(ctx context.Context, roomId, userId, emul
 			return v1.ErrorServiceError("无法重启，请先连接模拟器")
 		}
 		// 获取游戏信息和模拟器信息
-		game, _ := uc.emulatorGameRepo.GetById(ctx, gameId)
-		if game == nil || game.EmulatorId != emulatorId {
-			return v1.ErrorServiceError("重启失败，无法加载该游戏")
-		}
-		if game.EmulatorId != emulatorId {
-			return v1.ErrorServiceError("重启失败，无法加载该游戏")
-		}
 		emulator, _ := uc.emulatorRepo.GetById(ctx, emulatorId)
 		if emulator == nil {
 			return v1.ErrorServiceError("重启失败，模拟器不存在")
+		}
+		game, _ := uc.emulatorGameRepo.GetById(ctx, gameId)
+		if game == nil || game.EmulatorType != emulator.EmulatorType {
+			uc.logger.Error("重启获取游戏信息错误:", game.EmulatorType, emulator.EmulatorType)
+			return v1.ErrorServiceError("重启失败，无法加载该游戏")
 		}
 
 		params := RestartParams{
 			UserId:       userId,
 			EmulatorId:   emulatorId,
 			GameId:       gameId,
-			EmulatorType: emulator.EmulatorType,
+			EmulatorCode: emulator.EmulatorCode,
 			GameName:     game.GameName,
+			EmulatorType: emulator.EmulatorType,
 		}
 
 		// 重启后游戏发生改变，需要获取游戏文件并发送给游戏服务器

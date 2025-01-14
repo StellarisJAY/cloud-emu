@@ -46,6 +46,7 @@ func (e *EmulatorRepo) init() error {
 			Description:           em.Description,
 			SupportSave:           em.SupportSave,
 			SupportGraphicSetting: em.SupportGraphicSettings,
+			EmulatorCode:          em.EmulatorCode,
 		}
 		err := e.data.db.Table(EmulatorTableName).Create(emu).Error
 		if err != nil {

@@ -71,11 +71,9 @@ func (e *EmulatorGameRepo) DeleteFile(ctx context.Context, game *biz.EmulatorGam
 func (e *EmulatorGameRepo) ListGame(ctx context.Context, query biz.EmulatorGameQuery, p *common.Pagination) ([]*biz.EmulatorGame, error) {
 	var result []*biz.EmulatorGame
 	d := e.data.DB(ctx).Table(EmulatorGameTableName).
-		Select("emulator_game.*, emulator_name, emulator_type").
-		WithContext(ctx).
-		Joins("INNER JOIN emulator ON emulator_game.emulator_id = emulator.emulator_id")
-	if query.EmulatorId != 0 {
-		d = d.Where("emulator_game.emulator_id = ?", query.EmulatorId)
+		WithContext(ctx)
+	if query.EmulatorType != "" {
+		d = d.Where("emulator_type = ?", query.EmulatorType)
 	}
 	if query.GameName != "" {
 		d = d.Where("game_name LIKE ?", "%"+query.GameName+"%")
@@ -117,10 +115,10 @@ func (e *EmulatorGameRepo) Download(ctx context.Context, game *biz.EmulatorGame)
 	return buffer.Bytes(), nil
 }
 
-func (e *EmulatorGameRepo) GetByEmulatorIdAndName(ctx context.Context, emulatorId int64, name string) (*biz.EmulatorGame, error) {
+func (e *EmulatorGameRepo) GetByEmulatorTypeAndName(ctx context.Context, emulatorType string, name string) (*biz.EmulatorGame, error) {
 	var result *biz.EmulatorGame
 	err := e.data.DB(ctx).Table(EmulatorGameTableName).WithContext(ctx).
-		Where("emulator_id = ?", emulatorId).
+		Where("emulator_type = ?", emulatorType).
 		Where("game_name = ?", name).Scan(&result).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil

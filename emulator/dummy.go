@@ -11,11 +11,12 @@ type DummyAdapter struct {
 }
 
 func init() {
-	supportedEmulators[TypeDummy] = Info{
-		EmulatorType:           TypeDummy,
+	supportedEmulators[CodeDummy] = Info{
+		EmulatorType:           "DUMMY",
 		Provider:               "https://github.com/StellrisJAY/cloud-emu/",
 		Description:            "播放gif文件的dummy模拟器",
 		Name:                   "Dummy",
+		EmulatorCode:           CodeDummy,
 		SupportSave:            false,
 		SupportGraphicSettings: false,
 	}

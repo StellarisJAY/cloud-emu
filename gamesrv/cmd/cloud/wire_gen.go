@@ -29,11 +29,10 @@ func wireApp(confServer *conf.Server, confData *conf.Data, registry *conf.Regist
 	if err != nil {
 		return nil, nil, err
 	}
-	gameFileRepo := data.NewGameFileRepo(dataData)
 	memberAuthRepo := data.NewMemberAuthRepo(dataData)
 	client := server.NewConsulClient(registry)
 	connectionFactory := game.NewConnectionFactory(webRTC)
-	gameServerUseCase := biz.NewGameServerUseCase(gameFileRepo, memberAuthRepo, logger, client, connectionFactory)
+	gameServerUseCase := biz.NewGameServerUseCase(memberAuthRepo, logger, client, connectionFactory)
 	gameServer := service.NewGameService(gameServerUseCase)
 	grpcServer := server.NewGRPCServer(confServer, gameServer, logger)
 	registrar := server.NewRegistrar(registry)

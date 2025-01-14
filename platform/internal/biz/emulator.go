@@ -10,6 +10,7 @@ type Emulator struct {
 	SupportSave           bool   `json:"supportSave"`
 	SupportGraphicSetting bool   `json:"supportGraphicSetting"`
 	EmulatorType          string `json:"emulatorType"`
+	EmulatorCode          string `json:"emulatorCode"`
 }
 
 type EmulatorUseCase struct {

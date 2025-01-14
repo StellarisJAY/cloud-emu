@@ -18,6 +18,7 @@ type RestartParams struct {
 	UserId       int64
 	EmulatorId   int64
 	GameId       int64
+	EmulatorCode string
 	EmulatorType string
 	GameName     string
 	GameData     []byte
@@ -27,6 +28,7 @@ type LoadSaveParams struct {
 	UserId       int64
 	EmulatorId   int64
 	GameId       int64
+	EmulatorCode string
 	EmulatorType string
 	GameName     string
 	GameData     []byte

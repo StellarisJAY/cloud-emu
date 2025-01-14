@@ -28,7 +28,7 @@ func (g *GameService) OpenGameInstance(ctx context.Context, request *v1.OpenGame
 		EmulatorId:   request.EmulatorId,
 		GameId:       request.GameId,
 		GameData:     request.GameData,
-		EmulatorType: request.EmulatorType,
+		EmulatorCode: request.EmulatorCode,
 	}
 	token, sessionKey, err := g.uc.CreateRoomInstance(ctx, params)
 	if err != nil {
@@ -128,12 +128,13 @@ func (g *GameService) RestartGameInstance(ctx context.Context, request *v1.Resta
 	err := g.uc.Restart(ctx, biz.RestartParams{
 		RoomId:       request.RoomId,
 		UserId:       request.UserId,
-		EmulatorType: request.EmulatorType,
+		EmulatorCode: request.EmulatorCode,
 		GameName:     request.GameName,
 		GameUrl:      request.GameUrl,
 		EmulatorId:   request.EmulatorId,
 		GameId:       request.GameId,
 		GameData:     request.GameData,
+		EmulatorType: request.EmulatorType,
 	})
 	if err != nil {
 		return nil, err
@@ -161,12 +162,13 @@ func (g *GameService) LoadSave(ctx context.Context, request *v1.GameSrvLoadSaveR
 	err := g.uc.LoadSave(ctx, biz.LoadSaveParams{
 		RoomId:       request.RoomId,
 		UserId:       request.UserId,
-		EmulatorType: request.EmulatorType,
+		EmulatorCode: request.EmulatorCode,
 		GameName:     request.GameName,
 		EmulatorId:   request.EmulatorId,
 		GameId:       request.GameId,
 		GameData:     request.GameData,
 		SaveData:     request.SaveData,
+		EmulatorType: request.EmulatorType,
 	})
 
 	if err != nil {

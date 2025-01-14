@@ -51,7 +51,7 @@ func (g *GameServerRepo) OpenRoomInstance(ctx context.Context, instance *biz.Roo
 			AppId:  auth.AppId,
 		},
 		GameData:     gameData,
-		EmulatorType: instance.EmulatorType,
+		EmulatorCode: instance.EmulatorCode,
 		EmulatorId:   instance.EmulatorId,
 		GameId:       instance.GameId,
 	})
@@ -201,11 +201,12 @@ func (g *GameServerRepo) RestartGameInstance(ctx context.Context, instance *biz.
 	resp, err := gameServer.RestartGameInstance(ctx, &v1.RestartGameInstanceRequest{
 		RoomId:       instance.RoomId,
 		UserId:       params.UserId,
-		EmulatorType: params.EmulatorType,
+		EmulatorCode: params.EmulatorCode,
 		GameName:     params.GameName,
 		EmulatorId:   params.EmulatorId,
 		GameId:       params.GameId,
 		GameData:     params.GameData,
+		EmulatorType: params.EmulatorType,
 	})
 
 	if err != nil {
@@ -248,11 +249,12 @@ func (g *GameServerRepo) LoadSave(ctx context.Context, instance *biz.RoomInstanc
 		RoomId:       instance.RoomId,
 		UserId:       params.UserId,
 		EmulatorId:   params.EmulatorId,
-		EmulatorType: params.EmulatorType,
+		EmulatorCode: params.EmulatorCode,
 		GameId:       params.GameId,
 		GameName:     params.GameName,
 		GameData:     params.GameData,
 		SaveData:     params.SaveData,
+		EmulatorType: params.EmulatorType,
 	})
 	if err != nil {
 		return err

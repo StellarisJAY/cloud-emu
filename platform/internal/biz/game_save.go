@@ -18,6 +18,7 @@ type GameSave struct {
 	RoomName     string
 	EmulatorName string
 	EmulatorType string
+	EmulatorCode string
 	GameName     string
 	AddTime      time.Time
 	FileUrl      string
@@ -159,9 +160,10 @@ func (uc *GameSaveUseCase) LoadSave(ctx context.Context, roomId, userId int64, s
 	params := LoadSaveParams{
 		UserId:       userId,
 		EmulatorId:   save.EmulatorId,
-		EmulatorType: save.EmulatorType,
+		EmulatorCode: save.EmulatorCode,
 		GameId:       save.GameId,
 		GameName:     save.GameName,
+		EmulatorType: save.EmulatorType,
 	}
 
 	// 加载存档数据

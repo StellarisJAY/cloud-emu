@@ -12,6 +12,7 @@ type Save struct {
 type emulatorLoadSaveRequest struct {
 	emulatorId   int64
 	gameId       int64
+	emulatorCode string
 	emulatorType string
 	gameName     string
 	gameData     []byte
@@ -35,15 +36,16 @@ func (g *Instance) SaveGame() (*Save, error) {
 	}
 }
 
-func (g *Instance) LoadSave(emulatorId, gameId int64, emulatorType, gameName string, gameData, saveData []byte) error {
+func (g *Instance) LoadSave(emulatorId, gameId int64, emulatorCode, emulatorType, gameName string, gameData, saveData []byte) error {
 	ch := make(chan ConsumerResult)
 	g.messageChan <- &Message{Type: MsgLoadSave, resultChan: ch, Data: &emulatorLoadSaveRequest{
 		emulatorId:   emulatorId,
 		gameId:       gameId,
-		emulatorType: emulatorType,
+		emulatorCode: emulatorCode,
 		gameName:     gameName,
 		gameData:     gameData,
 		saveData:     saveData,
+		emulatorType: emulatorType,
 	}}
 	result := <-ch
 	close(ch)
@@ -65,7 +67,7 @@ func (g *Instance) handleSaveGame() ConsumerResult {
 func (g *Instance) handleLoadSave(request *emulatorLoadSaveRequest) ConsumerResult {
 	// 存档的模拟器或游戏与当前模拟器游戏不同，需要重启游戏实例
 	if g.emulatorId != request.emulatorId || g.gameId != request.gameId {
-		err := g.restartEmulator(request.gameName, request.gameData, request.emulatorType, request.emulatorId, request.gameId)
+		err := g.restartEmulator(request.gameName, request.gameData, request.emulatorCode, request.emulatorType, request.emulatorId, request.gameId)
 		if err != nil {
 			return ConsumerResult{Error: err}
 		}

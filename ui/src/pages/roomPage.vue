@@ -80,8 +80,6 @@ const tourSteps = [
               style="width: 90%">读档</a-button>
           </a-col>
           <a-col :span="6">
-            <a-button class="toolbar-button" type="primary" :disabled="chatBtnDisabled" @click="_ => { setChatModal(true) }"
-              style="width: 90%">聊天</a-button>
           </a-col>
           <a-col :span="6">
             <a-button ref="refRoomBtn" class="toolbar-button" type="primary" @click="openRoomMemberDrawer" style="width: 90%">房间</a-button>
@@ -132,14 +130,6 @@ const tourSteps = [
     <a-drawer size="default" title="保存游戏" placement="right" v-model:open="savedGameOpen">
       <SaveList :room-id="roomId"></SaveList>
     </a-drawer>
-    <!--聊天窗口-->
-    <a-modal title="聊天" v-model:open="chatModalOpen" @cancel="_ => { setChatModal(false) }">
-      <template #footer>
-        <a-button @click="_ => { setChatModal(false) }">取消</a-button>
-        <a-button type="primary" @click="sendChatMessage">发送</a-button>
-      </template>
-      <a-input placeholder="请输入消息..." v-model:value="chatMessage"></a-input>
-    </a-modal>
     <!--设置列表-->
     <a-drawer v-model:open="settingDrawerOpen" placement="right" title="设置" size="default">
       <a-form>
@@ -183,7 +173,6 @@ import { ArrowUpOutlined, ArrowDownOutlined, ArrowLeftOutlined, ArrowRightOutlin
 import { Tour } from "ant-design-vue";
 import RoomInfoDrawer from "../components/roomInfoDrawer.vue";
 import SaveList from "../components/saveList.vue";
-import KeyboardSetting from "../components/keyboardSetting.vue";
 import platform from "../util/platform.js";
 import EmulatorInfoDrawer from "../components/emulatorInfoDrawer.vue";
 import roomMemberAPI from "../api/roomMember.js";
@@ -217,7 +206,6 @@ export default {
     AInputPassword: Input.Password,
     RoomInfoDrawer,
     SaveList,
-    KeyboardSetting,
     ASlider: Slider,
     EmulatorInfoDrawer,
   },
@@ -306,7 +294,6 @@ export default {
     if (this.rtcSession && this.rtcSession.pc) {
       this.rtcSession.pc.close();
     }
-    this.setKeyboardControl(false);
   },
   methods: {
     openRoomMemberDrawer() {
@@ -502,55 +489,6 @@ export default {
         this.saveBtnDisabled = false;
       })
     },
-
-    setChatModal(open) {
-      this.setKeyboardControl(!open)
-      this.chatModalOpen = open
-      if (!open) {
-        this.chatMessage = ""
-      }
-    },
-    sendChatMessage() {
-      const timestamp = new Date().getTime();
-      if (this.rtcSession && this.rtcSession.pc) {
-        const pingMsg = {
-          "type": MessageChat,
-          "timestamp": timestamp,
-          "data": this.chatMessage,
-        };
-        this.rtcSession.dataChannel.send(JSON.stringify(pingMsg));
-      }
-      this.setChatModal(false);
-    },
-
-    setKeyboardControl(enabled) {
-      if (enabled) {
-        const _this = this;
-        let setting;
-        if (this.$refs.refKeyboardSettings && this.$refs.refKeyboardSettings.selected) {
-          setting = this.$refs.refKeyboardSettings.selected;
-        }else {
-          setting = globalConfigs.defaultKeyboardSetting;
-        }
-        window.onkeydown = ev => {
-          const button = setting.bindings.find(item => item.buttons[0] === ev.code);
-          if (button) {
-            _this.sendAction(button.emulatorKey, MessageGameButtonPressed);
-          }
-        };
-
-        window.onkeyup = ev => {
-          const button = setting.bindings.find(item => item.buttons[0] === ev.code);
-          if (button) {
-            _this.sendAction(button.emulatorKey, MessageGameButtonReleased);
-          }
-        };
-      } else {
-        window.onkeydown = _ => { }
-        window.onkeyup = _ => { }
-      }
-    },
-
     ping() {
       const timestamp = new Date().getTime();
       if (this.rtcSession && this.rtcSession.pc) {
@@ -573,20 +511,10 @@ export default {
         case MessagePing:
           this.stats.rtt = new Date().getTime() - msgObj.timestamp;
           break;
-        case MessageChat:
-          if (!msgObj["from"]) return;
-          api.get("/user/" + msgObj["from"]).then(resp => {
-            notification.info({
-              message: resp["data"]["name"],
-              description: msgObj.data,
-              placement: "topLeft",
-              duration: 1,
-            });
-          });
-          break;
         case MessageRestart:
           message.info("模拟器重启");
           this.destroyScreenButtons();
+          console.log(msgObj);
           this.initScreenButtons(msgObj["data"]["EmulatorType"]);
           break;
         default:

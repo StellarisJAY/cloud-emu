@@ -19,10 +19,11 @@ type GoboyAdapter struct {
 }
 
 func init() {
-	supportedEmulators[TypeGoboy] = Info{
-		EmulatorType:           TypeGoboy,
+	supportedEmulators[CodeGoboy] = Info{
+		EmulatorType:           "GB",
+		EmulatorCode:           CodeGoboy,
 		Provider:               "https://github.com/Humpheh/goboy",
-		Description:            "GameBoy 模拟器",
+		Description:            "Go语言实现的GameBoy模拟器",
 		Name:                   "GoBoy",
 		SupportSave:            false,
 		SupportGraphicSettings: false,

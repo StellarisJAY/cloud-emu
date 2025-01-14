@@ -146,7 +146,7 @@ paths:
                 - Emulator
             operationId: Emulator_ListGame
             parameters:
-                - name: emulatorId
+                - name: emulatorType
                   in: query
                   schema:
                     type: string
@@ -1034,6 +1034,10 @@ components:
                     type: boolean
                 supportGraphicSetting:
                     type: boolean
+                emulatorType:
+                    type: string
+                emulatorCode:
+                    type: string
         v1.GameDto:
             type: object
             properties:

@@ -29,6 +29,7 @@ type Room struct {
 	GameId       int64     `json:"gameId"`
 	GameName     string    `json:"gameName"`
 	EmulatorType string    `json:"emulatorType"`
+	EmulatorCode string    `json:"emulatorCode"`
 }
 
 type RoomUseCase struct {
@@ -136,6 +137,7 @@ func (r *RoomUseCase) buildRoomDto(ctx context.Context, room *Room) error {
 		room.EmulatorName = instance.EmulatorName
 		room.GameId = instance.GameId
 		room.EmulatorType = instance.EmulatorType
+		room.EmulatorCode = instance.EmulatorCode
 	}
 	return nil
 }

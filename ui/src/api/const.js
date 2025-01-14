@@ -54,7 +54,7 @@ const Configs = {
     },
 
     defaultButtonLayouts: {
-        "NESGO":[{"label": "←", "code": "Left", "slot": "l4"},
+        "NES":[{"label": "←", "code": "Left", "slot": "l4"},
             {"label": "→", "code": "Right", "slot": "l6"},
             {"label": "↑", "code": "Up", "slot": "l2"},
             {"label": "↓", "code": "Down", "slot": "l8"},
@@ -80,7 +80,7 @@ const Configs = {
             {"label": "F", "code": "F", "slot": "r5"},
             {"label": "0", "code": "0", "slot": "r4"},
         ],
-        "GOBOY": [{"label": "←", "code": "Left", "slot": "l4"},
+        "GB": [{"label": "←", "code": "Left", "slot": "l4"},
             {"label": "→", "code": "Right", "slot": "l6"},
             {"label": "↑", "code": "Up", "slot": "l2"},
             {"label": "↓", "code": "Down", "slot": "l8"},
@@ -91,7 +91,7 @@ const Configs = {
     },
 
     emulatorControllers: {
-        "NESGO": [
+        "NES": [
             {controllerId: 1, label: "玩家1"},
             {controllerId: 2, label: "玩家2"}
         ],

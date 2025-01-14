@@ -42,6 +42,8 @@ func (e *EmulatorService) ListEmulator(ctx context.Context, request *v1.ListEmul
 			Provider:              emulator.Provider,
 			SupportSave:           emulator.SupportSave,
 			SupportGraphicSetting: emulator.SupportGraphicSetting,
+			EmulatorType:          emulator.EmulatorType,
+			EmulatorCode:          emulator.EmulatorCode,
 		}
 	}
 	return &v1.ListEmulatorResponse{
@@ -54,8 +56,8 @@ func (e *EmulatorService) ListEmulator(ctx context.Context, request *v1.ListEmul
 func (e *EmulatorService) ListGame(ctx context.Context, request *v1.ListGameRequest) (*v1.ListGameResponse, error) {
 	p := &common.Pagination{Page: request.Page, PageSize: request.PageSize}
 	games, err := e.emulatorGameUC.ListGame(ctx, biz.EmulatorGameQuery{
-		EmulatorId: request.EmulatorId,
-		GameName:   request.GameName,
+		EmulatorType: request.EmulatorType,
+		GameName:     request.GameName,
 	}, p)
 	if err != nil {
 		e := errors.FromError(err)

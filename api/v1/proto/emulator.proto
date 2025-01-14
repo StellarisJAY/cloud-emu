@@ -27,6 +27,8 @@ message EmulatorDto {
   string provider = 4;
   bool supportSave = 5;
   bool supportGraphicSetting = 6;
+  string emulatorType = 7;
+  string emulatorCode = 8;
 }
 
 message GameDto {
@@ -54,7 +56,7 @@ message ListEmulatorResponse {
 }
 
 message ListGameRequest {
-  int64 emulatorId = 1;
+  string emulatorType = 1;
   string gameName = 2;
   int32 page = 3;
   int32 pageSize = 4;

@@ -9,20 +9,21 @@ import (
 type emulatorRestartRequest struct {
 	game         string
 	gameData     []byte
+	emulatorCode string
 	emulatorType string
 	emulatorId   int64
 	gameId       int64
 }
 
 func (g *Instance) handleRestartEmulator(request *emulatorRestartRequest) ConsumerResult {
-	err := g.restartEmulator(request.game, request.gameData, request.emulatorType, request.emulatorId, request.gameId)
+	err := g.restartEmulator(request.game, request.gameData, request.emulatorCode, request.emulatorType, request.emulatorId, request.gameId)
 	return ConsumerResult{Success: err == nil, Error: err}
 }
 
 // 重启模拟器，如果模拟器类型相同，则直接重启，否则先停止当前模拟器再创建新模拟器
-func (g *Instance) restartEmulator(game string, gameData []byte, emulatorType string, emulatorId, gameId int64) error {
-	if g.EmulatorType == emulatorType {
-		opts, err := g.makeEmulatorOptions(g.EmulatorType, game, gameData)
+func (g *Instance) restartEmulator(game string, gameData []byte, emulatorCode, emulatorType string, emulatorId, gameId int64) error {
+	if g.EmulatorCode == emulatorCode {
+		opts, err := g.makeEmulatorOptions(g.EmulatorCode, game, gameData)
 		if err != nil {
 			return err
 		}
@@ -33,17 +34,17 @@ func (g *Instance) restartEmulator(game string, gameData []byte, emulatorType st
 		g.gameId = gameId
 		return nil
 	}
-	options, err := g.makeEmulatorOptions(emulatorType, game, gameData)
+	options, err := g.makeEmulatorOptions(emulatorCode, game, gameData)
 	if err != nil {
 		return err
 	}
 	_ = g.e.Stop()
-	e, err := emulator.MakeEmulator(emulatorType, options)
+	e, err := emulator.MakeEmulator(emulatorCode, options)
 	if err != nil {
 		return err
 	}
 	g.e = e
-	g.EmulatorType = emulatorType
+	g.EmulatorCode = emulatorCode
 	g.emulatorId = emulatorId
 	g.gameId = gameId
 	width, height := g.e.OutputResolution()
@@ -60,30 +61,32 @@ func (g *Instance) restartEmulator(game string, gameData []byte, emulatorType st
 	return nil
 }
 
-func (g *Instance) RestartEmulator(game string, gameData []byte, emulatorType string, emulatorId, gameId int64) error {
+func (g *Instance) RestartEmulator(game string, gameData []byte, emulatorCode, emulatorType string, emulatorId, gameId int64) error {
 	ch := make(chan ConsumerResult)
-	request := &emulatorRestartRequest{game, gameData, emulatorType, emulatorId, gameId}
+	request := &emulatorRestartRequest{game, gameData, emulatorCode, emulatorType, emulatorId, gameId}
 	g.messageChan <- &Message{Type: MsgRestartEmulator, Data: request, resultChan: ch}
 	result := <-ch
 	close(ch)
 	if result.Success {
-		g.onRestartSuccess(emulatorId, gameId, emulatorType)
+		g.onRestartSuccess(emulatorId, gameId, emulatorCode, emulatorType)
 		return nil
 	} else {
 		return result.Error
 	}
 }
 
-func (g *Instance) onRestartSuccess(emulatorId, gameId int64, emulatorType string) {
+func (g *Instance) onRestartSuccess(emulatorId, gameId int64, emulatorCode, emulatorType string) {
 	g.mutex.RLock()
 	defer g.mutex.RUnlock()
 	content := &struct {
 		EmulatorId   int64
 		GameId       int64
+		EmulatorCode string
 		EmulatorType string
 	}{
 		EmulatorId:   emulatorId,
 		GameId:       gameId,
+		EmulatorCode: emulatorCode,
 		EmulatorType: emulatorType,
 	}
 	msg := &Message{Type: MsgEmulatorRestart, Data: content}
@@ -95,11 +98,11 @@ func (g *Instance) onRestartSuccess(emulatorId, gameId int64, emulatorType strin
 
 func (g *Instance) makeEmulatorOptions(emulatorName string, game string, gameData []byte) (emulator.IEmulatorOptions, error) {
 	switch emulatorName {
-	case emulator.TypeNESGO:
+	case emulator.CodeNesgo:
 		return emulator.MakeNesEmulatorOptions(game, gameData, g.audioSampleRate, g.audioSampleChan, func(frame emulator.IFrame) {
 			g.RenderCallback(frame, nil)
 		}), nil
-	case emulator.TypeChip8, emulator.TypeDummy, emulator.TypeGoboy:
+	case emulator.CodeChip8, emulator.CodeDummy, emulator.CodeGoboy:
 		return emulator.MakeBaseEmulatorOptions(game, gameData, g.audioSampleRate, g.audioSampleChan, func(frame emulator.IFrame) {
 			g.RenderCallback(frame, nil)
 		})

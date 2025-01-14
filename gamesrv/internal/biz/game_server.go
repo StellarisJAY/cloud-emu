@@ -12,12 +12,7 @@ import (
 	"sync"
 )
 
-type GameFileRepo interface {
-	GetGameData(ctx context.Context, game string) ([]byte, error)
-}
-
 type GameServerUseCase struct {
-	gameFileRepo   GameFileRepo
 	memberAuthRepo MemberAuthRepo
 	gameInstances  map[int64]*game.Instance
 	mutex          *sync.RWMutex
@@ -33,12 +28,13 @@ type CreateRoomInstanceParams struct {
 	EmulatorId     int64
 	GameId         int64
 	GameData       []byte
-	EmulatorType   string
+	EmulatorCode   string
 }
 
 type RestartParams struct {
 	RoomId       int64
 	UserId       int64
+	EmulatorCode string
 	EmulatorType string
 	GameName     string
 	GameUrl      string
@@ -50,6 +46,7 @@ type RestartParams struct {
 type LoadSaveParams struct {
 	RoomId       int64
 	UserId       int64
+	EmulatorCode string
 	EmulatorType string
 	GameName     string
 	GameUrl      string
@@ -59,10 +56,9 @@ type LoadSaveParams struct {
 	SaveData     []byte
 }
 
-func NewGameServerUseCase(gameFileRepo GameFileRepo, memberAuthRepo MemberAuthRepo, logger log.Logger, consul *api.Client,
+func NewGameServerUseCase(memberAuthRepo MemberAuthRepo, logger log.Logger, consul *api.Client,
 	cf *game.ConnectionFactory) *GameServerUseCase {
 	return &GameServerUseCase{
-		gameFileRepo:   gameFileRepo,
 		memberAuthRepo: memberAuthRepo,
 		logger:         log.NewHelper(logger),
 		mutex:          &sync.RWMutex{},
@@ -73,7 +69,7 @@ func NewGameServerUseCase(gameFileRepo GameFileRepo, memberAuthRepo MemberAuthRe
 }
 
 func (uc *GameServerUseCase) CreateRoomInstance(_ context.Context, params CreateRoomInstanceParams) (string, string, error) {
-	instance, err := game.MakeGameInstance(params.RoomId, params.EmulatorId, params.GameId, params.EmulatorType, params.GameData)
+	instance, err := game.MakeGameInstance(params.RoomId, params.EmulatorId, params.GameId, params.EmulatorCode, params.GameData)
 	if err != nil {
 		return "", "", v1.ErrorServiceError("创建游戏实例出错")
 	}
@@ -232,7 +228,7 @@ func (uc *GameServerUseCase) Restart(_ context.Context, params RestartParams) er
 		uc.logger.Error("无法找到用户连接:", params.UserId, params.RoomId)
 		return v1.ErrorServiceError("用户未连接")
 	}
-	return instance.RestartEmulator(params.GameName, params.GameData, params.EmulatorType, params.EmulatorId, params.GameId)
+	return instance.RestartEmulator(params.GameName, params.GameData, params.EmulatorCode, params.EmulatorType, params.EmulatorId, params.GameId)
 }
 
 func (uc *GameServerUseCase) createGameInstanceSession(gameInstance *game.Instance) (string, error) {
@@ -283,7 +279,8 @@ func (uc *GameServerUseCase) LoadSave(_ context.Context, params LoadSaveParams) 
 		uc.logger.Error("无法找到用户连接:", params.UserId, params.RoomId)
 		return v1.ErrorServiceError("用户未连接")
 	}
-	err := instance.LoadSave(params.EmulatorId, params.GameId, params.EmulatorType, params.GameName, params.GameData, params.SaveData)
+	err := instance.LoadSave(params.EmulatorId, params.GameId, params.EmulatorCode, params.EmulatorType,
+		params.GameName, params.GameData, params.SaveData)
 	return err
 }
 

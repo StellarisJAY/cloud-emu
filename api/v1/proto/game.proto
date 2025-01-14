@@ -38,7 +38,7 @@ message OpenGameInstanceRequest {
   RoomMemberAuth auth = 2;
   int64 emulatorId = 3;
   int64 gameId = 4;
-  string emulatorType = 5;
+  string emulatorCode = 5;
   bytes gameData = 6;
 }
 
@@ -124,12 +124,13 @@ message GetIceCandidateResponse {
 message RestartGameInstanceRequest {
   int64 roomId = 1;
   int64 userId = 2;
-  string emulatorType = 3;
+  string emulatorCode = 3;
   string gameName = 4;
   string gameUrl = 5;
   int64 emulatorId = 6;
   int64 gameId = 7;
   bytes gameData = 8;
+  string emulatorType = 9;
 }
 
 message RestartGameInstanceResponse {
@@ -157,13 +158,14 @@ message GameSrvSaveGameResponse {
 message GameSrvLoadSaveRequest {
   int64 roomId = 1;
   int64 userId = 2;
-  string emulatorType = 3;
+  string emulatorCode = 3;
   string gameName = 4;
   string gameUrl = 5;
   int64 emulatorId = 6;
   int64 gameId = 7;
   bytes saveData = 8;
   bytes gameData = 9;
+  string emulatorType = 10;
 }
 
 message GameSrvLoadSaveResponse {

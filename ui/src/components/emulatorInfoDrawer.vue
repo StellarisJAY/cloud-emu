@@ -6,6 +6,7 @@
                   @change="onEmulatorSelectChange" :disabled="!currentUserIsHost"></a-select>
       </a-form-item>
       <a-descriptions :column="1" v-if="selectedEmulator" title="模拟器详情">
+        <a-descriptions-item label="类型">{{selectedEmulator["emulatorType"]}}</a-descriptions-item>
         <a-descriptions-item label="描述">{{ selectedEmulator["description"] }}</a-descriptions-item>
         <a-descriptions-item label="提供者">{{ selectedEmulator["provider"] }}</a-descriptions-item>
         <a-descriptions-item label="支持存档">{{ selectedEmulator["supportSave"] ? "是" : "否" }}</a-descriptions-item>
@@ -115,7 +116,7 @@ export default {
     },
 
     listGames() {
-      emulatorAPI.listGame(this.selectedEmulator.emulatorId).then(resp => {
+      emulatorAPI.listGame(this.selectedEmulator.emulatorType).then(resp => {
         const data = resp.data;
         this.emulatorGames = data;
         this.emulatorGameOptions = data.map(item => {

@@ -30,10 +30,11 @@ type NesFrameAdapter struct {
 }
 
 func init() {
-	supportedEmulators[TypeNESGO] = Info{
-		EmulatorType:           TypeNESGO,
+	supportedEmulators[CodeNesgo] = Info{
+		EmulatorCode:           CodeNesgo,
+		EmulatorType:           "NES",
 		Provider:               "https://github.com/StellrisJAY/cloud-emu",
-		Description:            "NES模拟器",
+		Description:            "Go语言实现的NES模拟器，部分游戏运行存在Bug，但该模拟器是CloudEmu的起源，具有纪念意义所以没有被删除和替换。",
 		Name:                   "NESGO",
 		SupportSave:            true,
 		SupportGraphicSettings: true,

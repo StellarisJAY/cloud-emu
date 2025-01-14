@@ -63,7 +63,7 @@ type GraphicOptions struct {
 
 type Instance struct {
 	RoomId               int64
-	EmulatorType         string             // 模拟器类型名称，比如nes
+	EmulatorCode         string             // 模拟器唯一标识码,用于区分不同模拟器
 	e                    emulator.IEmulator // 模拟器接口
 	game                 string
 	videoEncoder         codec.IVideoEncoder
@@ -92,7 +92,7 @@ type Instance struct {
 }
 
 // MakeGameInstance 创建初始的游戏实例，其中运行dummy模拟器，该模拟器只输出一个提示玩家选择游戏的单帧画面（后期考虑动画）
-func MakeGameInstance(roomId, emulatorId, gameId int64, emulatorType string, gameData []byte) (*Instance, error) {
+func MakeGameInstance(roomId, emulatorId, gameId int64, emulatorCode string, gameData []byte) (*Instance, error) {
 	instance := &Instance{
 		RoomId:      roomId,
 		messageChan: make(chan *Message),
@@ -106,13 +106,14 @@ func MakeGameInstance(roomId, emulatorId, gameId int64, emulatorType string, gam
 		lastFrameTime:        time.Now(),
 		emulatorId:           emulatorId,
 		gameId:               gameId,
+		EmulatorCode:         emulatorCode,
 	}
 
 	// 创建dummy模拟器，输出静止介绍画面
 	options, err := emulator.MakeBaseEmulatorOptions("gopher.gif", gameData, 0, instance.audioSampleChan, func(frame emulator.IFrame) {
 		instance.RenderCallback(frame, log.NewHelper(log.DefaultLogger))
 	})
-	e, err := emulator.MakeEmulator(emulatorType, options)
+	e, err := emulator.MakeEmulator(emulatorCode, options)
 	if err != nil {
 		return nil, err
 	}

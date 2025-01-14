@@ -32,8 +32,8 @@ type EmulatorGame struct {
 }
 
 type EmulatorGameQuery struct {
-	EmulatorId int64
-	GameName   string
+	EmulatorType string
+	GameName     string
 }
 
 type EmulatorGameRepo interface {
@@ -44,7 +44,7 @@ type EmulatorGameRepo interface {
 	DeleteFile(ctx context.Context, game *EmulatorGame) error
 	ListGame(ctx context.Context, query EmulatorGameQuery, p *common.Pagination) ([]*EmulatorGame, error)
 	Download(ctx context.Context, game *EmulatorGame) ([]byte, error)
-	GetByEmulatorIdAndName(ctx context.Context, emulatorId int64, name string) (*EmulatorGame, error)
+	GetByEmulatorTypeAndName(ctx context.Context, emulatorType string, name string) (*EmulatorGame, error)
 }
 
 type EmulatorGameUseCase struct {
