@@ -1,6 +1,9 @@
 package biz
 
-import "context"
+import (
+	"context"
+	"github.com/StellrisJAY/cloud-emu/emulator"
+)
 
 type Emulator struct {
 	EmulatorId            int64  `json:"emulatorId"`
@@ -37,4 +40,8 @@ func NewEmulatorUseCase(repo EmulatorRepo) *EmulatorUseCase {
 
 func (uc *EmulatorUseCase) ListEmulator(ctx context.Context, query EmulatorQuery) ([]*Emulator, error) {
 	return uc.repo.ListEmulator(ctx, query)
+}
+
+func (uc *EmulatorUseCase) ListEmulatorTypes(_ context.Context) []string {
+	return emulator.GetSupportedEmulatorTypes()
 }

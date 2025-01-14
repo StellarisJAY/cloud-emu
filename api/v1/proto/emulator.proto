@@ -18,6 +18,12 @@ service Emulator {
       get: "/api/v1/game"
     };
   }
+
+  rpc ListEmulatorType(ListEmulatorTypeRequest) returns (ListEmulatorTypeResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/emulator/type"
+    };
+  }
 }
 
 message EmulatorDto {
@@ -67,5 +73,15 @@ message ListGameResponse {
   string message = 2;
   repeated GameDto data = 3;
   int32 total = 4;
+}
+
+message ListEmulatorTypeRequest {
+
+}
+
+message ListEmulatorTypeResponse {
+  int32 code = 1;
+  string message = 2;
+  repeated string data = 3;
 }
 

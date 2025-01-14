@@ -14,14 +14,15 @@ import (
 )
 
 type EmulatorGameEntity struct {
-	GameId     int64
-	EmulatorId int64
-	GameName   string
-	Size       int32
-	AddTime    time.Time
-	CustomData string
-	AddUser    int64
-	Url        string
+	GameId       int64
+	EmulatorType string
+	GameName     string
+	Size         int32
+	AddTime      time.Time
+	CustomData   string
+	AddUser      int64
+	Url          string
+	Md5          string
 }
 
 type EmulatorGameRepo struct {
@@ -127,15 +128,32 @@ func (e *EmulatorGameRepo) GetByEmulatorTypeAndName(ctx context.Context, emulato
 	}
 }
 
+func (e *EmulatorGameRepo) CountSame(ctx context.Context, game *biz.EmulatorGame) (int, error) {
+	var result int64
+	err := e.data.DB(ctx).Table(EmulatorGameTableName).
+		Where("emulator_type = ?", game.EmulatorType).
+		Where("(game_name =? OR md5 =?)", game.GameName, game.Md5).
+		WithContext(ctx).
+		Count(&result).
+		Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return 0, nil
+	} else if err != nil {
+		return 0, err
+	}
+	return int(result), nil
+}
+
 func convertEmulatorGameBizToEntity(gameBiz *biz.EmulatorGame) *EmulatorGameEntity {
 	return &EmulatorGameEntity{
-		GameId:     gameBiz.GameId,
-		EmulatorId: gameBiz.EmulatorId,
-		GameName:   gameBiz.GameName,
-		Size:       gameBiz.Size,
-		AddTime:    gameBiz.AddTime,
-		CustomData: gameBiz.CustomData,
-		AddUser:    gameBiz.AddUser,
-		Url:        gameBiz.Url,
+		GameId:       gameBiz.GameId,
+		EmulatorType: gameBiz.EmulatorType,
+		GameName:     gameBiz.GameName,
+		Size:         gameBiz.Size,
+		AddTime:      gameBiz.AddTime,
+		CustomData:   gameBiz.CustomData,
+		AddUser:      gameBiz.AddUser,
+		Url:          gameBiz.Url,
+		Md5:          gameBiz.Md5,
 	}
 }

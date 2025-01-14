@@ -86,3 +86,11 @@ func (e *EmulatorService) ListGame(ctx context.Context, request *v1.ListGameRequ
 		Total:   p.Total,
 	}, nil
 }
+
+func (e *EmulatorService) ListEmulatorType(ctx context.Context, request *v1.ListEmulatorTypeRequest) (*v1.ListEmulatorTypeResponse, error) {
+	return &v1.ListEmulatorTypeResponse{
+		Code:    200,
+		Message: "查询成功",
+		Data:    e.uc.ListEmulatorTypes(ctx),
+	}, nil
+}

@@ -2,6 +2,8 @@ package biz
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/StellrisJAY/cloud-emu/common"
@@ -12,7 +14,6 @@ import (
 	"github.com/go-kratos/kratos/v2/transport/http"
 	"github.com/golang-jwt/jwt/v5"
 	"io"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -29,6 +30,7 @@ type EmulatorGame struct {
 	Url          string
 	EmulatorName string
 	EmulatorType string
+	Md5          string
 }
 
 type EmulatorGameQuery struct {
@@ -45,6 +47,7 @@ type EmulatorGameRepo interface {
 	ListGame(ctx context.Context, query EmulatorGameQuery, p *common.Pagination) ([]*EmulatorGame, error)
 	Download(ctx context.Context, game *EmulatorGame) ([]byte, error)
 	GetByEmulatorTypeAndName(ctx context.Context, emulatorType string, name string) (*EmulatorGame, error)
+	CountSame(ctx context.Context, game *EmulatorGame) (int, error)
 }
 
 type EmulatorGameUseCase struct {
@@ -84,7 +87,7 @@ func (uc *EmulatorGameUseCase) Upload(c http.Context) error {
 		return err
 	}
 	gameName := request.FormValue("gameName")
-	emulatorId, _ := strconv.ParseInt(request.FormValue("emulatorId"), 10, 64)
+	emulatorType := request.FormValue("emulatorType")
 	token := request.Header.Get("Authorization")
 	if token == "" {
 		return errors.New(401, "Unauthorized", "没有登录")
@@ -98,7 +101,7 @@ func (uc *EmulatorGameUseCase) Upload(c http.Context) error {
 		return errors.New(401, "Unauthorized", "token无效")
 	}
 
-	if err := uc.upload(c, &EmulatorGame{GameName: gameName, EmulatorId: emulatorId}, data, claims.UserId); err != nil {
+	if err := uc.upload(c, &EmulatorGame{GameName: gameName, EmulatorType: emulatorType}, data, claims.UserId); err != nil {
 		er := errors.FromError(err)
 		_ = c.JSON(200, struct {
 			Message string `json:"message"`
@@ -129,8 +132,17 @@ func (uc *EmulatorGameUseCase) upload(ctx context.Context, game *EmulatorGame, d
 		game.Size = int32(len(data))
 		game.AddTime = time.Now()
 		game.AddUser = userId
+		hash := md5.Sum(data)
+		game.Md5 = hex.EncodeToString(hash[:])
 		game.Url = fmt.Sprintf("mongodb://cloud-emu/game_file/%d", game.GameId)
-		err := uc.emulatorGameRepo.Create(ctx, game)
+		count, err := uc.emulatorGameRepo.CountSame(ctx, game)
+		if err != nil {
+			return errors.New(500, "Database Error", "上传游戏失败")
+		}
+		if count > 0 {
+			return errors.New(500, "Upload Error", "游戏已存在")
+		}
+		err = uc.emulatorGameRepo.Create(ctx, game)
 		if err != nil {
 			uc.logger.Error("添加游戏错误:", err)
 			return errors.New(500, "Database Error", "上传游戏失败")

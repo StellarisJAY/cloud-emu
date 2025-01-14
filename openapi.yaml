@@ -140,6 +140,18 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.ListEmulatorResponse'
+    /api/v1/emulator/type:
+        get:
+            tags:
+                - Emulator
+            operationId: Emulator_ListEmulatorType
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.ListEmulatorTypeResponse'
     /api/v1/game:
         get:
             tags:
@@ -1228,6 +1240,18 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/v1.EmulatorDto'
+        v1.ListEmulatorTypeResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    type: array
+                    items:
+                        type: string
         v1.ListGameHistoryResponse:
             type: object
             properties:

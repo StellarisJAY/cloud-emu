@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Emulator_ListEmulator_FullMethodName = "/v1.Emulator/ListEmulator"
-	Emulator_ListGame_FullMethodName     = "/v1.Emulator/ListGame"
+	Emulator_ListEmulator_FullMethodName     = "/v1.Emulator/ListEmulator"
+	Emulator_ListGame_FullMethodName         = "/v1.Emulator/ListGame"
+	Emulator_ListEmulatorType_FullMethodName = "/v1.Emulator/ListEmulatorType"
 )
 
 // EmulatorClient is the client API for Emulator service.
@@ -29,6 +30,7 @@ const (
 type EmulatorClient interface {
 	ListEmulator(ctx context.Context, in *ListEmulatorRequest, opts ...grpc.CallOption) (*ListEmulatorResponse, error)
 	ListGame(ctx context.Context, in *ListGameRequest, opts ...grpc.CallOption) (*ListGameResponse, error)
+	ListEmulatorType(ctx context.Context, in *ListEmulatorTypeRequest, opts ...grpc.CallOption) (*ListEmulatorTypeResponse, error)
 }
 
 type emulatorClient struct {
@@ -59,12 +61,23 @@ func (c *emulatorClient) ListGame(ctx context.Context, in *ListGameRequest, opts
 	return out, nil
 }
 
+func (c *emulatorClient) ListEmulatorType(ctx context.Context, in *ListEmulatorTypeRequest, opts ...grpc.CallOption) (*ListEmulatorTypeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListEmulatorTypeResponse)
+	err := c.cc.Invoke(ctx, Emulator_ListEmulatorType_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // EmulatorServer is the server API for Emulator service.
 // All implementations must embed UnimplementedEmulatorServer
 // for forward compatibility.
 type EmulatorServer interface {
 	ListEmulator(context.Context, *ListEmulatorRequest) (*ListEmulatorResponse, error)
 	ListGame(context.Context, *ListGameRequest) (*ListGameResponse, error)
+	ListEmulatorType(context.Context, *ListEmulatorTypeRequest) (*ListEmulatorTypeResponse, error)
 	mustEmbedUnimplementedEmulatorServer()
 }
 
@@ -80,6 +93,9 @@ func (UnimplementedEmulatorServer) ListEmulator(context.Context, *ListEmulatorRe
 }
 func (UnimplementedEmulatorServer) ListGame(context.Context, *ListGameRequest) (*ListGameResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListGame not implemented")
+}
+func (UnimplementedEmulatorServer) ListEmulatorType(context.Context, *ListEmulatorTypeRequest) (*ListEmulatorTypeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListEmulatorType not implemented")
 }
 func (UnimplementedEmulatorServer) mustEmbedUnimplementedEmulatorServer() {}
 func (UnimplementedEmulatorServer) testEmbeddedByValue()                  {}
@@ -138,6 +154,24 @@ func _Emulator_ListGame_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Emulator_ListEmulatorType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListEmulatorTypeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EmulatorServer).ListEmulatorType(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Emulator_ListEmulatorType_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EmulatorServer).ListEmulatorType(ctx, req.(*ListEmulatorTypeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Emulator_ServiceDesc is the grpc.ServiceDesc for Emulator service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +186,10 @@ var Emulator_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListGame",
 			Handler:    _Emulator_ListGame_Handler,
+		},
+		{
+			MethodName: "ListEmulatorType",
+			Handler:    _Emulator_ListEmulatorType_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -57,6 +57,9 @@ const api = {
     },
     delete(path) {
         return this.axios.delete(path).catch(err => errorHandler(err));
+    },
+    postForm(path, form) {
+        return this.axios.postForm(path, form).catch(err => errorHandler(err));
     }
 }
 

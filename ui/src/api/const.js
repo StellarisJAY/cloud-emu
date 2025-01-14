@@ -6,52 +6,6 @@ const Configs = {
         Username: "turn_user",       // 设置TURN服务器用户名
         Password: "turn_password",   // 设置TURN服务器密码
     },
-    defaultKeyboardSetting: {
-        "id": "0",
-        "name": "默认设置",
-        "bindings": [
-            {
-                "emulatorKey": "Left",
-                "emulatorKeyTranslated": "Left",
-                "buttons": ["KeyA"],
-            },
-            {
-                "emulatorKey": "Right",
-                "emulatorKeyTranslated": "Right",
-                "buttons": ["KeyD"],
-            },
-            {
-                "emulatorKey": "Up",
-                "emulatorKeyTranslated": "Up",
-                "buttons": ["KeyW"],
-            },
-            {
-                "emulatorKey": "Down",
-                "emulatorKeyTranslated": "Down",
-                "buttons": ["KeyS"],
-            },
-            {
-                "emulatorKey": "A",
-                "emulatorKeyTranslated": "A",
-                "buttons": ["Space"],
-            },
-            {
-                "emulatorKey": "B",
-                "emulatorKeyTranslated": "B",
-                "buttons": ["KeyJ"],
-            },
-            {
-                "emulatorKey": "Start",
-                "emulatorKeyTranslated": "Start",
-                "buttons": ["Enter"],
-            },
-            {
-                "emulatorKey": "Select",
-                "emulatorKeyTranslated": "Select",
-                "buttons": ["Tab"],
-            },
-        ]
-    },
 
     defaultButtonLayouts: {
         "NES":[{"label": "←", "code": "Left", "slot": "l4"},
@@ -88,19 +42,6 @@ const Configs = {
             {"label": "B", "code": "B", "slot": "r7"},
             {"label": "Select", "code": "Select", "slot": "r3"},
             {"label": "Start", "code": "Start", "slot": "r9"}],
-    },
-
-    emulatorControllers: {
-        "NES": [
-            {controllerId: 1, label: "玩家1"},
-            {controllerId: 2, label: "玩家2"}
-        ],
-        "DUMMY": [
-            {controllerId: 1, label: "控制器"},
-        ],
-        "CHIP8": [
-            {controllerId: 1, label: "控制器"},
-        ]
     },
 
     enums: {

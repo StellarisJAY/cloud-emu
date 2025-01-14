@@ -20,10 +20,12 @@ var _ = binding.EncodeURL
 const _ = http.SupportPackageIsVersion1
 
 const OperationEmulatorListEmulator = "/v1.Emulator/ListEmulator"
+const OperationEmulatorListEmulatorType = "/v1.Emulator/ListEmulatorType"
 const OperationEmulatorListGame = "/v1.Emulator/ListGame"
 
 type EmulatorHTTPServer interface {
 	ListEmulator(context.Context, *ListEmulatorRequest) (*ListEmulatorResponse, error)
+	ListEmulatorType(context.Context, *ListEmulatorTypeRequest) (*ListEmulatorTypeResponse, error)
 	ListGame(context.Context, *ListGameRequest) (*ListGameResponse, error)
 }
 
@@ -31,6 +33,7 @@ func RegisterEmulatorHTTPServer(s *http.Server, srv EmulatorHTTPServer) {
 	r := s.Route("/")
 	r.GET("/api/v1/emulator", _Emulator_ListEmulator0_HTTP_Handler(srv))
 	r.GET("/api/v1/game", _Emulator_ListGame0_HTTP_Handler(srv))
+	r.GET("/api/v1/emulator/type", _Emulator_ListEmulatorType0_HTTP_Handler(srv))
 }
 
 func _Emulator_ListEmulator0_HTTP_Handler(srv EmulatorHTTPServer) func(ctx http.Context) error {
@@ -71,8 +74,28 @@ func _Emulator_ListGame0_HTTP_Handler(srv EmulatorHTTPServer) func(ctx http.Cont
 	}
 }
 
+func _Emulator_ListEmulatorType0_HTTP_Handler(srv EmulatorHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in ListEmulatorTypeRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationEmulatorListEmulatorType)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.ListEmulatorType(ctx, req.(*ListEmulatorTypeRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ListEmulatorTypeResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 type EmulatorHTTPClient interface {
 	ListEmulator(ctx context.Context, req *ListEmulatorRequest, opts ...http.CallOption) (rsp *ListEmulatorResponse, err error)
+	ListEmulatorType(ctx context.Context, req *ListEmulatorTypeRequest, opts ...http.CallOption) (rsp *ListEmulatorTypeResponse, err error)
 	ListGame(ctx context.Context, req *ListGameRequest, opts ...http.CallOption) (rsp *ListGameResponse, err error)
 }
 
@@ -89,6 +112,19 @@ func (c *EmulatorHTTPClientImpl) ListEmulator(ctx context.Context, in *ListEmula
 	pattern := "/api/v1/emulator"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationEmulatorListEmulator))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *EmulatorHTTPClientImpl) ListEmulatorType(ctx context.Context, in *ListEmulatorTypeRequest, opts ...http.CallOption) (*ListEmulatorTypeResponse, error) {
+	var out ListEmulatorTypeResponse
+	pattern := "/api/v1/emulator/type"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationEmulatorListEmulatorType))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
