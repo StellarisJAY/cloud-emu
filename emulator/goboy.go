@@ -73,11 +73,13 @@ func cacheGameFile(name string, data []byte) {
 
 func (g *GoboyAdapter) Pause() error {
 	g.gb.ExecutionPaused = true
+	g.ticker.Stop()
 	return nil
 }
 
 func (g *GoboyAdapter) Resume() error {
 	g.gb.ExecutionPaused = false
+	g.ticker.Reset(time.Millisecond * 16)
 	return nil
 }
 

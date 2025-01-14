@@ -3,13 +3,15 @@ package emulator
 import (
 	"errors"
 	"image"
+	"image/color"
 )
 
 const (
-	CodeNesgo = "NESGO"
-	CodeChip8 = "CHIP8"
-	CodeDummy = "DUMMY"
-	CodeGoboy = "GOBOY"
+	CodeNesgo       = "NESGO"
+	CodeChip8       = "CHIP8"
+	CodeDummy       = "DUMMY"
+	CodeGoboy       = "GOBOY"
+	CodeFoglemanNES = "FOGLEMAN/NES"
 )
 
 var (
@@ -123,6 +125,8 @@ func MakeEmulator(emulatorCode string, options IEmulatorOptions) (IEmulator, err
 		return MakeDummyAdapter(options)
 	case CodeGoboy:
 		return newGoboyAdapter(options)
+	case CodeFoglemanNES:
+		return newFoglemanNesAdapter(options)
 	default:
 		return nil, ErrorEmulatorNotSupported
 	}
@@ -155,6 +159,14 @@ func MakeBaseFrame(image *image.YCbCr, width, height int) IFrame {
 	}
 }
 
+func MakeEmptyBaseFrame(rect image.Rectangle) *BaseFrame {
+	return &BaseFrame{
+		image:  image.NewYCbCr(rect, image.YCbCrSubsampleRatio420),
+		width:  rect.Dx(),
+		height: rect.Dy(),
+	}
+}
+
 func (b *BaseFrame) Width() int {
 	return b.width
 }
@@ -169,6 +181,20 @@ func (b *BaseFrame) YCbCr() *image.YCbCr {
 
 func (b *BaseFrame) Read() (image.Image, func(), error) {
 	return b.image, func() {}, nil
+}
+
+func (b *BaseFrame) FromRGBA(rgba *image.RGBA) {
+	for x := 0; x < rgba.Rect.Dx(); x++ {
+		for y := 0; y < rgba.Rect.Dy(); y++ {
+			r0, g0, b0, _ := rgba.At(x, y).RGBA()
+			Y, Cb, Cr := color.RGBToYCbCr(uint8(r0), uint8(g0), uint8(b0))
+			yOff := b.image.YOffset(x, y)
+			cOff := b.image.COffset(x, y)
+			b.image.Y[yOff] = Y
+			b.image.Cb[cOff] = Cb
+			b.image.Cr[cOff] = Cr
+		}
+	}
 }
 
 func MakeBaseEmulatorOptions(game string, gameData []byte, audioSampleRate int, audioSampleChan chan float32,
@@ -208,4 +234,16 @@ func GetSupportedEmulators() []Info {
 		infos = append(infos, v)
 	}
 	return infos
+}
+
+func GetSupportedEmulatorTypes() []string {
+	types := make(map[string]struct{})
+	for _, v := range supportedEmulators {
+		types[v.EmulatorType] = struct{}{}
+	}
+	var result []string
+	for k := range types {
+		result = append(result, k)
+	}
+	return result
 }
