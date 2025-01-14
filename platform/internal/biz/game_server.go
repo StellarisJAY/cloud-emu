@@ -64,4 +64,6 @@ type GameServerRepo interface {
 	LoadSave(ctx context.Context, instance *RoomInstance, params LoadSaveParams) error
 
 	GetControllerPlayers(ctx context.Context, instance *RoomInstance) ([]*ControllerPlayer, error)
+
+	SetControllerPlayer(context.Context, []*ControllerPlayer, *RoomInstance) error
 }

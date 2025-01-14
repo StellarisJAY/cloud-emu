@@ -303,3 +303,14 @@ func (uc *GameServerUseCase) GetControllerPlayers(_ context.Context, roomId int6
 	}
 	return instance.GetControllerPlayers(), nil
 }
+
+func (uc *GameServerUseCase) SetControllerPlayers(_ context.Context, roomId int64, players []game.ControllerPlayer) error {
+	uc.mutex.RLock()
+	instance, ok := uc.gameInstances[roomId]
+	uc.mutex.RUnlock()
+	if !ok {
+		return v1.ErrorServiceError("游戏实例不存在")
+	}
+	instance.SetController(players)
+	return nil
+}

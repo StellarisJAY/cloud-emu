@@ -10,17 +10,11 @@ type ControllerPlayer struct {
 
 // handlePlayerControl 玩家控制消息处理
 func (g *Instance) handlePlayerControl(keyCode string, action byte, userId int64) {
-	g.e.SubmitInput(1, keyCode, action == MsgPlayerControlButtonPressed)
-	//if g.e.MultiController() {
-	//	c, ok := g.controllerMap[userId]
-	//	if ok {
-	//		g.e.SubmitInput(c, keyCode, action == MsgPlayerControlButtonPressed)
-	//	}
-	//} else {
-	//	if _, ok := g.controllerMap[userId]; ok {
-	//		g.e.SubmitInput(1, keyCode, action == MsgPlayerControlButtonPressed)
-	//	}
-	//}
+	for k, v := range g.controllerMap {
+		if v == userId {
+			g.e.SubmitInput(k, keyCode, action == MsgPlayerControlButtonPressed)
+		}
+	}
 }
 
 // handleChat 聊天消息处理, 广播给所有数据通道
@@ -34,8 +28,22 @@ func (g *Instance) handleChat(msg *Message) {
 	}
 }
 
-func (g *Instance) handleSetController(cp []ControllerPlayer) {
+func (g *Instance) SetController(cp []ControllerPlayer) []ControllerPlayer {
+	resultChan := make(chan ConsumerResult)
+	g.messageChan <- &Message{
+		Type:       MsgSetController,
+		Data:       cp,
+		resultChan: resultChan,
+	}
+	result := <-resultChan
+	return result.Data.([]ControllerPlayer)
+}
 
+func (g *Instance) handleSetController(cp []ControllerPlayer) {
+	g.controllerMap = make(map[int]int64)
+	for _, cp := range cp {
+		g.controllerMap[cp.ControllerId] = cp.UserId
+	}
 }
 
 func (g *Instance) handleResetController(controllerId int) {
@@ -62,12 +70,7 @@ func (g *Instance) getControllerPlayer() []ControllerPlayer {
 		players[i] = ControllerPlayer{
 			ControllerId: c.ControllerId,
 			Label:        c.Label,
-		}
-		for userId, controllerId := range g.controllerMap {
-			if controllerId == c.ControllerId {
-				players[i].UserId = userId
-				break
-			}
+			UserId:       g.controllerMap[c.ControllerId],
 		}
 	}
 	return players

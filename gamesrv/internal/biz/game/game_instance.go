@@ -88,7 +88,7 @@ type Instance struct {
 	DoneChan       chan struct{}
 	emulatorId     int64
 	gameId         int64
-	controllerMap  map[int64]int
+	controllerMap  map[int]int64
 }
 
 // MakeGameInstance 创建初始的游戏实例，其中运行dummy模拟器，该模拟器只输出一个提示玩家选择游戏的单帧画面（后期考虑动画）
@@ -171,6 +171,11 @@ func (g *Instance) MessageHandler(ctx context.Context) {
 			case MsgSetEmulatorSpeed:
 				msg.resultChan <- g.setEmulatorSpeed(msg.Data.(float64))
 			case MsgSetController:
+				g.handleSetController(msg.Data.([]ControllerPlayer))
+				msg.resultChan <- ConsumerResult{
+					Success: true,
+					Data:    g.getControllerPlayer(),
+				}
 			case MsgResetController:
 			case MsgGetController:
 				players := g.getControllerPlayer()

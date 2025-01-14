@@ -188,3 +188,28 @@ func (r *RoomInstanceService) GetControllerPlayers(ctx context.Context, request 
 		Data:    result,
 	}, nil
 }
+
+func (r *RoomInstanceService) SetControllerPlayer(ctx context.Context, request *v1.SetControllerPlayerRequest) (*v1.SetControllerPlayerResponse, error) {
+	c, _ := jwt.FromContext(ctx)
+	claims := c.(*biz.LoginClaims)
+	cps := make([]*biz.ControllerPlayer, len(request.Data))
+	for i, cp := range request.Data {
+		cps[i] = &biz.ControllerPlayer{
+			UserId:       cp.UserId,
+			ControllerId: cp.ControllerId,
+			Label:        cp.Label,
+		}
+	}
+	err := r.uc.SetControllerPlayers(ctx, request.RoomId, cps, claims.UserId)
+	if err != nil {
+		e := errors.FromError(err)
+		return &v1.SetControllerPlayerResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
+	}
+	return &v1.SetControllerPlayerResponse{
+		Code:    200,
+		Message: "设置成功",
+	}, nil
+}

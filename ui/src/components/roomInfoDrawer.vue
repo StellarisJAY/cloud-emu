@@ -44,7 +44,7 @@
     <UserPicker :visible="userPickerOpen"/>
     <a-divider>模拟器控制权限</a-divider>
     <a-form-item :label="item.label" v-for="item in controllerPlayers">
-      <a-select :options="memberOptions" :disabled="!currentUserIsHost" v-model:value="item.userId" @change="onControllerPlayerChange"></a-select>
+      <a-select :options="memberOptions" :disabled="!currentUserIsHost || setCPDisabled" v-model:value="item.userId" @change="onControllerPlayerChange"></a-select>
     </a-form-item>
   </div>
 </template>
@@ -109,6 +109,7 @@ export default {
 
       controllerPlayers: [],
       memberOptions: [],
+      setCPDisabled: false,
     }
   },
   created() {
@@ -116,21 +117,24 @@ export default {
     this.getUserRoomMember();
     this.listRoomMembers();
     this.getRoomDetail();
-    this.getControllerPlayers();
     addEventListener("memberDrawerOpen", _ => {
       this.getUserRoomMember();
       this.listRoomMembers();
       this.getRoomDetail();
-      this.getControllerPlayers();
     });
   },
   methods: {
     listRoomMembers: async function () {
       const resp = await roomMemberAPI.listRoomMember(this.roomId);
       this.roomMembers = resp.data;
+      this.memberOptions = [];
       this.roomMembers.forEach(item=>{
-        this.memberOptions.push({"label": item.nickName, "value": item.userId});
-      })
+        if (item.online) {
+          this.memberOptions.push({"label": item.nickName, "value": item.userId});
+        }
+      });
+      this.memberOptions.push({label: "无", value: "0"});
+      this.getControllerPlayers();
     },
 
     updateRoom() {
@@ -190,7 +194,16 @@ export default {
       });
     },
     onControllerPlayerChange(ev) {
-      // TODO set controller player
+      this.setCPDisabled = true;
+      api.post("/room-instance/controller-players", {roomId: this.roomId, data: this.controllerPlayers}).then(resp=>{
+        message.success("设置成功");
+        this.getControllerPlayers();
+        this.setCPDisabled = false;
+      }).catch(resp=>{
+        message.error(resp.message);
+        this.getControllerPlayers();
+        this.setCPDisabled = false;
+      });
     },
   }
 }

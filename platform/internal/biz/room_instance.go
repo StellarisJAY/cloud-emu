@@ -370,3 +370,24 @@ func (uc *RoomInstanceUseCase) GetControllerPlayers(ctx context.Context, roomId 
 	}
 	return uc.gameServerRepo.GetControllerPlayers(ctx, ri)
 }
+
+func (uc *RoomInstanceUseCase) SetControllerPlayers(ctx context.Context, roomId int64, players []*ControllerPlayer, userId int64) error {
+	ri, _ := uc.repo.GetRoomInstance(ctx, roomId)
+	if ri == nil {
+		return v1.ErrorNotFound("房间不存在")
+	}
+	currUser, _ := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId)
+	if currUser == nil || currUser.Role != RoomMemberRoleHost {
+		return v1.ErrorAccessDenied("当前用户没有权限设置控制器")
+	}
+	for _, pl := range players {
+		if pl.UserId == 0 {
+			continue
+		}
+		member, _ := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, pl.UserId)
+		if member == nil || member.Role == RoomMemberRoleObserver {
+			return v1.ErrorServiceError("无法将控制权交给该用户")
+		}
+	}
+	return uc.gameServerRepo.SetControllerPlayer(ctx, players, ri)
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/biz"
+	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/biz/game"
 )
 
 type GameService struct {
@@ -210,4 +211,20 @@ func (g *GameService) GetControllerPlayers(ctx context.Context, request *v1.Game
 		Message: "获取成功",
 		Data:    result,
 	}, nil
+}
+
+func (g *GameService) SetControllerPlayer(ctx context.Context, request *v1.GameSrvSetControllerPlayerRequest) (*v1.GameSrvSetControllerPlayerResponse, error) {
+	cps := make([]game.ControllerPlayer, len(request.ControllerPlayers))
+	for i, cp := range request.ControllerPlayers {
+		cps[i] = game.ControllerPlayer{
+			UserId:       cp.UserId,
+			ControllerId: int(cp.ControllerId),
+			Label:        cp.Label,
+		}
+	}
+	err := g.uc.SetControllerPlayers(ctx, request.RoomId, cps)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.GameSrvSetControllerPlayerResponse{Code: 200}, nil
 }
