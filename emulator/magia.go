@@ -102,6 +102,13 @@ func (m *MagiaAdapter) Restart(options IEmulatorOptions) error {
 	g := gba.New(options.GameData(), false)
 	m.cancel()
 	m.e = g
+	handlers := [10]func() bool{}
+	for i := 0; i < 10; i++ {
+		handlers[i] = func() bool {
+			return m.buttons[i]
+		}
+	}
+	g.SetJoypadHandler(handlers)
 	m.frameConsumer = options.FrameConsumer()
 	return m.Start()
 }

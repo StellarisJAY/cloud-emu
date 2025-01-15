@@ -52,6 +52,14 @@ const Configs = {
             {"label": "L", "code": "L", "slot": "r6"},
             {"label": "Select", "code": "Select", "slot": "r7"},
             {"label": "Start", "code": "Start", "slot": "r9"}],
+        "GBC": [{"label": "←", "code": "Left", "slot": "l4"},
+            {"label": "→", "code": "Right", "slot": "l6"},
+            {"label": "↑", "code": "Up", "slot": "l2"},
+            {"label": "↓", "code": "Down", "slot": "l8"},
+            {"label": "A", "code": "A", "slot": "r1"},
+            {"label": "B", "code": "B", "slot": "r7"},
+            {"label": "Select", "code": "Select", "slot": "r3"},
+            {"label": "Start", "code": "Start", "slot": "r9"}],
     },
 
     enums: {

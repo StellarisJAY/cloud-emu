@@ -195,10 +195,6 @@ func (g *GoboyAdapter) ControllerInfos() []ControllerInfo {
 			ControllerId: 1,
 			Label:        "玩家1",
 		},
-		{
-			ControllerId: 2,
-			Label:        "玩家2",
-		},
 	}
 }
 

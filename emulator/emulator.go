@@ -14,6 +14,7 @@ const (
 	CodeGoboy       = "GOBOY"
 	CodeFoglemanNES = "FOGLEMAN/NES"
 	CodeMagia       = "MAGIA"
+	CodeDawnGB      = "DAWNGB"
 )
 
 const FrameInterval = time.Second / 60
@@ -133,6 +134,8 @@ func MakeEmulator(emulatorCode string, options IEmulatorOptions) (IEmulator, err
 		return newFoglemanNesAdapter(options)
 	case CodeMagia:
 		return newMagiaAdapter(options)
+	case CodeDawnGB:
+		return newDawnGbAdapter(options)
 	default:
 		return nil, ErrorEmulatorNotSupported
 	}
@@ -209,6 +212,19 @@ func (b *BaseFrame) FromRGBARaw(data []byte) {
 		Y, Cb, Cr := color.RGBToYCbCr(r0, g0, b0)
 		x := (i / 4) % b.width
 		y := (i / 4) / b.width
+		yOff := b.image.YOffset(x, y)
+		cOff := b.image.COffset(x, y)
+		b.image.Y[yOff] = Y
+		b.image.Cb[cOff] = Cb
+		b.image.Cr[cOff] = Cr
+	}
+}
+
+func (b *BaseFrame) FromNRGBAColors(rgbaColors []color.NRGBA) {
+	for i, rgba := range rgbaColors {
+		Y, Cb, Cr := color.RGBToYCbCr(rgba.R, rgba.G, rgba.B)
+		x := i % b.width
+		y := i / b.width
 		yOff := b.image.YOffset(x, y)
 		cOff := b.image.COffset(x, y)
 		b.image.Y[yOff] = Y
