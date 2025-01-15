@@ -71,6 +71,7 @@ func (g *Instance) handleLoadSave(request *emulatorLoadSaveRequest) ConsumerResu
 		if err != nil {
 			return ConsumerResult{Error: err}
 		}
+		g.onRestartSuccess(request.emulatorId, request.gameId, request.emulatorCode, request.emulatorType)
 	}
 	// 切换存档
 	err := g.e.LoadSave(&emulator.BaseEmulatorSave{
