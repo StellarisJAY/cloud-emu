@@ -34,6 +34,8 @@ type PPU struct {
 	scanLines    uint16 // scanLines
 	nmiInterrupt bool
 	frame        *Frame
+
+	FrameCount int
 }
 
 type Snapshot struct {

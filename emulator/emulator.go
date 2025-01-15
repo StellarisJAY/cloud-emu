@@ -4,6 +4,7 @@ import (
 	"errors"
 	"image"
 	"image/color"
+	"time"
 )
 
 const (
@@ -12,7 +13,10 @@ const (
 	CodeDummy       = "DUMMY"
 	CodeGoboy       = "GOBOY"
 	CodeFoglemanNES = "FOGLEMAN/NES"
+	CodeMagia       = "MAGIA"
 )
+
+const FrameInterval = time.Second / 60
 
 var (
 	supportedEmulators = make(map[string]Info)
@@ -127,6 +131,8 @@ func MakeEmulator(emulatorCode string, options IEmulatorOptions) (IEmulator, err
 		return newGoboyAdapter(options)
 	case CodeFoglemanNES:
 		return newFoglemanNesAdapter(options)
+	case CodeMagia:
+		return newMagiaAdapter(options)
 	default:
 		return nil, ErrorEmulatorNotSupported
 	}
@@ -194,6 +200,20 @@ func (b *BaseFrame) FromRGBA(rgba *image.RGBA) {
 			b.image.Cb[cOff] = Cb
 			b.image.Cr[cOff] = Cr
 		}
+	}
+}
+
+func (b *BaseFrame) FromRGBARaw(data []byte) {
+	for i := 0; i < len(data); i += 4 {
+		r0, g0, b0 := data[i], data[i+1], data[i+2]
+		Y, Cb, Cr := color.RGBToYCbCr(r0, g0, b0)
+		x := (i / 4) % b.width
+		y := (i / 4) / b.width
+		yOff := b.image.YOffset(x, y)
+		cOff := b.image.COffset(x, y)
+		b.image.Y[yOff] = Y
+		b.image.Cb[cOff] = Cb
+		b.image.Cr[cOff] = Cr
 	}
 }
 

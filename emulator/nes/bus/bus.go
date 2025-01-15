@@ -81,24 +81,26 @@ func (b *Bus) Tick(cycles uint64) {
 	before := b.ppu.PeekInterrupt()
 	// ppu的cycles是CPU的三倍
 	b.ppu.Tick(cycles * 3)
-	if !before && b.ppu.PeekInterrupt() {
-		start := time.Now()
-		b.ppu.Render()
-		b.renderCallback(b.ppu)
-		renderTime := time.Now().Sub(start)
-		processorTime := start.Sub(b.lastRenderTime)
-		// 两次渲染之间的cpu cycles除以CPU频率等于帧之间的间隔时间, nanoseconds
-		freq := uint64(float64(CPUFrequency) * b.cpuBoost)
-		frameTime := (b.cycles - b.lastRenderCycles) * 1000_000_000 / freq
-		sleepTime := time.Duration(frameTime - uint64(renderTime.Nanoseconds()) - uint64(processorTime.Nanoseconds()))
-		time.Sleep(sleepTime)
-		b.lastRenderCycles = b.cycles
-		b.lastRenderTime = time.Now()
-	}
 	// apu ticks on every cpu cycle
 	for i := 0; i < int(cycles); i++ {
 		b.apu.Tick()
 	}
+	if !before && b.ppu.PeekInterrupt() {
+		//start := time.Now()
+		b.ppu.Render()
+		b.renderCallback(b.ppu)
+		b.ppu.FrameCount++
+		//renderTime := time.Now().Sub(start)
+		//processorTime := start.Sub(b.lastRenderTime)
+		//// 两次渲染之间的cpu cycles除以CPU频率等于帧之间的间隔时间, nanoseconds
+		//freq := uint64(float64(CPUFrequency) * b.cpuBoost)
+		//frameTime := (b.cycles - b.lastRenderCycles) * 1000_000_000 / freq
+		//sleepTime := time.Duration(frameTime - uint64(renderTime.Nanoseconds()) - uint64(processorTime.Nanoseconds()))
+		//time.Sleep(sleepTime)
+		//b.lastRenderCycles = b.cycles
+		//b.lastRenderTime = time.Now()
+	}
+
 }
 
 func (b *Bus) BoostCPU(delta float64) float64 {

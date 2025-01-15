@@ -75,3 +75,15 @@ func (e *RawEmulator) BoostCPU(delta float64) float64 {
 func (e *RawEmulator) CPUBoostRate() float64 {
 	return e.bus.CPUBoostRate()
 }
+
+func (e *RawEmulator) StepOneFrame() {
+	fc := e.ppu.FrameCount
+	for fc == e.ppu.FrameCount {
+		e.processor.Step()
+	}
+	e.ppu.FrameCount = 0
+}
+
+func (e *RawEmulator) Reset() {
+	e.processor.Reset()
+}

@@ -7,6 +7,7 @@ import (
 	"github.com/StellrisJAY/cloud-emu/emulator/nes/config"
 	"github.com/StellrisJAY/cloud-emu/emulator/nes/ppu"
 	"image"
+	"time"
 )
 
 type NesEmulatorAdapter struct {
@@ -15,6 +16,7 @@ type NesEmulatorAdapter struct {
 	cancelFunc       context.CancelFunc
 	reverseColorOpen bool
 	grayscaleOpen    bool
+	ticker           *time.Ticker
 }
 
 type NesEmulatorOptions struct {
@@ -77,20 +79,45 @@ func (n *NesEmulatorOptions) FrameConsumer() func(frame IFrame) {
 // Start 启动NES模拟器，创建单独的goroutine运行CPU循环，使用context打断
 func (n *NesEmulatorAdapter) Start() error {
 	ctx, cancelFunc := context.WithCancel(context.Background())
-	go n.e.LoadAndRun(ctx, false)
+	n.e.Reset()
+	go n.emulatorLoop(ctx)
 	n.cancelFunc = cancelFunc
 	return nil
 }
 
+func (n *NesEmulatorAdapter) emulatorLoop(ctx context.Context) {
+	n.ticker = time.NewTicker(FrameInterval)
+	defer func() {
+		if r := recover(); r != nil {
+		}
+		n.ticker.Stop()
+	}()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-n.ticker.C:
+			start := time.Now()
+			n.e.StepOneFrame()
+			interval := max(FrameInterval-time.Since(start), time.Millisecond*5)
+			n.ticker.Reset(interval)
+		}
+	}
+}
+
 // Pause 暂停NES模拟器
 func (n *NesEmulatorAdapter) Pause() error {
-	n.e.Pause()
+	if n.ticker != nil {
+		n.ticker.Stop()
+	}
 	return nil
 }
 
 // Resume 恢复NES模拟器
 func (n *NesEmulatorAdapter) Resume() error {
-	n.e.Resume()
+	if n.ticker != nil {
+		n.ticker.Reset(FrameInterval)
+	}
 	return nil
 }
 
@@ -102,8 +129,9 @@ func (n *NesEmulatorAdapter) Restart(options IEmulatorOptions) error {
 		return err
 	}
 	n.e = e
+	n.e.Reset()
 	ctx, cancelFunc := context.WithCancel(context.Background())
-	go n.e.LoadAndRun(ctx, false)
+	go n.emulatorLoop(ctx)
 	n.cancelFunc = cancelFunc
 	n.options = options
 	return nil
@@ -117,8 +145,8 @@ func (n *NesEmulatorAdapter) Stop() error {
 
 // Save 获取模拟器存档数据
 func (n *NesEmulatorAdapter) Save() (IEmulatorSave, error) {
-	n.e.Pause()
-	defer n.e.Resume()
+	_ = n.Pause()
+	defer n.Resume()
 	s, err := n.e.GetSaveData()
 	if err != nil {
 		return nil, err
@@ -129,8 +157,8 @@ func (n *NesEmulatorAdapter) Save() (IEmulatorSave, error) {
 }
 
 func (n *NesEmulatorAdapter) LoadSave(save IEmulatorSave) error {
-	n.e.Pause()
-	defer n.e.Resume()
+	_ = n.Pause()
+	defer n.Resume()
 LOOP:
 	for {
 		select {

@@ -99,7 +99,7 @@ func (p *Processor) Resume() {
 }
 
 func (p *Processor) LoadAndRunWithCallback(ctx context.Context, callback InstructionCallback, cpuCallback CallbackFunc) {
-	p.reset()
+	p.Reset()
 	p.RunWithCallbacks(ctx, callback, cpuCallback)
 }
 
@@ -108,7 +108,7 @@ func (p *Processor) loadProgram(program []byte) {
 	p.writeMemUint16(0xFFFC, ProgramEntryPoint)
 }
 
-func (p *Processor) reset() {
+func (p *Processor) Reset() {
 	p.regX = 0
 	p.regA = 0
 	p.regY = 0
@@ -166,6 +166,34 @@ func (p *Processor) RunWithCallbacks(ctx context.Context, insCallback Instructio
 		if p.pc == originalPc {
 			p.pc += uint16(instruction.Length - 1)
 		}
+	}
+}
+
+func (p *Processor) Step() {
+	if p.bus.PollNMIInterrupt() {
+		p.handleInterrupt(NMIInterrupt)
+	}
+	opCode := p.readMemUint8(p.pc)
+	p.pc++
+	originalPc := p.pc
+	instruction, ok := Instructions[opCode]
+	if !ok {
+		panic(fmt.Errorf("unknown instruction at %04x: 0x%x", originalPc-1, opCode))
+	}
+	switch opCode {
+	case BRK:
+		p.handleInterrupt(BrkInterrupt)
+	case NOP:
+	case INX:
+		p.inx()
+	case INY:
+		p.iny()
+	default:
+		instruction.handler(p, instruction)
+	}
+	p.bus.Tick(uint64(instruction.Cycle))
+	if p.pc == originalPc {
+		p.pc += uint16(instruction.Length - 1)
 	}
 }
 

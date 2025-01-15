@@ -54,15 +54,23 @@ func (g *GoboyAdapter) Start() error {
 }
 
 func (g *GoboyAdapter) emulatorLoop(ctx context.Context) {
-	ticker := time.NewTicker(time.Millisecond * 16)
+	g.ticker = time.NewTicker(FrameInterval)
+	defer func() {
+		if r := recover(); r != nil {
+		}
+		g.ticker.Stop()
+	}()
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-ticker.C:
+		case <-g.ticker.C:
+			start := time.Now()
 			g.gb.Update()
 			g.frame.reset(g.gb.PreparedData)
 			g.frameConsumer(g.frame)
+			interval := max(FrameInterval-time.Since(start), time.Millisecond*5)
+			g.ticker.Reset(interval)
 		}
 	}
 }
@@ -79,7 +87,7 @@ func (g *GoboyAdapter) Pause() error {
 
 func (g *GoboyAdapter) Resume() error {
 	g.gb.ExecutionPaused = false
-	g.ticker.Reset(time.Millisecond * 16)
+	g.ticker.Reset(FrameInterval)
 	return nil
 }
 

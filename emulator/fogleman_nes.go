@@ -52,16 +52,24 @@ func (f *FoglemanNesAdapter) Start() error {
 }
 
 func (f *FoglemanNesAdapter) emulatorLoop(ctx context.Context) {
-	f.ticker = time.NewTicker(16 * time.Millisecond)
+	f.ticker = time.NewTicker(FrameInterval)
+	defer func() {
+		if r := recover(); r != nil {
+		}
+		f.ticker.Stop()
+	}()
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-f.ticker.C:
+			start := time.Now()
 			f.console.StepFrame()
 			frame := f.console.Buffer()
 			f.frame.FromRGBA(frame)
 			f.frameConsumer(f.frame)
+			interval := max(FrameInterval-time.Since(start), time.Millisecond*5)
+			f.ticker.Reset(interval)
 		}
 	}
 }
@@ -72,7 +80,7 @@ func (f *FoglemanNesAdapter) Pause() error {
 }
 
 func (f *FoglemanNesAdapter) Resume() error {
-	f.ticker.Reset(16 * time.Millisecond)
+	f.ticker.Reset(FrameInterval)
 	return nil
 }
 
