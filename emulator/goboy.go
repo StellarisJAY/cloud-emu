@@ -5,7 +5,6 @@ import (
 	"github.com/StellrisJAY/cloud-emu/emulator/goboy/gb"
 	"image"
 	"image/color"
-	"os"
 	"time"
 )
 
@@ -31,9 +30,7 @@ func init() {
 }
 
 func newGoboyAdapter(options IEmulatorOptions) (IEmulator, error) {
-	// goboy 只能从文件系统读取rom，所以需要先把rom文件缓存到本地
-	cacheGameFile(options.Game(), options.GameData())
-	e, err := gb.NewGameboy(options.Game())
+	e, err := gb.NewGameboy(options.Game(), options.GameData())
 	if err != nil {
 		return nil, err
 	}
@@ -75,10 +72,6 @@ func (g *GoboyAdapter) emulatorLoop(ctx context.Context) {
 	}
 }
 
-func cacheGameFile(name string, data []byte) {
-	_ = os.WriteFile(name, data, 0666)
-}
-
 func (g *GoboyAdapter) Pause() error {
 	g.gb.ExecutionPaused = true
 	g.ticker.Stop()
@@ -108,8 +101,7 @@ func (g *GoboyAdapter) LoadSave(save IEmulatorSave) error {
 }
 
 func (g *GoboyAdapter) Restart(options IEmulatorOptions) error {
-	cacheGameFile(options.Game(), options.GameData())
-	e, err := gb.NewGameboy(options.Game())
+	e, err := gb.NewGameboy(options.Game(), options.GameData())
 	if err != nil {
 		return err
 	}

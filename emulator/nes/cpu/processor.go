@@ -1,15 +1,13 @@
 package cpu
 
 import (
-	"context"
 	"fmt"
 	"github.com/StellrisJAY/cloud-emu/emulator/nes/bus"
 )
 
 const (
-	ProgramEntryPoint = 0x0600
-	StackBase         = 0x0100
-	StackReset        = 0xFD
+	StackBase  = 0x0100
+	StackReset = 0xFD
 
 	ResetVector uint16 = 0xFFFC // 程序entry point在ROM的地址
 	NMIVector   uint16 = 0xFFFA // 程序中断处理函数地址
@@ -39,8 +37,6 @@ type Processor struct {
 	pc        uint16   // pc 程序计数器
 	sp        byte     // sp 栈指针，记录栈地址的低8位，高位固定为0x0100
 	bus       *bus.Bus // bus 总线，通过总线访问内存或mmio寄存器
-
-	signalChan chan Signal
 }
 
 type Snapshot struct {
@@ -59,15 +55,8 @@ const (
 	BrkInterrupt
 )
 
-type Signal byte
-
-const (
-	SignalPause Signal = iota
-	SignalResume
-)
-
 func NewProcessor(bus *bus.Bus) *Processor {
-	return &Processor{bus: bus, signalChan: make(chan Signal)}
+	return &Processor{bus: bus}
 }
 
 func (p *Processor) MakeSnapshot() Snapshot {
@@ -90,24 +79,6 @@ func (p *Processor) Reverse(s Snapshot) {
 	p.regStatus = s.RegStatus
 }
 
-func (p *Processor) Pause() {
-	p.signalChan <- SignalPause
-}
-
-func (p *Processor) Resume() {
-	p.signalChan <- SignalResume
-}
-
-func (p *Processor) LoadAndRunWithCallback(ctx context.Context, callback InstructionCallback, cpuCallback CallbackFunc) {
-	p.Reset()
-	p.RunWithCallbacks(ctx, callback, cpuCallback)
-}
-
-func (p *Processor) loadProgram(program []byte) {
-	p.bus.WriteRAM(ProgramEntryPoint, program)
-	p.writeMemUint16(0xFFFC, ProgramEntryPoint)
-}
-
 func (p *Processor) Reset() {
 	p.regX = 0
 	p.regA = 0
@@ -116,57 +87,6 @@ func (p *Processor) Reset() {
 	p.sp = StackReset
 	// 从ROM读取程序的entry point
 	p.pc = p.readMemUint16(ResetVector)
-}
-
-func (p *Processor) RunWithCallbacks(ctx context.Context, insCallback InstructionCallback, cpuCallback CallbackFunc) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case s := <-p.signalChan:
-			// 重复暂停信号处理
-			sig := s
-			for sig == SignalPause {
-				select {
-				case sig = <-p.signalChan:
-				case <-ctx.Done():
-					return
-				}
-			}
-		default:
-		}
-		if cpuCallback != nil {
-			cpuCallback(p)
-		}
-		if p.bus.PollNMIInterrupt() {
-			p.handleInterrupt(NMIInterrupt)
-		}
-		opCode := p.readMemUint8(p.pc)
-		p.pc++
-		originalPc := p.pc
-		instruction, ok := Instructions[opCode]
-		if !ok {
-			panic(fmt.Errorf("unknown instruction at %04x: 0x%x", originalPc-1, opCode))
-		}
-		if insCallback != nil {
-			insCallback(p, instruction)
-		}
-		switch opCode {
-		case BRK:
-			p.handleInterrupt(BrkInterrupt)
-		case NOP:
-		case INX:
-			p.inx()
-		case INY:
-			p.iny()
-		default:
-			instruction.handler(p, instruction)
-		}
-		p.bus.Tick(uint64(instruction.Cycle))
-		if p.pc == originalPc {
-			p.pc += uint16(instruction.Length - 1)
-		}
-	}
 }
 
 func (p *Processor) Step() {

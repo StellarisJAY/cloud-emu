@@ -228,6 +228,15 @@ func (g *Instance) handleMsgNewConn(conn *Connection) ConsumerResult {
 		delete(g.connections, conn.userId)
 	}
 	g.connections[conn.userId] = conn
+	var controllers []int
+	for c, v := range g.controllerMap {
+		if v == conn.userId {
+			controllers = append(controllers, c)
+		}
+	}
+	for _, c := range controllers {
+		delete(g.controllerMap, c)
+	}
 	return ConsumerResult{Success: true}
 }
 

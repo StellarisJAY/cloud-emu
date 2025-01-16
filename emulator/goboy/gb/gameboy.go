@@ -304,11 +304,10 @@ func (gb *Gameboy) IsCGB() bool {
 }
 
 // Initialise the Gameboy using a path to a rom.
-func (gb *Gameboy) init(romFile string) error {
+func (gb *Gameboy) init(romFile string, data []byte) error {
 	gb.setup()
-
 	// Load the ROM file
-	hasCGB, err := gb.Memory.LoadCart(romFile)
+	hasCGB, err := gb.Memory.LoadCart(romFile, data)
 	if err != nil {
 		return fmt.Errorf("failed to open rom file: %s", err)
 	}
@@ -342,13 +341,13 @@ func (gb *Gameboy) setup() {
 }
 
 // NewGameboy returns a new Gameboy instance.
-func NewGameboy(romFile string, opts ...GameboyOption) (*Gameboy, error) {
+func NewGameboy(romFile string, data []byte, opts ...GameboyOption) (*Gameboy, error) {
 	// Build the gameboy
 	gameboy := Gameboy{}
 	for _, opt := range opts {
 		opt(&gameboy.options)
 	}
-	err := gameboy.init(romFile)
+	err := gameboy.init(romFile, data)
 	if err != nil {
 		return nil, err
 	}

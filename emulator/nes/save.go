@@ -6,9 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/StellrisJAY/cloud-emu/emulator/nes/cartridge"
-	"log"
-	"os"
-	"path/filepath"
 	"slices"
 	"time"
 )
@@ -18,20 +15,6 @@ type Save struct {
 	Serializer string // 快照的序列化格式
 	Hash       []byte // 存档checksum Hash 防止玩家修改存档数据
 	Snapshot   []byte // 该存档的模拟器快照
-}
-
-func (e *RawEmulator) SaveToFile() error {
-	timestamp := time.Now()
-	saveData, err := e.GetSaveData()
-	if err != nil {
-		return err
-	}
-	path := filepath.Join(e.config.SaveDirectory, getSaveFileName(filepath.Base(e.config.Game), timestamp))
-	if err := os.WriteFile(path, saveData, 0644); err != nil {
-		return fmt.Errorf("write save file error %s", err)
-	}
-	log.Println("game saved at:", path)
-	return nil
 }
 
 func (e *RawEmulator) GetSaveData() ([]byte, error) {

@@ -114,12 +114,8 @@ func (mem *Memory) Init(gameboy *Gameboy) {
 }
 
 // LoadCart load a cart rom into memory.
-func (mem *Memory) LoadCart(loc string) (bool, error) {
-	var err error
-	mem.Cart, err = cart.NewCartFromFile(loc)
-	if err != nil {
-		return false, err
-	}
+func (mem *Memory) LoadCart(filename string, data []byte) (bool, error) {
+	mem.Cart = cart.NewCart(data, filename)
 	return mem.Cart.GetMode()&cart.CGB != 0, nil
 }
 

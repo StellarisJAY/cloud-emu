@@ -184,7 +184,7 @@ func (g *GB) Dump(cmd DumpCmd, args ...any) ([]uint8, error) {
 func (g *GB) RunFrame() {
 	if g.cartridge != nil {
 		g.cpu.SendInputs(g.inputs ^ 0xFF) // ボタンの状態をCPUに送る(ただし、押されてないボタンのビットを立てる)
-		g.inputs = 0
+		//g.inputs = 0
 
 		const FRAME = 70224 * ppu.CYCLE
 		start := g.cpu.Cycles
@@ -210,12 +210,14 @@ func (g *GB) Screen() []color.NRGBA {
 }
 
 func (g *GB) SetKeyInput(key string, press bool) {
-	if press {
-		for i, b := range buttons {
-			if b == key {
-				g.inputs |= (1 << uint(i))
-				break
+	for i, b := range buttons {
+		if b == key {
+			if press {
+				g.inputs |= 1 << uint(i)
+			} else {
+				g.inputs &= ^(1 << uint(i))
 			}
+			break
 		}
 	}
 }
