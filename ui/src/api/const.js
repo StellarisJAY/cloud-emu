@@ -61,7 +61,48 @@ const Configs = {
             {"label": "Select", "code": "Select", "slot": "r3"},
             {"label": "Start", "code": "Start", "slot": "r9"}],
     },
-
+    defaultKeyboardBindings: {
+        "NES": [
+            {keyCode: "KeyA", button: "Left"},
+            {keyCode: "KeyD", button: "Right"},
+            {keyCode: "KeyW", button: "Up"},
+            {keyCode: "KeyS", button: "Down"},
+            {keyCode: "Space", button: "A"},
+            {keyCode: "keyJ", button: "B"},
+            {keyCode: "Tab", button: "Select"},
+            {keyCode: "Enter", button: "Start"},
+        ],
+        "GB": [
+            {keyCode: "KeyA", button: "Left"},
+            {keyCode: "KeyD", button: "Right"},
+            {keyCode: "KeyW", button: "Up"},
+            {keyCode: "KeyS", button: "Down"},
+            {keyCode: "Space", button: "A"},
+            {keyCode: "keyJ", button: "B"},
+            {keyCode: "Tab", button: "Select"},
+            {keyCode: "Enter", button: "Start"},
+        ],
+        "GBC": [
+            {keyCode: "KeyA", button: "Left"},
+            {keyCode: "KeyD", button: "Right"},
+            {keyCode: "KeyW", button: "Up"},
+            {keyCode: "KeyS", button: "Down"},
+            {keyCode: "Space", button: "A"},
+            {keyCode: "keyJ", button: "B"},
+            {keyCode: "Tab", button: "Select"},
+            {keyCode: "Enter", button: "Start"},
+        ],
+        "GBA": [
+            {keyCode: "KeyA", button: "Left"},
+            {keyCode: "KeyD", button: "Right"},
+            {keyCode: "KeyW", button: "Up"},
+            {keyCode: "KeyS", button: "Down"},
+            {keyCode: "Space", button: "A"},
+            {keyCode: "keyJ", button: "B"},
+            {keyCode: "Tab", button: "Select"},
+            {keyCode: "Enter", button: "Start"},
+        ]
+    },
     enums: {
         roomJoinTypeEnum: [
             {"id": 1, "name": "公开"},
