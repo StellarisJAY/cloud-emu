@@ -24,6 +24,13 @@ service Emulator {
       get: "/api/v1/emulator/type"
     };
   }
+
+  rpc UpdateEmulator(UpdateEmulatorRequest) returns (UpdateEmulatorResponse) {
+    option (google.api.http) = {
+      put: "/api/v1/emulator"
+      body: "*"
+    };
+  }
 }
 
 message EmulatorDto {
@@ -85,3 +92,16 @@ message ListEmulatorTypeResponse {
   repeated string data = 3;
 }
 
+message UpdateEmulatorRequest {
+  int64 emulatorId = 1;
+  string emulatorName = 2;
+  string description = 3;
+  string provider = 4;
+  bool supportSave = 5;
+  bool supportGraphicSetting = 6;
+}
+
+message UpdateEmulatorResponse {
+  int32 code = 1;
+  string message = 2;
+}

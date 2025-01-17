@@ -7,6 +7,7 @@
                 <a-menu-item key="3">通知</a-menu-item>
                 <a-menu-item key="4">个人</a-menu-item>
                 <a-menu-item key="6" v-if="isAdmin">游戏列表</a-menu-item>
+              <a-menu-item key="7" v-if="isAdmin">模拟器</a-menu-item>
                 <a-menu-item key="5" @click="logout">注销</a-menu-item>
             </a-menu>
         </a-layout-header>
@@ -18,6 +19,7 @@
                 <NotificationList v-else-if="headerSelectedKeys[0] === '3'"></NotificationList>
                 <UserInfo v-else-if="headerSelectedKeys[0] === '4'"/>
                 <AdminGameList v-else-if="headerSelectedKeys[0] === '6'"></AdminGameList>
+                <AdminEmulatorList v-else-if="headerSelectedKeys[0] === '7'"/>
             </a-col>
         </a-row>
     </a-layout>
@@ -34,6 +36,7 @@ import UserInfo from "../components/userInfo.vue";
 import AdminInfo from "../components/adminGameList.vue";
 import userAPI from "../api/user.js";
 import AdminGameList from "../components/adminGameList.vue";
+import AdminEmulatorList from "../components/adminEmulatorList.vue";
 
 export default {
     components: {
@@ -50,6 +53,7 @@ export default {
         NotificationList: NotificationList,
         UserInfo: UserInfo,
         AdminInfo: AdminInfo,
+        AdminEmulatorList: AdminEmulatorList,
     },
     data() {
         return {

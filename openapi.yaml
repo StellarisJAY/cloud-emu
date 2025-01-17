@@ -140,6 +140,23 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.ListEmulatorResponse'
+        put:
+            tags:
+                - Emulator
+            operationId: Emulator_UpdateEmulator
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.UpdateEmulatorRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.UpdateEmulatorResponse'
     /api/v1/emulator/type:
         get:
             tags:
@@ -1680,6 +1697,29 @@ components:
                 layout:
                     type: string
         v1.UpdateButtonLayoutResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+        v1.UpdateEmulatorRequest:
+            type: object
+            properties:
+                emulatorId:
+                    type: string
+                emulatorName:
+                    type: string
+                description:
+                    type: string
+                provider:
+                    type: string
+                supportSave:
+                    type: boolean
+                supportGraphicSetting:
+                    type: boolean
+        v1.UpdateEmulatorResponse:
             type: object
             properties:
                 code:

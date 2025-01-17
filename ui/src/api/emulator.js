@@ -9,7 +9,10 @@ const emulator = {
     },
     listEmulatorTypes: async function() {
         return await api.get("/emulator/type");
-    }
+    },
+    updateEmulator: async function(emulator)  {
+        return await api.put("/emulator", emulator);
+    },
 };
 
 export default emulator;

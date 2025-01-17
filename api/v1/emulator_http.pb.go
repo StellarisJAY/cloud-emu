@@ -22,11 +22,13 @@ const _ = http.SupportPackageIsVersion1
 const OperationEmulatorListEmulator = "/v1.Emulator/ListEmulator"
 const OperationEmulatorListEmulatorType = "/v1.Emulator/ListEmulatorType"
 const OperationEmulatorListGame = "/v1.Emulator/ListGame"
+const OperationEmulatorUpdateEmulator = "/v1.Emulator/UpdateEmulator"
 
 type EmulatorHTTPServer interface {
 	ListEmulator(context.Context, *ListEmulatorRequest) (*ListEmulatorResponse, error)
 	ListEmulatorType(context.Context, *ListEmulatorTypeRequest) (*ListEmulatorTypeResponse, error)
 	ListGame(context.Context, *ListGameRequest) (*ListGameResponse, error)
+	UpdateEmulator(context.Context, *UpdateEmulatorRequest) (*UpdateEmulatorResponse, error)
 }
 
 func RegisterEmulatorHTTPServer(s *http.Server, srv EmulatorHTTPServer) {
@@ -34,6 +36,7 @@ func RegisterEmulatorHTTPServer(s *http.Server, srv EmulatorHTTPServer) {
 	r.GET("/api/v1/emulator", _Emulator_ListEmulator0_HTTP_Handler(srv))
 	r.GET("/api/v1/game", _Emulator_ListGame0_HTTP_Handler(srv))
 	r.GET("/api/v1/emulator/type", _Emulator_ListEmulatorType0_HTTP_Handler(srv))
+	r.PUT("/api/v1/emulator", _Emulator_UpdateEmulator0_HTTP_Handler(srv))
 }
 
 func _Emulator_ListEmulator0_HTTP_Handler(srv EmulatorHTTPServer) func(ctx http.Context) error {
@@ -93,10 +96,33 @@ func _Emulator_ListEmulatorType0_HTTP_Handler(srv EmulatorHTTPServer) func(ctx h
 	}
 }
 
+func _Emulator_UpdateEmulator0_HTTP_Handler(srv EmulatorHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in UpdateEmulatorRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationEmulatorUpdateEmulator)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.UpdateEmulator(ctx, req.(*UpdateEmulatorRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*UpdateEmulatorResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 type EmulatorHTTPClient interface {
 	ListEmulator(ctx context.Context, req *ListEmulatorRequest, opts ...http.CallOption) (rsp *ListEmulatorResponse, err error)
 	ListEmulatorType(ctx context.Context, req *ListEmulatorTypeRequest, opts ...http.CallOption) (rsp *ListEmulatorTypeResponse, err error)
 	ListGame(ctx context.Context, req *ListGameRequest, opts ...http.CallOption) (rsp *ListGameResponse, err error)
+	UpdateEmulator(ctx context.Context, req *UpdateEmulatorRequest, opts ...http.CallOption) (rsp *UpdateEmulatorResponse, err error)
 }
 
 type EmulatorHTTPClientImpl struct {
@@ -140,6 +166,19 @@ func (c *EmulatorHTTPClientImpl) ListGame(ctx context.Context, in *ListGameReque
 	opts = append(opts, http.Operation(OperationEmulatorListGame))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *EmulatorHTTPClientImpl) UpdateEmulator(ctx context.Context, in *UpdateEmulatorRequest, opts ...http.CallOption) (*UpdateEmulatorResponse, error) {
+	var out UpdateEmulatorResponse
+	pattern := "/api/v1/emulator"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationEmulatorUpdateEmulator))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

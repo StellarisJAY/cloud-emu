@@ -6,6 +6,7 @@ import (
 	"github.com/StellrisJAY/cloud-emu/common"
 	"github.com/StellrisJAY/cloud-emu/platform/internal/biz"
 	"github.com/go-kratos/kratos/v2/errors"
+	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
 	"time"
 )
 
@@ -92,5 +93,29 @@ func (e *EmulatorService) ListEmulatorType(ctx context.Context, request *v1.List
 		Code:    200,
 		Message: "查询成功",
 		Data:    e.uc.ListEmulatorTypes(ctx),
+	}, nil
+}
+
+func (e *EmulatorService) UpdateEmulator(ctx context.Context, request *v1.UpdateEmulatorRequest) (*v1.UpdateEmulatorResponse, error) {
+	c, _ := jwt.FromContext(ctx)
+	claims := c.(*biz.LoginClaims)
+	err := e.uc.Update(ctx, &biz.Emulator{
+		EmulatorId:            request.EmulatorId,
+		EmulatorName:          request.EmulatorName,
+		Description:           request.Description,
+		Provider:              request.Provider,
+		SupportSave:           request.SupportSave,
+		SupportGraphicSetting: request.SupportGraphicSetting,
+	}, claims.UserId)
+	if err != nil {
+		e := errors.FromError(err)
+		return &v1.UpdateEmulatorResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
+	}
+	return &v1.UpdateEmulatorResponse{
+		Code:    200,
+		Message: "更新成功",
 	}, nil
 }

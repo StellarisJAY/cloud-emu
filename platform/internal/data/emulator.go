@@ -109,3 +109,20 @@ func (e *EmulatorRepo) GetByType(ctx context.Context, emulatorType string) (*biz
 		return result, err
 	}
 }
+
+func (e *EmulatorRepo) Update(ctx context.Context, emulator *biz.Emulator) error {
+	err := e.data.DB(ctx).Table(EmulatorTableName).
+		Where("emulator_id =?", emulator.EmulatorId).
+		Updates(map[string]interface{}{
+			"support_save":            emulator.SupportSave,
+			"support_graphic_setting": emulator.SupportGraphicSetting,
+			"description":             emulator.Description,
+			"emulator_name":           emulator.EmulatorName,
+		}).
+		WithContext(ctx).Error
+	if err != nil {
+		return err
+	}
+	_ = e.cache.Del(ctx, e.cacheKey(emulator.EmulatorId))
+	return nil
+}
