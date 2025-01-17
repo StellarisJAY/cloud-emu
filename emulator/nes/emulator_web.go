@@ -14,7 +14,7 @@ type Emulator struct {
 	RawEmulator
 }
 
-func NewEmulatorWithGameData(game []byte, conf config.Config, callback bus.RenderCallback, audioSampleChan chan float32, apuSampleRate int) (*Emulator, error) {
+func NewEmulatorWithGameData(game []byte, conf config.Config, audioSampleChan chan float32, apuSampleRate int) (*Emulator, error) {
 	c, err := cartridge.MakeCartridge(game)
 	if err != nil {
 		return nil, err
@@ -29,7 +29,7 @@ func NewEmulatorWithGameData(game []byte, conf config.Config, callback bus.Rende
 	e.joyPad2 = bus.NewJoyPad()
 	e.ppu = ppu.NewPPU(e.cartridge.GetChrBank, e.cartridge.GetMirroring, e.cartridge.WriteCHR)
 	e.apu = apu.NewBasicAPU()
-	e.bus = bus.NewBus(e.cartridge, e.ppu, callback, e.joyPad1, e.joyPad2, e.apu)
+	e.bus = bus.NewBus(e.cartridge, e.ppu, e.joyPad1, e.joyPad2, e.apu)
 	e.apu.SetRates(bus.CPUFrequency, float64(apuSampleRate))
 	e.apu.SetOutputChan(audioSampleChan)
 	e.apu.SetMemReader(e.bus.ReadMemUint8)

@@ -143,17 +143,6 @@ func MakeEmulator(emulatorCode string, options IEmulatorOptions) (IEmulator, err
 	}
 }
 
-func makeNESEmulatorAdapter(options IEmulatorOptions) (IEmulator, error) {
-	e, err := makeNESEmulator(options)
-	if err != nil {
-		return nil, err
-	}
-	return &NesEmulatorAdapter{
-		e:       e,
-		options: options,
-	}, nil
-}
-
 func (s *BaseEmulatorSave) GameName() string {
 	return s.Game
 }

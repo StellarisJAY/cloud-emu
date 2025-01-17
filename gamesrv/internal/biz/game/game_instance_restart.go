@@ -98,11 +98,7 @@ func (g *Instance) onRestartSuccess(emulatorId, gameId int64, emulatorCode, emul
 
 func (g *Instance) makeEmulatorOptions(emulatorName string, game string, gameData []byte) (emulator.IEmulatorOptions, error) {
 	switch emulatorName {
-	case emulator.CodeNesgo:
-		return emulator.MakeNesEmulatorOptions(game, gameData, g.audioSampleRate, g.audioSampleChan, func(frame emulator.IFrame) {
-			g.RenderCallback(frame, nil)
-		}), nil
-	case emulator.CodeChip8, emulator.CodeDummy, emulator.CodeGoboy, emulator.CodeFoglemanNES, emulator.CodeMagia, emulator.CodeDawnGB:
+	case emulator.CodeNesgo, emulator.CodeChip8, emulator.CodeDummy, emulator.CodeGoboy, emulator.CodeFoglemanNES, emulator.CodeMagia, emulator.CodeDawnGB:
 		return emulator.MakeBaseEmulatorOptions(game, gameData, g.audioSampleRate, g.audioSampleChan, func(frame emulator.IFrame) {
 			g.RenderCallback(frame, nil)
 		})

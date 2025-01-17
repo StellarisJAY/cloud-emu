@@ -91,7 +91,7 @@ func (p *PPU) MakeSnapshot() Snapshot {
 	}
 }
 
-func (p *PPU) Reverse(s Snapshot) []byte {
+func (p *PPU) Reverse(s Snapshot) {
 	rev := PPU{
 		getChrBank:     p.getChrBank,
 		getMirroring:   p.getMirroring,
@@ -112,7 +112,6 @@ func (p *PPU) Reverse(s Snapshot) []byte {
 		frame:          p.frame,
 	}
 	*p = rev
-	return p.FrameData()
 }
 
 func (p *PPU) incrementAddr() {
@@ -266,10 +265,6 @@ func (p *PPU) PollInterrupt() bool {
 
 func (p *PPU) PeekInterrupt() bool {
 	return p.nmiInterrupt
-}
-
-func (p *PPU) FrameData() []byte {
-	return p.frame.Data()
 }
 
 func (p *PPU) Frame() *Frame {

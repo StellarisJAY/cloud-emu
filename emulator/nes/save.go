@@ -40,7 +40,7 @@ func (e *RawEmulator) Load(savedGame []byte) error {
 		}
 		e.processor.Reverse(s.Processor)
 		e.bus.Reverse(s.Bus)
-		_ = e.ppu.Reverse(s.PPU)
+		e.ppu.Reverse(s.PPU)
 		if err := cartridge.Load(e.cartridge, s.Cartridge); err != nil {
 			return err
 		}

@@ -6,29 +6,15 @@ import (
 	"github.com/StellrisJAY/cloud-emu/emulator/nes/bus"
 	"github.com/StellrisJAY/cloud-emu/emulator/nes/config"
 	"github.com/StellrisJAY/cloud-emu/emulator/nes/ppu"
-	"image"
 	"time"
 )
 
 type NesEmulatorAdapter struct {
-	e                *nes.Emulator
-	options          IEmulatorOptions
-	cancelFunc       context.CancelFunc
-	reverseColorOpen bool
-	grayscaleOpen    bool
-	ticker           *time.Ticker
-}
-
-type NesEmulatorOptions struct {
-	NesGame               string
-	NesGameData           []byte
-	OutputAudioSampleRate int
-	OutputAudioSampleChan chan float32
-	NesRenderCallback     func(frame *ppu.Frame)
-}
-
-type NesFrameAdapter struct {
-	frame *ppu.Frame
+	e             *nes.Emulator
+	cancelFunc    context.CancelFunc
+	ticker        *time.Ticker
+	frameConsumer func(IFrame)
+	scale         int
 }
 
 func init() {
@@ -39,49 +25,44 @@ func init() {
 		Description:            "Go语言实现的NES模拟器，部分游戏运行存在Bug，但该模拟器是CloudEmu的起源，具有纪念意义所以没有被删除和替换。",
 		Name:                   "NESGO",
 		SupportSave:            true,
-		SupportGraphicSettings: false,
+		SupportGraphicSettings: true,
 	}
 }
 
-func MakeNesEmulatorOptions(game string, gameData []byte, audioSampleRate int, audioChan chan float32, renderCallback func(frame IFrame)) IEmulatorOptions {
-	return &NesEmulatorOptions{
-		NesGame:               game,
-		NesGameData:           gameData,
-		OutputAudioSampleRate: audioSampleRate,
-		OutputAudioSampleChan: audioChan,
-		NesRenderCallback: func(frame *ppu.Frame) {
-			f := MakeNESFrameAdapter(frame)
-			renderCallback(f)
-		},
+func makeNESEmulatorAdapter(options IEmulatorOptions) (IEmulator, error) {
+	e, err := makeNESEmulator(options)
+	if err != nil {
+		return nil, err
 	}
+	return &NesEmulatorAdapter{
+		e:             e,
+		frameConsumer: options.FrameConsumer(),
+		scale:         1,
+	}, nil
 }
 
-func (n *NesEmulatorOptions) GameData() []byte {
-	return n.NesGameData
-}
-
-func (n *NesEmulatorOptions) AudioSampleRate() int {
-	return n.OutputAudioSampleRate
-}
-
-func (n *NesEmulatorOptions) AudioSampleChan() chan float32 {
-	return n.OutputAudioSampleChan
-}
-
-func (n *NesEmulatorOptions) Game() string {
-	return n.NesGame
-}
-
-func (n *NesEmulatorOptions) FrameConsumer() func(frame IFrame) {
-	return nil
+func makeNESEmulator(options IEmulatorOptions) (*nes.Emulator, error) {
+	configs := config.Config{
+		Game:               options.Game(),
+		EnableTrace:        false,
+		Disassemble:        false,
+		SnapshotSerializer: "json",
+		MuteApu:            false,
+		Debug:              false,
+	}
+	e, err := nes.NewEmulatorWithGameData(options.GameData(), configs, options.AudioSampleChan(), options.AudioSampleRate())
+	if err != nil {
+		return nil, err
+	}
+	return e, nil
 }
 
 // Start 启动NES模拟器，创建单独的goroutine运行CPU循环，使用context打断
 func (n *NesEmulatorAdapter) Start() error {
 	ctx, cancelFunc := context.WithCancel(context.Background())
+	n.cancelFunc = cancelFunc
 	n.e.Reset()
 	go n.emulatorLoop(ctx)
-	n.cancelFunc = cancelFunc
 	return nil
 }
 
@@ -99,6 +80,7 @@ func (n *NesEmulatorAdapter) emulatorLoop(ctx context.Context) {
 		case <-n.ticker.C:
 			start := time.Now()
 			n.e.StepOneFrame()
+			n.frameConsumer(n.e.Frame())
 			interval := max(FrameInterval-time.Since(start), time.Millisecond*5)
 			n.ticker.Reset(interval)
 		}
@@ -130,10 +112,10 @@ func (n *NesEmulatorAdapter) Restart(options IEmulatorOptions) error {
 	}
 	n.e = e
 	n.e.Reset()
+	n.frameConsumer = options.FrameConsumer()
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	go n.emulatorLoop(ctx)
 	n.cancelFunc = cancelFunc
-	n.options = options
 	return nil
 }
 
@@ -159,14 +141,6 @@ func (n *NesEmulatorAdapter) Save() (IEmulatorSave, error) {
 func (n *NesEmulatorAdapter) LoadSave(save IEmulatorSave) error {
 	_ = n.Pause()
 	defer n.Resume()
-LOOP:
-	for {
-		select {
-		case <-n.options.AudioSampleChan():
-		default:
-			break LOOP
-		}
-	}
 	return n.e.Load(save.SaveData())
 }
 
@@ -192,11 +166,20 @@ func (n *NesEmulatorAdapter) SubmitInput(controlId int, keyCode string, pressed 
 }
 
 func (n *NesEmulatorAdapter) SetGraphicOptions(opts *GraphicOptions) {
-	panic("not implemented")
+	_ = n.Pause()
+	if opts.HighResolution {
+		n.scale = 2
+	} else {
+		n.scale = 1
+	}
+	n.e.Frame().SetScale(n.scale)
+	_ = n.Resume()
 }
 
 func (n *NesEmulatorAdapter) GetGraphicOptions() *GraphicOptions {
-	panic("not implemented")
+	return &GraphicOptions{
+		HighResolution: n.scale > 1,
+	}
 }
 
 func (n *NesEmulatorAdapter) GetCPUBoostRate() float64 {
@@ -226,45 +209,4 @@ func (n *NesEmulatorAdapter) ControllerInfos() []ControllerInfo {
 			Label:        "玩家2",
 		},
 	}
-}
-
-func makeNESEmulator(options IEmulatorOptions) (*nes.Emulator, error) {
-	configs := config.Config{
-		Game:               options.Game(),
-		EnableTrace:        false,
-		Disassemble:        false,
-		SnapshotSerializer: "json",
-		MuteApu:            false,
-		Debug:              false,
-	}
-	renderCallback := func(p *ppu.PPU) {
-		options.(*NesEmulatorOptions).NesRenderCallback(p.Frame())
-	}
-	e, err := nes.NewEmulatorWithGameData(options.GameData(), configs, renderCallback, options.AudioSampleChan(), options.AudioSampleRate())
-	if err != nil {
-		return nil, err
-	}
-	return e, nil
-}
-
-func MakeNESFrameAdapter(frame *ppu.Frame) IFrame {
-	return &NesFrameAdapter{
-		frame: frame,
-	}
-}
-
-func (f *NesFrameAdapter) Width() int {
-	return ppu.WIDTH
-}
-
-func (f *NesFrameAdapter) Height() int {
-	return ppu.HEIGHT
-}
-
-func (f *NesFrameAdapter) YCbCr() *image.YCbCr {
-	return f.frame.YCbCr()
-}
-
-func (f *NesFrameAdapter) Read() (image.Image, func(), error) {
-	return f.frame.Read()
 }

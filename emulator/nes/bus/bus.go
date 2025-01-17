@@ -21,14 +21,13 @@ type RenderCallback func(*ppu.PPU)
 
 // Bus 虚拟总线，CPU通过总线地址访问RAM, PPU, Registers
 type Bus struct {
-	cpuRAM         [RAMSize]byte       // cpuRAM cpu RAM内存区域
-	resetPC        uint16              // resetPC 重启pc
-	cartridge      cartridge.Cartridge // cartridge PrgROM和ChrROM
-	ppu            *ppu.PPU            // ppu 图形处理器
-	cycles         uint64              // cycles 总线时钟周期数，用来同步CPU和PPU的周期
-	renderCallback RenderCallback
-	joyPad1        *JoyPad
-	joyPad2        *JoyPad
+	cpuRAM    [RAMSize]byte       // cpuRAM cpu RAM内存区域
+	resetPC   uint16              // resetPC 重启pc
+	cartridge cartridge.Cartridge // cartridge PrgROM和ChrROM
+	ppu       *ppu.PPU            // ppu 图形处理器
+	cycles    uint64              // cycles 总线时钟周期数，用来同步CPU和PPU的周期
+	joyPad1   *JoyPad
+	joyPad2   *JoyPad
 
 	lastRenderCycles uint64
 	lastRenderTime   time.Time
@@ -45,16 +44,15 @@ type Snapshot struct {
 }
 
 // NewBus 创建总线，并将PPU和ROM接入总线
-func NewBus(cartridge cartridge.Cartridge, ppu *ppu.PPU, callback RenderCallback, joyPad1 *JoyPad, joyPad2 *JoyPad, apu *apu.BasicAPU) *Bus {
+func NewBus(cartridge cartridge.Cartridge, ppu *ppu.PPU, joyPad1 *JoyPad, joyPad2 *JoyPad, apu *apu.BasicAPU) *Bus {
 	return &Bus{
-		cpuRAM:         [2048]byte{},
-		cartridge:      cartridge,
-		ppu:            ppu,
-		renderCallback: callback,
-		joyPad1:        joyPad1,
-		joyPad2:        joyPad2,
-		cpuBoost:       1.0,
-		apu:            apu,
+		cpuRAM:    [2048]byte{},
+		cartridge: cartridge,
+		ppu:       ppu,
+		joyPad1:   joyPad1,
+		joyPad2:   joyPad2,
+		cpuBoost:  1.0,
+		apu:       apu,
 	}
 }
 
@@ -86,21 +84,9 @@ func (b *Bus) Tick(cycles uint64) {
 		b.apu.Tick()
 	}
 	if !before && b.ppu.PeekInterrupt() {
-		//start := time.Now()
 		b.ppu.Render()
-		b.renderCallback(b.ppu)
 		b.ppu.FrameCount++
-		//renderTime := time.Now().Sub(start)
-		//processorTime := start.Sub(b.lastRenderTime)
-		//// 两次渲染之间的cpu cycles除以CPU频率等于帧之间的间隔时间, nanoseconds
-		//freq := uint64(float64(CPUFrequency) * b.cpuBoost)
-		//frameTime := (b.cycles - b.lastRenderCycles) * 1000_000_000 / freq
-		//sleepTime := time.Duration(frameTime - uint64(renderTime.Nanoseconds()) - uint64(processorTime.Nanoseconds()))
-		//time.Sleep(sleepTime)
-		//b.lastRenderCycles = b.cycles
-		//b.lastRenderTime = time.Now()
 	}
-
 }
 
 func (b *Bus) BoostCPU(delta float64) float64 {
