@@ -57,13 +57,7 @@
     </a-form>
     <a-form>
       <a-form-item label="高分辨率">
-        <a-switch v-model:checked="graphicOptions.highResOpen" :disabled="graphicOptionsDisabled" @change="updateGraphicOptions"></a-switch>
-      </a-form-item>
-      <a-form-item label="反色">
-        <a-switch v-model:checked="graphicOptions.reverseColor" :disabled="graphicOptionsDisabled" @change="updateGraphicOptions"></a-switch>
-      </a-form-item>
-      <a-form-item label="黑白">
-        <a-switch v-model:checked="graphicOptions.grayscale" :disabled="graphicOptionsDisabled" @change="updateGraphicOptions"></a-switch>
+        <a-switch v-model:checked="graphicOptions.highResolution" :disabled="graphicOptionsDisabled" @change="setGraphicOptions"></a-switch>
       </a-form-item>
       <a-form-item label="模拟器速度">
         <a-slider v-model:value="emulatorSpeedRate" :min="0.5" :max="2.0" :marks="allowedEmulatorSpeedRates" :step="null" @afterChange="setEmulatorSpeed" :disabled="emulatorSpeedSliderDisabled"></a-slider>
@@ -199,9 +193,7 @@ export default {
         showStats: false,
       },
       graphicOptions: {
-        highResOpen: false,
-        reverseColor: false,
-        grayscale: false,
+        highResolution: false,
       },
       emulatorSpeedRate: 1.0,
       allowedEmulatorSpeedRates: {
@@ -465,9 +457,10 @@ export default {
         this.setKeyboardControls(this.roomDetail["emulatorType"], false);
       });
       dispatchEvent(new Event("webrtc-connected"));
-      this.saveBtnDisabled = false;
-      this.loadBtnDisabled = false;
+      this.saveBtnDisabled = this.memberSelf.role !== 1;
+      this.loadBtnDisabled = this.memberSelf.role !== 1;
       this.emulatorBtnDisabled = false;
+      this.graphicOptionsDisabled = this.memberSelf.role !== 1;
     },
     onDisconnected() {
       message.warn("连接断开");
@@ -573,23 +566,21 @@ export default {
       return (bytes>>20) + "MB";
     },
 
-    updateGraphicOptions: function() {
-      const _this = this;
+    setGraphicOptions: function() {
       this.graphicOptionsDisabled = true;
-      api.post("/game/graphic", {
-        "roomId": this.roomId,
-        "highResOpen": this.graphicOptions.highResOpen,
-        "reverseColor": this.graphicOptions.reverseColor,
-        "grayscale": this.graphicOptions.grayscale,
-      }).then(resp => {
-        _this.graphicOptionsDisabled = false;
-        _this.graphicOptions.highResOpen = resp['highResOpen'];
-        _this.graphicOptions.reverseColor = resp['reverseColor'];
-        _this.graphicOptions.grayscale = resp['grayscale'];
+      api.post("/room-instance/graphic-options", {roomId: this.roomId, data: this.graphicOptions}).then(_ => {
         message.success("设置成功");
-      }).catch(_ => {
-        message.error("设置失败");
-        _this.graphicOptionsDisabled = false;
+        this.graphicOptionsDisabled = false;
+        this.getGraphicOptions();
+      }).catch(resp => {
+        message.error(resp.message);
+        this.graphicOptionsDisabled = false;
+      });
+    },
+
+    getGraphicOptions: function() {
+      api.get("/room-instance/graphic-options", {roomId: this.roomId}).then(resp => {
+        this.graphicOptions = resp.data;
       });
     },
 
@@ -620,8 +611,9 @@ export default {
         button.innerText = item.label;
         button.style.width = "100%";
         button.style.height = "100%";
-        button.style.backgroundColor = "#f8f3d4"
+        button.style.backgroundColor = "#9c253d"
         button.style.position="relative"
+        button.style.color = "white";
         button.addEventListener("mousedown", _=>this.sendAction(item["code"], MessageGameButtonPressed));
         button.addEventListener("mouseup", _=>this.sendAction(item["code"], MessageGameButtonReleased));
         button.addEventListener("touchstart", _=>this.sendAction(item["code"], MessageGameButtonPressed));
@@ -683,7 +675,7 @@ export default {
 }
 
 #center-container {
-  background-color: #f8f3d4;
+  background-color: #fffbe9;
   position: absolute;
   left: 30%;
   width: 40%;

@@ -213,3 +213,36 @@ func (r *RoomInstanceService) SetControllerPlayer(ctx context.Context, request *
 		Message: "设置成功",
 	}, nil
 }
+
+func (r *RoomInstanceService) GetGraphicOptions(ctx context.Context, request *v1.GetGraphicOptionsRequest) (*v1.GetGraphicOptionsResponse, error) {
+	options, err := r.uc.GetGraphicOptions(ctx, request.RoomId)
+	if err != nil {
+		e := errors.FromError(err)
+		return &v1.GetGraphicOptionsResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
+	}
+	return &v1.GetGraphicOptionsResponse{
+		Code:    200,
+		Message: "获取成功",
+		Data:    &v1.GraphicOptions{HighResolution: options.HighResolution},
+	}, nil
+}
+
+func (r *RoomInstanceService) SetGraphicOptions(ctx context.Context, request *v1.SetGraphicOptionsRequest) (*v1.SetGraphicOptionsResponse, error) {
+	c, _ := jwt.FromContext(ctx)
+	claims := c.(*biz.LoginClaims)
+	err := r.uc.SetGraphicOptions(ctx, request.RoomId, &biz.GraphicOptions{HighResolution: request.Data.HighResolution}, claims.UserId)
+	if err != nil {
+		e := errors.FromError(err)
+		return &v1.SetGraphicOptionsResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
+	}
+	return &v1.SetGraphicOptionsResponse{
+		Code:    200,
+		Message: "设置成功",
+	}, nil
+}

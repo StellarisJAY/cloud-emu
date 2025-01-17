@@ -228,3 +228,25 @@ func (g *GameService) SetControllerPlayer(ctx context.Context, request *v1.GameS
 	}
 	return &v1.GameSrvSetControllerPlayerResponse{Code: 200}, nil
 }
+
+func (g *GameService) GetGraphicOptions(ctx context.Context, request *v1.GameSrvGetGraphicOptionsRequest) (*v1.GameSrvGetGraphicOptionsResponse, error) {
+	options, err := g.uc.GetGraphicOptions(ctx, request.RoomId)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.GameSrvGetGraphicOptionsResponse{
+		Code:    200,
+		Message: "获取成功",
+		Data:    &v1.GameSrvGraphicOptions{HighResolution: options.HighResOpen},
+	}, nil
+}
+
+func (g *GameService) SetGraphicOptions(ctx context.Context, request *v1.GameSrvSetGraphicOptionsRequest) (*v1.GameSrvSetGraphicOptionsResponse, error) {
+	err := g.uc.SetGraphicOptions(ctx, request.RoomId, &game.GraphicOptions{
+		HighResOpen: request.GraphicOptions.HighResolution,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &v1.GameSrvSetGraphicOptionsResponse{Code: 200}, nil
+}

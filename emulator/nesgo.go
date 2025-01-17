@@ -39,7 +39,7 @@ func init() {
 		Description:            "Go语言实现的NES模拟器，部分游戏运行存在Bug，但该模拟器是CloudEmu的起源，具有纪念意义所以没有被删除和替换。",
 		Name:                   "NESGO",
 		SupportSave:            true,
-		SupportGraphicSettings: true,
+		SupportGraphicSettings: false,
 	}
 }
 
@@ -192,25 +192,11 @@ func (n *NesEmulatorAdapter) SubmitInput(controlId int, keyCode string, pressed 
 }
 
 func (n *NesEmulatorAdapter) SetGraphicOptions(opts *GraphicOptions) {
-	if opts.ReverseColor != n.reverseColorOpen {
-		n.reverseColorOpen = opts.ReverseColor
-		if n.reverseColorOpen {
-			n.e.Frame().UseReverseColorPreprocessor()
-		} else {
-			n.e.Frame().RemoveReverseColorPreprocessor()
-		}
+	panic("not implemented")
+}
 
-	}
-
-	if opts.Grayscale != n.grayscaleOpen {
-		n.grayscaleOpen = opts.Grayscale
-		if n.grayscaleOpen {
-			n.e.Frame().UseGrayscalePreprocessor()
-		} else {
-			n.e.Frame().RemoveGrayscalePreprocessor()
-		}
-	}
-
+func (n *NesEmulatorAdapter) GetGraphicOptions() *GraphicOptions {
+	panic("not implemented")
 }
 
 func (n *NesEmulatorAdapter) GetCPUBoostRate() float64 {

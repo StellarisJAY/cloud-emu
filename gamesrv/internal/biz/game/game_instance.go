@@ -31,6 +31,7 @@ const (
 	MsgSetController     byte = 18
 	MsgResetController   byte = 19
 	MsgGetController     byte = 20
+	MsgGetGraphicOptions byte = 21
 )
 
 const (
@@ -168,6 +169,8 @@ func (g *Instance) MessageHandler(ctx context.Context) {
 				g.handleChat(msg)
 			case MsgSetGraphicOptions:
 				msg.resultChan <- g.setGraphicOptions(msg.Data.(*GraphicOptions))
+			case MsgGetGraphicOptions:
+				msg.resultChan <- ConsumerResult{Success: true, Data: g.getGraphicOptions()}
 			case MsgSetEmulatorSpeed:
 				msg.resultChan <- g.setEmulatorSpeed(msg.Data.(float64))
 			case MsgSetController:

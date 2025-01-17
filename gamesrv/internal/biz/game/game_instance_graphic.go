@@ -6,33 +6,8 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/pion/webrtc/v3"
 	"github.com/pion/webrtc/v3/pkg/media"
-	"image"
 	"time"
 )
-
-func (g *Instance) enhanceFrame(frame emulator.IFrame) emulator.IFrame {
-	if g.enhancedFrame == nil {
-		g.enhancedFrame = image.NewYCbCr(image.Rect(0, 0, frame.Width()*EnhanceFrameScale, frame.Height()*EnhanceFrameScale), image.YCbCrSubsampleRatio420)
-	}
-	original := frame.YCbCr()
-	enhancedFrame := g.enhancedFrame
-	for y := 0; y < frame.Height(); y++ {
-		for x := 0; x < frame.Width(); x++ {
-			// 分辨率放大到原来的两倍，每个像素变成四个像素
-			offset := original.YOffset(x, y)
-			cOffset := original.COffset(x, y)
-			dx, dy := x*EnhanceFrameScale, y*EnhanceFrameScale
-			for i := 0; i < EnhanceFrameScale; i++ {
-				for j := 0; j < EnhanceFrameScale; j++ {
-					enhancedFrame.Y[enhancedFrame.YOffset(dx+i, dy+j)] = original.Y[offset]
-					enhancedFrame.Cb[enhancedFrame.COffset(dx+i, dy+j)] = original.Cb[cOffset]
-					enhancedFrame.Cr[enhancedFrame.COffset(dx+i, dy+j)] = original.Cr[cOffset]
-				}
-			}
-		}
-	}
-	return emulator.MakeBaseFrame(enhancedFrame, frame.Width()*EnhanceFrameScale, frame.Height()*EnhanceFrameScale)
-}
 
 func (g *Instance) RenderCallback(frame emulator.IFrame, logger *log.Helper) {
 	frame = g.frameEnhancer(frame)
@@ -69,34 +44,38 @@ func (g *Instance) SetGraphicOptions(options *GraphicOptions) {
 	close(resultCh)
 }
 
+func (g *Instance) GetGraphicOptions() *GraphicOptions {
+	resultCh := make(chan ConsumerResult)
+	g.messageChan <- &Message{Type: MsgGetGraphicOptions, resultChan: resultCh}
+	res := <-resultCh
+	close(resultCh)
+	return res.Data.(*GraphicOptions)
+}
+
 func (g *Instance) setGraphicOptions(options *GraphicOptions) ConsumerResult {
 	_ = g.e.Pause()
 	defer g.e.Resume()
-	if g.enhanceFrameOpen != options.HighResOpen {
-		g.enhanceFrameOpen = options.HighResOpen
-		g.videoEncoder.Close()
-		enhanceRate := 1
-		if options.HighResOpen {
-			enhanceRate = 2
-			g.frameEnhancer = g.enhanceFrame
-		} else {
-			g.frameEnhancer = func(frame emulator.IFrame) emulator.IFrame {
-				return frame
-			}
-		}
-		width, height := g.e.OutputResolution()
-		enc, err := codec.NewVideoEncoder("vp8", width*enhanceRate, height*enhanceRate)
-		if err != nil {
-			return ConsumerResult{Error: err}
-		}
-		g.videoEncoder = enc
-	}
+
 	g.e.SetGraphicOptions(&emulator.GraphicOptions{
-		Grayscale:    options.Grayscale,
-		ReverseColor: options.ReverseColor,
+		//Grayscale:    options.Grayscale,
+		//ReverseColor: options.ReverseColor,
+		HighResolution: options.HighResOpen,
 	})
-	options.HighResOpen = g.enhanceFrameOpen
+	w, h := g.e.OutputResolution()
+	enc, err := codec.NewVideoEncoder("vp8", w, h)
+	if err != nil {
+		return ConsumerResult{Success: false, Error: err}
+	}
+	g.videoEncoder.Close()
+	g.videoEncoder = enc
 	return ConsumerResult{Success: true, Error: nil}
+}
+
+func (g *Instance) getGraphicOptions() *GraphicOptions {
+	options := g.e.GetGraphicOptions()
+	return &GraphicOptions{
+		HighResOpen: options.HighResolution,
+	}
 }
 
 func (g *Instance) SetEmulatorSpeed(boostRate float64) float64 {

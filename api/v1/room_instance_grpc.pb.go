@@ -28,6 +28,8 @@ const (
 	RoomInstance_RestartRoomInstance_FullMethodName   = "/v1.RoomInstance/RestartRoomInstance"
 	RoomInstance_GetControllerPlayers_FullMethodName  = "/v1.RoomInstance/GetControllerPlayers"
 	RoomInstance_SetControllerPlayer_FullMethodName   = "/v1.RoomInstance/SetControllerPlayer"
+	RoomInstance_GetGraphicOptions_FullMethodName     = "/v1.RoomInstance/GetGraphicOptions"
+	RoomInstance_SetGraphicOptions_FullMethodName     = "/v1.RoomInstance/SetGraphicOptions"
 )
 
 // RoomInstanceClient is the client API for RoomInstance service.
@@ -43,6 +45,8 @@ type RoomInstanceClient interface {
 	RestartRoomInstance(ctx context.Context, in *RestartRoomInstanceRequest, opts ...grpc.CallOption) (*RestartRoomInstanceResponse, error)
 	GetControllerPlayers(ctx context.Context, in *GetControllerPlayersRequest, opts ...grpc.CallOption) (*GetControllerPlayersResponse, error)
 	SetControllerPlayer(ctx context.Context, in *SetControllerPlayerRequest, opts ...grpc.CallOption) (*SetControllerPlayerResponse, error)
+	GetGraphicOptions(ctx context.Context, in *GetGraphicOptionsRequest, opts ...grpc.CallOption) (*GetGraphicOptionsResponse, error)
+	SetGraphicOptions(ctx context.Context, in *SetGraphicOptionsRequest, opts ...grpc.CallOption) (*SetGraphicOptionsResponse, error)
 }
 
 type roomInstanceClient struct {
@@ -143,6 +147,26 @@ func (c *roomInstanceClient) SetControllerPlayer(ctx context.Context, in *SetCon
 	return out, nil
 }
 
+func (c *roomInstanceClient) GetGraphicOptions(ctx context.Context, in *GetGraphicOptionsRequest, opts ...grpc.CallOption) (*GetGraphicOptionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetGraphicOptionsResponse)
+	err := c.cc.Invoke(ctx, RoomInstance_GetGraphicOptions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *roomInstanceClient) SetGraphicOptions(ctx context.Context, in *SetGraphicOptionsRequest, opts ...grpc.CallOption) (*SetGraphicOptionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetGraphicOptionsResponse)
+	err := c.cc.Invoke(ctx, RoomInstance_SetGraphicOptions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RoomInstanceServer is the server API for RoomInstance service.
 // All implementations must embed UnimplementedRoomInstanceServer
 // for forward compatibility.
@@ -156,6 +180,8 @@ type RoomInstanceServer interface {
 	RestartRoomInstance(context.Context, *RestartRoomInstanceRequest) (*RestartRoomInstanceResponse, error)
 	GetControllerPlayers(context.Context, *GetControllerPlayersRequest) (*GetControllerPlayersResponse, error)
 	SetControllerPlayer(context.Context, *SetControllerPlayerRequest) (*SetControllerPlayerResponse, error)
+	GetGraphicOptions(context.Context, *GetGraphicOptionsRequest) (*GetGraphicOptionsResponse, error)
+	SetGraphicOptions(context.Context, *SetGraphicOptionsRequest) (*SetGraphicOptionsResponse, error)
 	mustEmbedUnimplementedRoomInstanceServer()
 }
 
@@ -192,6 +218,12 @@ func (UnimplementedRoomInstanceServer) GetControllerPlayers(context.Context, *Ge
 }
 func (UnimplementedRoomInstanceServer) SetControllerPlayer(context.Context, *SetControllerPlayerRequest) (*SetControllerPlayerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetControllerPlayer not implemented")
+}
+func (UnimplementedRoomInstanceServer) GetGraphicOptions(context.Context, *GetGraphicOptionsRequest) (*GetGraphicOptionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetGraphicOptions not implemented")
+}
+func (UnimplementedRoomInstanceServer) SetGraphicOptions(context.Context, *SetGraphicOptionsRequest) (*SetGraphicOptionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetGraphicOptions not implemented")
 }
 func (UnimplementedRoomInstanceServer) mustEmbedUnimplementedRoomInstanceServer() {}
 func (UnimplementedRoomInstanceServer) testEmbeddedByValue()                      {}
@@ -376,6 +408,42 @@ func _RoomInstance_SetControllerPlayer_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RoomInstance_GetGraphicOptions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetGraphicOptionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomInstanceServer).GetGraphicOptions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoomInstance_GetGraphicOptions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomInstanceServer).GetGraphicOptions(ctx, req.(*GetGraphicOptionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RoomInstance_SetGraphicOptions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetGraphicOptionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomInstanceServer).SetGraphicOptions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoomInstance_SetGraphicOptions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomInstanceServer).SetGraphicOptions(ctx, req.(*SetGraphicOptionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RoomInstance_ServiceDesc is the grpc.ServiceDesc for RoomInstance service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -418,6 +486,14 @@ var RoomInstance_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetControllerPlayer",
 			Handler:    _RoomInstance_SetControllerPlayer_Handler,
+		},
+		{
+			MethodName: "GetGraphicOptions",
+			Handler:    _RoomInstance_GetGraphicOptions_Handler,
+		},
+		{
+			MethodName: "SetGraphicOptions",
+			Handler:    _RoomInstance_SetGraphicOptions_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

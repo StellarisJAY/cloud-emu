@@ -163,6 +163,10 @@ func (g *GoboyAdapter) SetGraphicOptions(options *GraphicOptions) {
 	panic("implement me")
 }
 
+func (g *GoboyAdapter) GetGraphicOptions() *GraphicOptions {
+	panic("not implemented")
+}
+
 func (g *GoboyAdapter) GetCPUBoostRate() float64 {
 	//TODO implement me
 	panic("implement me")

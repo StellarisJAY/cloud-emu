@@ -41,6 +41,10 @@ type ControllerPlayer struct {
 	UserId       int64
 }
 
+type GraphicOptions struct {
+	HighResolution bool
+}
+
 type GameServerRepo interface {
 	// ListActiveGameServers 服务发现 列出所有可用的游戏服务器
 	ListActiveGameServers(ctx context.Context) ([]*GameServer, error)
@@ -66,4 +70,7 @@ type GameServerRepo interface {
 	GetControllerPlayers(ctx context.Context, instance *RoomInstance) ([]*ControllerPlayer, error)
 
 	SetControllerPlayer(context.Context, []*ControllerPlayer, *RoomInstance) error
+
+	GetGraphicOptions(ctx context.Context, instance *RoomInstance) (*GraphicOptions, error)
+	SetGraphicOptions(ctx context.Context, instance *RoomInstance, options *GraphicOptions) error
 }

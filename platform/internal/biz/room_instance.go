@@ -6,6 +6,7 @@ import (
 	"fmt"
 	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/bwmarrin/snowflake"
+	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-redsync/redsync/v4"
 	"net/url"
@@ -390,4 +391,32 @@ func (uc *RoomInstanceUseCase) SetControllerPlayers(ctx context.Context, roomId 
 		}
 	}
 	return uc.gameServerRepo.SetControllerPlayer(ctx, players, ri)
+}
+
+func (uc *RoomInstanceUseCase) GetGraphicOptions(ctx context.Context, roomId int64) (*GraphicOptions, error) {
+	ri, _ := uc.repo.GetRoomInstance(ctx, roomId)
+	if ri == nil {
+		return nil, v1.ErrorNotFound("房间不存在")
+	}
+	emulator, _ := uc.emulatorRepo.GetById(ctx, ri.EmulatorId)
+	if emulator == nil || !emulator.SupportGraphicSetting {
+		return &GraphicOptions{false}, nil
+	}
+	return uc.gameServerRepo.GetGraphicOptions(ctx, ri)
+}
+
+func (uc *RoomInstanceUseCase) SetGraphicOptions(ctx context.Context, roomId int64, opts *GraphicOptions, userId int64) error {
+	ri, _ := uc.repo.GetRoomInstance(ctx, roomId)
+	if ri == nil {
+		return v1.ErrorNotFound("房间不存在")
+	}
+	currUser, _ := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId)
+	if currUser == nil || currUser.Role != RoomMemberRoleHost {
+		return v1.ErrorAccessDenied("没有权限")
+	}
+	emulator, _ := uc.emulatorRepo.GetById(ctx, ri.EmulatorId)
+	if emulator == nil || !emulator.SupportGraphicSetting {
+		return errors.New(500, "Service Error", "模拟器不支持画面设置")
+	}
+	return uc.gameServerRepo.SetGraphicOptions(ctx, ri, opts)
 }

@@ -540,6 +540,40 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.SetControllerPlayerResponse'
+    /api/v1/room-instance/graphic-options:
+        get:
+            tags:
+                - RoomInstance
+            operationId: RoomInstance_GetGraphicOptions
+            parameters:
+                - name: roomId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.GetGraphicOptionsResponse'
+        post:
+            tags:
+                - RoomInstance
+            operationId: RoomInstance_SetGraphicOptions
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.SetGraphicOptionsRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.SetGraphicOptionsResponse'
     /api/v1/room-instance/history:
         get:
             tags:
@@ -1101,6 +1135,16 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/v1.ControllerPlayer'
+        v1.GetGraphicOptionsResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/v1.GraphicOptions'
         v1.GetLoginUserDetailResponse:
             type: object
             properties:
@@ -1170,6 +1214,11 @@ components:
                     type: string
                 data:
                     $ref: '#/components/schemas/v1.UserRoomMember'
+        v1.GraphicOptions:
+            type: object
+            properties:
+                highResolution:
+                    type: boolean
         v1.InviteRoomMemberRequest:
             type: object
             properties:
@@ -1606,6 +1655,21 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/v1.ControllerPlayer'
+        v1.SetGraphicOptionsRequest:
+            type: object
+            properties:
+                roomId:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/v1.GraphicOptions'
+        v1.SetGraphicOptionsResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
         v1.UpdateButtonLayoutRequest:
             type: object
             properties:

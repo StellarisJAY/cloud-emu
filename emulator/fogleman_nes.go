@@ -17,6 +17,7 @@ type FoglemanNesAdapter struct {
 	frameConsumer func(frame IFrame)
 	buttons       [2][8]bool
 	game          string
+	scale         int
 }
 
 func init() {
@@ -26,14 +27,15 @@ func init() {
 		Description:            "Go语言实现的功能完善的NES模拟器",
 		Name:                   "fogleman/nes",
 		EmulatorCode:           CodeFoglemanNES,
-		SupportSave:            false,
-		SupportGraphicSettings: false,
+		SupportSave:            true,
+		SupportGraphicSettings: true,
 	}
 }
 
 func newFoglemanNesAdapter(options IEmulatorOptions) (*FoglemanNesAdapter, error) {
 	adapter := &FoglemanNesAdapter{}
 	adapter.game = options.Game()
+	adapter.scale = 1
 	adapter.frame = MakeEmptyBaseFrame(image.Rect(0, 0, 256, 240))
 	console, err := nes.NewConsole(options.GameData())
 	if err != nil {
@@ -66,7 +68,7 @@ func (f *FoglemanNesAdapter) emulatorLoop(ctx context.Context) {
 			start := time.Now()
 			f.console.StepFrame()
 			frame := f.console.Buffer()
-			f.frame.FromRGBA(frame)
+			f.frame.FromRGBA(frame, f.scale)
 			f.frameConsumer(f.frame)
 			interval := max(FrameInterval-time.Since(start), time.Millisecond*5)
 			f.ticker.Reset(interval)
@@ -142,8 +144,20 @@ func (f *FoglemanNesAdapter) SubmitInput(controllerId int, keyCode string, press
 }
 
 func (f *FoglemanNesAdapter) SetGraphicOptions(options *GraphicOptions) {
-	//TODO implement me
-	panic("implement me")
+	_ = f.Pause()
+	if options.HighResolution {
+		f.scale = 2
+	} else {
+		f.scale = 1
+	}
+	f.frame = MakeEmptyBaseFrame(image.Rect(0, 0, 256*f.scale, 240*f.scale))
+	_ = f.Resume()
+}
+
+func (f *FoglemanNesAdapter) GetGraphicOptions() *GraphicOptions {
+	return &GraphicOptions{
+		HighResolution: f.scale > 1,
+	}
 }
 
 func (f *FoglemanNesAdapter) GetCPUBoostRate() float64 {

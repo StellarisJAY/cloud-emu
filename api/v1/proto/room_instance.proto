@@ -65,6 +65,18 @@ service RoomInstance {
       body: "*"
     };
   }
+
+  rpc GetGraphicOptions(GetGraphicOptionsRequest) returns (GetGraphicOptionsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/room-instance/graphic-options"
+    };
+  }
+  rpc SetGraphicOptions(SetGraphicOptionsRequest) returns (SetGraphicOptionsResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/room-instance/graphic-options"
+      body: "*"
+    };
+  }
 }
 
 message RoomInstanceDto {
@@ -189,4 +201,28 @@ message SetControllerPlayerResponse {
   int32 code = 1;
   string message = 2;
   repeated ControllerPlayer data = 3;
+}
+
+message GraphicOptions {
+  bool highResolution = 1;
+}
+
+message GetGraphicOptionsRequest {
+  int64 roomId = 1;
+}
+
+message GetGraphicOptionsResponse {
+  int32 code = 1;
+  string message = 2;
+  GraphicOptions data = 3;
+}
+
+message SetGraphicOptionsRequest {
+  int64 roomId = 1;
+  GraphicOptions data = 2;
+}
+
+message SetGraphicOptionsResponse {
+  int32 code = 1;
+  string message = 2;
 }

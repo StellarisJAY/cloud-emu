@@ -32,6 +32,8 @@ const (
 	Game_ListOnlineRoomMember_FullMethodName       = "/v1.Game/ListOnlineRoomMember"
 	Game_GetControllerPlayers_FullMethodName       = "/v1.Game/GetControllerPlayers"
 	Game_SetControllerPlayer_FullMethodName        = "/v1.Game/SetControllerPlayer"
+	Game_GetGraphicOptions_FullMethodName          = "/v1.Game/GetGraphicOptions"
+	Game_SetGraphicOptions_FullMethodName          = "/v1.Game/SetGraphicOptions"
 )
 
 // GameClient is the client API for Game service.
@@ -51,6 +53,8 @@ type GameClient interface {
 	ListOnlineRoomMember(ctx context.Context, in *ListOnlineRoomMemberRequest, opts ...grpc.CallOption) (*ListOnlineRoomMemberResponse, error)
 	GetControllerPlayers(ctx context.Context, in *GameSrvGetControllerPlayersRequest, opts ...grpc.CallOption) (*GameSrvGetControllerPlayersResponse, error)
 	SetControllerPlayer(ctx context.Context, in *GameSrvSetControllerPlayerRequest, opts ...grpc.CallOption) (*GameSrvSetControllerPlayerResponse, error)
+	GetGraphicOptions(ctx context.Context, in *GameSrvGetGraphicOptionsRequest, opts ...grpc.CallOption) (*GameSrvGetGraphicOptionsResponse, error)
+	SetGraphicOptions(ctx context.Context, in *GameSrvSetGraphicOptionsRequest, opts ...grpc.CallOption) (*GameSrvSetGraphicOptionsResponse, error)
 }
 
 type gameClient struct {
@@ -191,6 +195,26 @@ func (c *gameClient) SetControllerPlayer(ctx context.Context, in *GameSrvSetCont
 	return out, nil
 }
 
+func (c *gameClient) GetGraphicOptions(ctx context.Context, in *GameSrvGetGraphicOptionsRequest, opts ...grpc.CallOption) (*GameSrvGetGraphicOptionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GameSrvGetGraphicOptionsResponse)
+	err := c.cc.Invoke(ctx, Game_GetGraphicOptions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gameClient) SetGraphicOptions(ctx context.Context, in *GameSrvSetGraphicOptionsRequest, opts ...grpc.CallOption) (*GameSrvSetGraphicOptionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GameSrvSetGraphicOptionsResponse)
+	err := c.cc.Invoke(ctx, Game_SetGraphicOptions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GameServer is the server API for Game service.
 // All implementations must embed UnimplementedGameServer
 // for forward compatibility.
@@ -208,6 +232,8 @@ type GameServer interface {
 	ListOnlineRoomMember(context.Context, *ListOnlineRoomMemberRequest) (*ListOnlineRoomMemberResponse, error)
 	GetControllerPlayers(context.Context, *GameSrvGetControllerPlayersRequest) (*GameSrvGetControllerPlayersResponse, error)
 	SetControllerPlayer(context.Context, *GameSrvSetControllerPlayerRequest) (*GameSrvSetControllerPlayerResponse, error)
+	GetGraphicOptions(context.Context, *GameSrvGetGraphicOptionsRequest) (*GameSrvGetGraphicOptionsResponse, error)
+	SetGraphicOptions(context.Context, *GameSrvSetGraphicOptionsRequest) (*GameSrvSetGraphicOptionsResponse, error)
 	mustEmbedUnimplementedGameServer()
 }
 
@@ -256,6 +282,12 @@ func (UnimplementedGameServer) GetControllerPlayers(context.Context, *GameSrvGet
 }
 func (UnimplementedGameServer) SetControllerPlayer(context.Context, *GameSrvSetControllerPlayerRequest) (*GameSrvSetControllerPlayerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetControllerPlayer not implemented")
+}
+func (UnimplementedGameServer) GetGraphicOptions(context.Context, *GameSrvGetGraphicOptionsRequest) (*GameSrvGetGraphicOptionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetGraphicOptions not implemented")
+}
+func (UnimplementedGameServer) SetGraphicOptions(context.Context, *GameSrvSetGraphicOptionsRequest) (*GameSrvSetGraphicOptionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetGraphicOptions not implemented")
 }
 func (UnimplementedGameServer) mustEmbedUnimplementedGameServer() {}
 func (UnimplementedGameServer) testEmbeddedByValue()              {}
@@ -512,6 +544,42 @@ func _Game_SetControllerPlayer_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Game_GetGraphicOptions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GameSrvGetGraphicOptionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameServer).GetGraphicOptions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Game_GetGraphicOptions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServer).GetGraphicOptions(ctx, req.(*GameSrvGetGraphicOptionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Game_SetGraphicOptions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GameSrvSetGraphicOptionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameServer).SetGraphicOptions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Game_SetGraphicOptions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServer).SetGraphicOptions(ctx, req.(*GameSrvSetGraphicOptionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Game_ServiceDesc is the grpc.ServiceDesc for Game service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -570,6 +638,14 @@ var Game_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetControllerPlayer",
 			Handler:    _Game_SetControllerPlayer_Handler,
+		},
+		{
+			MethodName: "GetGraphicOptions",
+			Handler:    _Game_GetGraphicOptions_Handler,
+		},
+		{
+			MethodName: "SetGraphicOptions",
+			Handler:    _Game_SetGraphicOptions_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

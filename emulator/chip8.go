@@ -97,3 +97,7 @@ func (c *chip8EmulatorAdapter) ControllerInfos() []ControllerInfo {
 		},
 	}
 }
+
+func (c *chip8EmulatorAdapter) GetGraphicOptions() *GraphicOptions {
+	panic("not implemented")
+}

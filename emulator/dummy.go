@@ -81,6 +81,10 @@ func (d *DummyAdapter) SetGraphicOptions(options *GraphicOptions) {
 	panic("implement me")
 }
 
+func (d *DummyAdapter) GetGraphicOptions() *GraphicOptions {
+	panic("not implemented")
+}
+
 func (d *DummyAdapter) GetCPUBoostRate() float64 {
 	//TODO implement me
 	panic("implement me")

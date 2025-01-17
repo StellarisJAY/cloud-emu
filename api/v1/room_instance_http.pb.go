@@ -21,6 +21,7 @@ const _ = http.SupportPackageIsVersion1
 
 const OperationRoomInstanceAddIceCandidate = "/v1.RoomInstance/AddIceCandidate"
 const OperationRoomInstanceGetControllerPlayers = "/v1.RoomInstance/GetControllerPlayers"
+const OperationRoomInstanceGetGraphicOptions = "/v1.RoomInstance/GetGraphicOptions"
 const OperationRoomInstanceGetRoomInstance = "/v1.RoomInstance/GetRoomInstance"
 const OperationRoomInstanceGetServerIceCandidate = "/v1.RoomInstance/GetServerIceCandidate"
 const OperationRoomInstanceListGameHistory = "/v1.RoomInstance/ListGameHistory"
@@ -28,10 +29,12 @@ const OperationRoomInstanceOpenGameConnection = "/v1.RoomInstance/OpenGameConnec
 const OperationRoomInstanceRestartRoomInstance = "/v1.RoomInstance/RestartRoomInstance"
 const OperationRoomInstanceSdpAnswer = "/v1.RoomInstance/SdpAnswer"
 const OperationRoomInstanceSetControllerPlayer = "/v1.RoomInstance/SetControllerPlayer"
+const OperationRoomInstanceSetGraphicOptions = "/v1.RoomInstance/SetGraphicOptions"
 
 type RoomInstanceHTTPServer interface {
 	AddIceCandidate(context.Context, *AddIceCandidateRequest) (*AddIceCandidateResponse, error)
 	GetControllerPlayers(context.Context, *GetControllerPlayersRequest) (*GetControllerPlayersResponse, error)
+	GetGraphicOptions(context.Context, *GetGraphicOptionsRequest) (*GetGraphicOptionsResponse, error)
 	GetRoomInstance(context.Context, *GetRoomInstanceRequest) (*GetRoomInstanceResponse, error)
 	GetServerIceCandidate(context.Context, *GetServerIceCandidateRequest) (*GetServerIceCandidateResponse, error)
 	ListGameHistory(context.Context, *ListGameHistoryRequest) (*ListGameHistoryResponse, error)
@@ -39,6 +42,7 @@ type RoomInstanceHTTPServer interface {
 	RestartRoomInstance(context.Context, *RestartRoomInstanceRequest) (*RestartRoomInstanceResponse, error)
 	SdpAnswer(context.Context, *SdpAnswerRequest) (*SdpAnswerResponse, error)
 	SetControllerPlayer(context.Context, *SetControllerPlayerRequest) (*SetControllerPlayerResponse, error)
+	SetGraphicOptions(context.Context, *SetGraphicOptionsRequest) (*SetGraphicOptionsResponse, error)
 }
 
 func RegisterRoomInstanceHTTPServer(s *http.Server, srv RoomInstanceHTTPServer) {
@@ -52,6 +56,8 @@ func RegisterRoomInstanceHTTPServer(s *http.Server, srv RoomInstanceHTTPServer) 
 	r.POST("/api/v1/room-instance/restart", _RoomInstance_RestartRoomInstance0_HTTP_Handler(srv))
 	r.GET("/api/v1/room-instance/controller-players", _RoomInstance_GetControllerPlayers0_HTTP_Handler(srv))
 	r.POST("/api/v1/room-instance/controller-players", _RoomInstance_SetControllerPlayer0_HTTP_Handler(srv))
+	r.GET("/api/v1/room-instance/graphic-options", _RoomInstance_GetGraphicOptions0_HTTP_Handler(srv))
+	r.POST("/api/v1/room-instance/graphic-options", _RoomInstance_SetGraphicOptions0_HTTP_Handler(srv))
 }
 
 func _RoomInstance_GetRoomInstance0_HTTP_Handler(srv RoomInstanceHTTPServer) func(ctx http.Context) error {
@@ -240,9 +246,51 @@ func _RoomInstance_SetControllerPlayer0_HTTP_Handler(srv RoomInstanceHTTPServer)
 	}
 }
 
+func _RoomInstance_GetGraphicOptions0_HTTP_Handler(srv RoomInstanceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetGraphicOptionsRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationRoomInstanceGetGraphicOptions)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetGraphicOptions(ctx, req.(*GetGraphicOptionsRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetGraphicOptionsResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _RoomInstance_SetGraphicOptions0_HTTP_Handler(srv RoomInstanceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in SetGraphicOptionsRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationRoomInstanceSetGraphicOptions)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.SetGraphicOptions(ctx, req.(*SetGraphicOptionsRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*SetGraphicOptionsResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 type RoomInstanceHTTPClient interface {
 	AddIceCandidate(ctx context.Context, req *AddIceCandidateRequest, opts ...http.CallOption) (rsp *AddIceCandidateResponse, err error)
 	GetControllerPlayers(ctx context.Context, req *GetControllerPlayersRequest, opts ...http.CallOption) (rsp *GetControllerPlayersResponse, err error)
+	GetGraphicOptions(ctx context.Context, req *GetGraphicOptionsRequest, opts ...http.CallOption) (rsp *GetGraphicOptionsResponse, err error)
 	GetRoomInstance(ctx context.Context, req *GetRoomInstanceRequest, opts ...http.CallOption) (rsp *GetRoomInstanceResponse, err error)
 	GetServerIceCandidate(ctx context.Context, req *GetServerIceCandidateRequest, opts ...http.CallOption) (rsp *GetServerIceCandidateResponse, err error)
 	ListGameHistory(ctx context.Context, req *ListGameHistoryRequest, opts ...http.CallOption) (rsp *ListGameHistoryResponse, err error)
@@ -250,6 +298,7 @@ type RoomInstanceHTTPClient interface {
 	RestartRoomInstance(ctx context.Context, req *RestartRoomInstanceRequest, opts ...http.CallOption) (rsp *RestartRoomInstanceResponse, err error)
 	SdpAnswer(ctx context.Context, req *SdpAnswerRequest, opts ...http.CallOption) (rsp *SdpAnswerResponse, err error)
 	SetControllerPlayer(ctx context.Context, req *SetControllerPlayerRequest, opts ...http.CallOption) (rsp *SetControllerPlayerResponse, err error)
+	SetGraphicOptions(ctx context.Context, req *SetGraphicOptionsRequest, opts ...http.CallOption) (rsp *SetGraphicOptionsResponse, err error)
 }
 
 type RoomInstanceHTTPClientImpl struct {
@@ -278,6 +327,19 @@ func (c *RoomInstanceHTTPClientImpl) GetControllerPlayers(ctx context.Context, i
 	pattern := "/api/v1/room-instance/controller-players"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationRoomInstanceGetControllerPlayers))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *RoomInstanceHTTPClientImpl) GetGraphicOptions(ctx context.Context, in *GetGraphicOptionsRequest, opts ...http.CallOption) (*GetGraphicOptionsResponse, error) {
+	var out GetGraphicOptionsResponse
+	pattern := "/api/v1/room-instance/graphic-options"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationRoomInstanceGetGraphicOptions))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
@@ -369,6 +431,19 @@ func (c *RoomInstanceHTTPClientImpl) SetControllerPlayer(ctx context.Context, in
 	pattern := "/api/v1/room-instance/controller-players"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationRoomInstanceSetControllerPlayer))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *RoomInstanceHTTPClientImpl) SetGraphicOptions(ctx context.Context, in *SetGraphicOptionsRequest, opts ...http.CallOption) (*SetGraphicOptionsResponse, error) {
+	var out SetGraphicOptionsResponse
+	pattern := "/api/v1/room-instance/graphic-options"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationRoomInstanceSetGraphicOptions))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {

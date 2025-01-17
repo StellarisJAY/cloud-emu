@@ -16,6 +16,7 @@ type DawnGbAdapter struct {
 	ticker        *time.Ticker
 	cancel        context.CancelFunc
 	audioBuffer   *bytes.Buffer
+	scale         int
 }
 
 func init() {
@@ -25,8 +26,8 @@ func init() {
 		Provider:               "https://github.com/akatsuki105/dawngb",
 		Description:            "Go语言实现的GB模拟器",
 		Name:                   "DawnGB",
-		SupportSave:            false,
-		SupportGraphicSettings: false,
+		SupportSave:            true,
+		SupportGraphicSettings: true,
 	}
 }
 
@@ -41,6 +42,7 @@ func newDawnGbAdapter(options IEmulatorOptions) (*DawnGbAdapter, error) {
 		frame:         MakeEmptyBaseFrame(image.Rect(0, 0, 160, 144)),
 		frameConsumer: options.FrameConsumer(),
 		audioBuffer:   buffer,
+		scale:         1,
 	}, nil
 }
 
@@ -54,7 +56,7 @@ func (d *DawnGbAdapter) emulatorLoop(ctx context.Context) {
 			start := time.Now()
 			d.g.RunFrame()
 			screen := d.g.Screen()
-			d.frame.FromNRGBAColors(screen)
+			d.frame.FromNRGBAColors(screen, d.scale)
 			d.frameConsumer(d.frame)
 			interval := max(FrameInterval-time.Since(start), time.Millisecond*5)
 			d.ticker.Reset(interval)
@@ -81,13 +83,17 @@ func (d *DawnGbAdapter) Resume() error {
 }
 
 func (d *DawnGbAdapter) Save() (IEmulatorSave, error) {
-	//TODO implement me
-	panic("implement me")
+	saveData, err := d.g.Dump(gb.DUMP_SAVE)
+	if err != nil {
+		return nil, err
+	}
+	return &BaseEmulatorSave{
+		Data: saveData,
+	}, nil
 }
 
 func (d *DawnGbAdapter) LoadSave(save IEmulatorSave) error {
-	//TODO implement me
-	panic("implement me")
+	return d.g.Load(gb.LOAD_SAVE, save.SaveData())
 }
 
 func (d *DawnGbAdapter) Restart(options IEmulatorOptions) error {
@@ -113,8 +119,19 @@ func (d *DawnGbAdapter) SubmitInput(controllerId int, keyCode string, pressed bo
 }
 
 func (d *DawnGbAdapter) SetGraphicOptions(options *GraphicOptions) {
-	//TODO implement me
-	panic("implement me")
+	if options.HighResolution {
+		d.scale = 2
+		d.frame = MakeEmptyBaseFrame(image.Rect(0, 0, 160*d.scale, 144*d.scale))
+	} else {
+		d.scale = 1
+		d.frame = MakeEmptyBaseFrame(image.Rect(0, 0, 160, 144))
+	}
+}
+
+func (g *DawnGbAdapter) GetGraphicOptions() *GraphicOptions {
+	return &GraphicOptions{
+		HighResolution: g.scale > 1,
+	}
 }
 
 func (d *DawnGbAdapter) GetCPUBoostRate() float64 {
@@ -128,7 +145,7 @@ func (d *DawnGbAdapter) SetCPUBoostRate(f float64) float64 {
 }
 
 func (d *DawnGbAdapter) OutputResolution() (width, height int) {
-	return 160, 144
+	return 160 * d.scale, 144 * d.scale
 }
 
 func (d *DawnGbAdapter) MultiController() bool {

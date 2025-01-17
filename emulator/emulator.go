@@ -60,6 +60,7 @@ type IEmulator interface {
 	SubmitInput(controllerId int, keyCode string, pressed bool)
 	// SetGraphicOptions 修改模拟器画面设置
 	SetGraphicOptions(*GraphicOptions)
+	GetGraphicOptions() *GraphicOptions
 
 	GetCPUBoostRate() float64
 	SetCPUBoostRate(float64) float64
@@ -93,8 +94,9 @@ type IEmulatorSave interface {
 }
 
 type GraphicOptions struct {
-	ReverseColor bool
-	Grayscale    bool
+	//ReverseColor   bool
+	//Grayscale      bool
+	HighResolution bool
 }
 
 type BaseEmulatorSave struct {
@@ -192,44 +194,56 @@ func (b *BaseFrame) Read() (image.Image, func(), error) {
 	return b.image, func() {}, nil
 }
 
-func (b *BaseFrame) FromRGBA(rgba *image.RGBA) {
-	for x := 0; x < rgba.Rect.Dx(); x++ {
-		for y := 0; y < rgba.Rect.Dy(); y++ {
-			r0, g0, b0, _ := rgba.At(x, y).RGBA()
+func (b *BaseFrame) FromRGBA(rgba *image.RGBA, scale int) {
+	for x0 := 0; x0 < rgba.Rect.Dx(); x0++ {
+		for y0 := 0; y0 < rgba.Rect.Dy(); y0++ {
+			r0, g0, b0, _ := rgba.At(x0, y0).RGBA()
 			Y, Cb, Cr := color.RGBToYCbCr(uint8(r0), uint8(g0), uint8(b0))
-			yOff := b.image.YOffset(x, y)
-			cOff := b.image.COffset(x, y)
-			b.image.Y[yOff] = Y
-			b.image.Cb[cOff] = Cb
-			b.image.Cr[cOff] = Cr
+			for x := 0; x < scale; x++ {
+				for y := 0; y < scale; y++ {
+					yOff := b.image.YOffset(x0*scale+x, y0*scale+y)
+					cOff := b.image.COffset(x0*scale+x, y0*scale+y)
+					b.image.Y[yOff] = Y
+					b.image.Cb[cOff] = Cb
+					b.image.Cr[cOff] = Cr
+				}
+			}
 		}
 	}
 }
 
-func (b *BaseFrame) FromRGBARaw(data []byte) {
+func (b *BaseFrame) FromRGBARaw(data []byte, scale int) {
 	for i := 0; i < len(data); i += 4 {
 		r0, g0, b0 := data[i], data[i+1], data[i+2]
 		Y, Cb, Cr := color.RGBToYCbCr(r0, g0, b0)
-		x := (i / 4) % b.width
-		y := (i / 4) / b.width
-		yOff := b.image.YOffset(x, y)
-		cOff := b.image.COffset(x, y)
-		b.image.Y[yOff] = Y
-		b.image.Cb[cOff] = Cb
-		b.image.Cr[cOff] = Cr
+		x0 := (i / 4) % (b.width / scale)
+		y0 := (i / 4) / (b.width / scale)
+		for x := 0; x < scale; x++ {
+			for y := 0; y < scale; y++ {
+				yOff := b.image.YOffset(x0*scale+x, y0*scale+y)
+				cOff := b.image.COffset(x0*scale+x, y0*scale+y)
+				b.image.Y[yOff] = Y
+				b.image.Cb[cOff] = Cb
+				b.image.Cr[cOff] = Cr
+			}
+		}
 	}
 }
 
-func (b *BaseFrame) FromNRGBAColors(rgbaColors []color.NRGBA) {
+func (b *BaseFrame) FromNRGBAColors(rgbaColors []color.NRGBA, scale int) {
 	for i, rgba := range rgbaColors {
 		Y, Cb, Cr := color.RGBToYCbCr(rgba.R, rgba.G, rgba.B)
-		x := i % b.width
-		y := i / b.width
-		yOff := b.image.YOffset(x, y)
-		cOff := b.image.COffset(x, y)
-		b.image.Y[yOff] = Y
-		b.image.Cb[cOff] = Cb
-		b.image.Cr[cOff] = Cr
+		x0 := i % (b.width / scale)
+		y0 := i / (b.width / scale)
+		for x := 0; x < scale; x++ {
+			for y := 0; y < scale; y++ {
+				yOff := b.image.YOffset(x0*scale+x, y0*scale+y)
+				cOff := b.image.COffset(x0*scale+x, y0*scale+y)
+				b.image.Y[yOff] = Y
+				b.image.Cb[cOff] = Cb
+				b.image.Cr[cOff] = Cr
+			}
+		}
 	}
 }
 

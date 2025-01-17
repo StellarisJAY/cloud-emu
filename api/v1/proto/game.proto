@@ -20,6 +20,8 @@ service Game {
   rpc ListOnlineRoomMember(ListOnlineRoomMemberRequest) returns (ListOnlineRoomMemberResponse) {}
   rpc GetControllerPlayers(GameSrvGetControllerPlayersRequest) returns (GameSrvGetControllerPlayersResponse) {}
   rpc SetControllerPlayer(GameSrvSetControllerPlayerRequest) returns (GameSrvSetControllerPlayerResponse) {}
+  rpc GetGraphicOptions(GameSrvGetGraphicOptionsRequest) returns (GameSrvGetGraphicOptionsResponse) {}
+  rpc SetGraphicOptions(GameSrvSetGraphicOptionsRequest) returns (GameSrvSetGraphicOptionsResponse) {}
 }
 
 message GetGameInstanceResult {
@@ -208,4 +210,28 @@ message GameSrvSetControllerPlayerResponse {
   int32 code = 1;
   string message = 2;
   repeated GameSrvControllerPlayer data = 3;
+}
+
+message GameSrvGraphicOptions {
+  bool highResolution = 1;
+}
+
+message GameSrvGetGraphicOptionsRequest {
+  int64 roomId = 1;
+}
+
+message GameSrvGetGraphicOptionsResponse {
+  int32 code = 1;
+  string message = 2;
+  GameSrvGraphicOptions data = 3;
+}
+
+message GameSrvSetGraphicOptionsRequest {
+  int64 roomId = 1;
+  GameSrvGraphicOptions graphicOptions = 2;
+}
+
+message GameSrvSetGraphicOptionsResponse {
+  int32 code = 1;
+  string message = 2;
 }

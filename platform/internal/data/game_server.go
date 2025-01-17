@@ -319,3 +319,46 @@ func (g *GameServerRepo) SetControllerPlayer(ctx context.Context, cps []*biz.Con
 	}
 	return nil
 }
+
+func (g *GameServerRepo) GetGraphicOptions(ctx context.Context, instance *biz.RoomInstance) (*biz.GraphicOptions, error) {
+	client, err := common.NewGRPCClient(instance.ServerIp, int(instance.RpcPort))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+	gameServer := v1.NewGameClient(client)
+	resp, err := gameServer.GetGraphicOptions(ctx, &v1.GameSrvGetGraphicOptionsRequest{
+		RoomId: instance.RoomId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if resp.Code != 200 {
+		return nil, errors.New(int(resp.Code), "Service Error", resp.Message)
+	}
+	return &biz.GraphicOptions{
+		HighResolution: resp.Data.HighResolution,
+	}, nil
+}
+
+func (g *GameServerRepo) SetGraphicOptions(ctx context.Context, instance *biz.RoomInstance, options *biz.GraphicOptions) error {
+	client, err := common.NewGRPCClient(instance.ServerIp, int(instance.RpcPort))
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+	gameServer := v1.NewGameClient(client)
+	resp, err := gameServer.SetGraphicOptions(ctx, &v1.GameSrvSetGraphicOptionsRequest{
+		RoomId: instance.RoomId,
+		GraphicOptions: &v1.GameSrvGraphicOptions{
+			HighResolution: options.HighResolution,
+		},
+	})
+	if err != nil {
+		return err
+	}
+	if resp.Code != 200 {
+		return errors.New(int(resp.Code), "Service Error", resp.Message)
+	}
+	return nil
+}

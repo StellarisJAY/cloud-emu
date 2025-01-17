@@ -15,6 +15,7 @@ type MagiaAdapter struct {
 	frameConsumer func(frame IFrame)
 	ticker        *time.Ticker
 	buttons       [10]bool
+	scale         int
 }
 
 func init() {
@@ -25,7 +26,7 @@ func init() {
 		Description:            "Go语言实现的GBA模拟器",
 		Name:                   "Magia",
 		SupportSave:            false,
-		SupportGraphicSettings: false,
+		SupportGraphicSettings: true,
 	}
 }
 
@@ -36,6 +37,7 @@ func newMagiaAdapter(options IEmulatorOptions) (*MagiaAdapter, error) {
 		game:          options.Game(),
 		frame:         MakeEmptyBaseFrame(image.Rect(0, 0, 240, 160)),
 		frameConsumer: options.FrameConsumer(),
+		scale:         1,
 	}
 	handlers := [10]func() bool{}
 	for i := 0; i < 10; i++ {
@@ -69,7 +71,7 @@ func (m *MagiaAdapter) emulatorLoop(ctx context.Context) {
 		case <-m.ticker.C:
 			start := time.Now()
 			m.e.Update()
-			m.frame.FromRGBARaw(m.e.Draw())
+			m.frame.FromRGBARaw(m.e.Draw(), m.scale)
 			m.frameConsumer(m.frame)
 			processTime := time.Since(start)
 			interval := max(FrameInterval-processTime, time.Millisecond*5)
@@ -144,8 +146,20 @@ func (m *MagiaAdapter) SubmitInput(_ int, keyCode string, pressed bool) {
 }
 
 func (m *MagiaAdapter) SetGraphicOptions(options *GraphicOptions) {
-	//TODO implement me
-	panic("implement me")
+	_ = m.Pause()
+	if options.HighResolution {
+		m.scale = 2
+	} else {
+		m.scale = 1
+	}
+	m.frame = MakeEmptyBaseFrame(image.Rect(0, 0, 240*m.scale, 160*m.scale))
+	_ = m.Resume()
+}
+
+func (m *MagiaAdapter) GetGraphicOptions() *GraphicOptions {
+	return &GraphicOptions{
+		HighResolution: m.scale > 1,
+	}
 }
 
 func (m *MagiaAdapter) GetCPUBoostRate() float64 {
@@ -159,7 +173,7 @@ func (m *MagiaAdapter) SetCPUBoostRate(f float64) float64 {
 }
 
 func (m *MagiaAdapter) OutputResolution() (width, height int) {
-	return 240, 160
+	return 240 * m.scale, 160 * m.scale
 }
 
 func (m *MagiaAdapter) MultiController() bool {

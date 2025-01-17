@@ -314,3 +314,24 @@ func (uc *GameServerUseCase) SetControllerPlayers(_ context.Context, roomId int6
 	instance.SetController(players)
 	return nil
 }
+
+func (uc *GameServerUseCase) GetGraphicOptions(_ context.Context, roomId int64) (*game.GraphicOptions, error) {
+	uc.mutex.RLock()
+	instance, ok := uc.gameInstances[roomId]
+	uc.mutex.RUnlock()
+	if !ok {
+		return nil, v1.ErrorServiceError("游戏实例不存在")
+	}
+	return instance.GetGraphicOptions(), nil
+}
+
+func (uc *GameServerUseCase) SetGraphicOptions(_ context.Context, roomId int64, opts *game.GraphicOptions) error {
+	uc.mutex.RLock()
+	instance, ok := uc.gameInstances[roomId]
+	uc.mutex.RUnlock()
+	if !ok {
+		return v1.ErrorServiceError("游戏实例不存在")
+	}
+	instance.SetGraphicOptions(opts)
+	return nil
+}
