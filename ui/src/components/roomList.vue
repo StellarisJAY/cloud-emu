@@ -40,7 +40,6 @@
             <ul style="text-align: left">
               <li>房主：{{ item["hostName"] }}</li>
               <li>人数：{{ item["memberCount"] }}/{{ item["memberLimit"] }}</li>
-              <li>模拟器：{{ item["emulatorName"] }}</li>
               <li>访问权限：{{ getJoinTypeName(item["joinType"]) }}</li>
               <li>创建时间：{{ item["addTime"] }}</li>
             </ul>
@@ -49,7 +48,7 @@
       </template>
     </a-list>
 
-    <a-pagination v-model:current="listRoomQuery.page" v-model:pageSize="listRoomQuery.pageSize" :total="totalPages">
+    <a-pagination v-model:current="listRoomQuery.page" v-model:pageSize="listRoomQuery.pageSize" :total="total" @change="onPageChange">
     </a-pagination>
 
     <a-modal v-if="joined" :open="createRoomModalOpen" title="新建房间">
@@ -148,7 +147,7 @@ export default {
         page: 1,
         pageSize: 10
       },
-      totalPages: 1,
+      total: 0,
     }
   },
   created() {
@@ -160,6 +159,10 @@ export default {
     this.joinTypeQueryOptions = configs.getEnumOptionsWithAll("roomJoinTypeEnum");
   },
   methods: {
+    onPageChange(page) {
+      this.listRoomQuery.page = page;
+      this.listRoom();
+    },
     listRoom(e) {
       if (this.joined) {
         this.listJoinedRooms()
@@ -170,13 +173,13 @@ export default {
     listJoinedRooms() {
       roomAPI.listJoinedRooms(this.listRoomQuery).then(resp=>{
         this.rooms = resp.data;
-        this.totalPages = Math.ceil(resp.total / this.listRoomQuery.pageSize);
+        this.total = resp.total;
       });
     },
     listAllRooms() {
       roomAPI.listAllRooms(this.listRoomQuery).then(resp=>{
         this.rooms = resp.data;
-        this.totalPages = Math.ceil(resp.total / this.listRoomQuery.pageSize);
+        this.total = resp.total;
       });
     },
     createRoom() {

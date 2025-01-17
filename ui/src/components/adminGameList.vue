@@ -3,9 +3,9 @@
     <template #extra>
       <a-button type="primary" @click="showUploadModal">上传</a-button>
     </template>
-    <a-table :columns="columns"
-             :data-source="games"
-             :pagination="{pageSize: query.pageSize, current: query.page}"></a-table>
+    <a-table :columns="columns" size="small"
+             :data-source="games" :pagination="false" style="width: 100%"></a-table>
+    <a-pagination v-model:current="query.page" :total="total" v-model:page-size="query.pageSize" @change="onPaginationChange"></a-pagination>
   </a-card>
   <a-modal :open="uploadModalOpen" @cancel="onUploadClose" @ok="uploadFile">
     <a-form>
@@ -27,7 +27,7 @@
 
 <script>
 import {Row, Col, List, Card, Modal, UploadDragger, message} from "ant-design-vue";
-import { Button, Table, Form, Select, Input} from "ant-design-vue";
+import { Button, Table, Form, Select, Input, Pagination} from "ant-design-vue";
 import api from "../api/request.js";
 import emulatorAPI from "../api/emulator.js";
 
@@ -46,6 +46,7 @@ export default {
     ASelect: Select,
     AForm: Form,
     AInput: Input,
+    APagination: Pagination,
   },
   data() {
     return {
@@ -56,6 +57,7 @@ export default {
         page: 1,
         pageSize: 10,
       },
+      total: 0,
       columns: [
         {title: "游戏名称", dataIndex: "gameName"},
         {title: "模拟器类型", dataIndex: "emulatorType"},
@@ -86,9 +88,14 @@ export default {
   unmounted() {
   },
   methods: {
+    onPaginationChange(page) {
+      this.query.page = page;
+      this.listGames();
+    },
     listGames() {
       api.get("/game", this.query).then(res => {
         this.games = res.data;
+        this.total = res["total"];
         this.games.forEach(game => {
           game.size = this.formatGameSize(game.size);
         });

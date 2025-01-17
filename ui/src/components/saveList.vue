@@ -11,7 +11,7 @@
         <a-button danger @click="deleteSavedGame(item['saveId'])" :disabled="loadSaveBtnDisable">删除</a-button>
       </a-list-item>
     </template>
-    <a-pagination :page="page" :pageSize="pageSize" :total="totalPages" @change="onPaginationChange"></a-pagination>
+    <a-pagination v-model:current="page" v-model:pageSize="pageSize" :total="total" @change="onPaginationChange"></a-pagination>
   </a-list>
 </template>
 
@@ -40,7 +40,7 @@ export default {
       saves: [],
       page: 1,
       pageSize: 10,
-      totalPages: 1,
+      total: 0,
 
       loadSaveBtnDisable: false,
     }
@@ -57,7 +57,7 @@ export default {
         pageSize: this.pageSize,
       }).then(resp => {
         this.saves = resp.data;
-        this.totalPages = Math.ceil(resp["total"] / this.pageSize);
+        this.total = resp.total;
       }).catch(_ => {
         message.error("获取存档列表失败");
       });
