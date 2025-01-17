@@ -94,7 +94,7 @@ func (uc *GameServerUseCase) GetRoomInstanceToken(_ context.Context, roomId int6
 	_, ok := uc.gameInstances[roomId]
 	uc.mutex.RUnlock()
 	if !ok {
-		return "", v1.ErrorAccessDenied("连接失败，游戏实例不存在")
+		return "", v1.ErrorNotFound("连接失败，游戏实例不存在")
 	}
 	uid, _ := uuid.NewUUID()
 	token := uid.String()

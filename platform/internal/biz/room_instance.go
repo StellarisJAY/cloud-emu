@@ -111,12 +111,16 @@ func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int6
 		if instance != nil {
 			// 获取连接token
 			token, err := uc.gameServerRepo.GetRoomInstanceToken(ctx, instance, roomId, auth)
-			if err != nil {
-				return v1.ErrorServiceError("获取token失败")
+			if err == nil {
+				result.RoomInstance = *instance
+				result.AccessToken = token
+				return nil
 			}
-			result.RoomInstance = *instance
-			result.AccessToken = token
-			return nil
+			// 游戏服务器没有该房间实例，重新创建实例
+			if errors.Reason(err) != v1.ErrorReason_NOT_FOUND.String() {
+				uc.logger.Error("获取房间实例连接token错误:", err)
+				return v1.ErrorServiceError("获取房间实例连接token出错")
+			}
 		}
 		if err != nil {
 			return v1.ErrorServiceError("获取房间实例出错")

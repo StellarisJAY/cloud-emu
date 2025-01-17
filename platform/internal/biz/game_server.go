@@ -64,13 +64,14 @@ type GameServerRepo interface {
 	RestartGameInstance(ctx context.Context, instance *RoomInstance, params RestartParams) error
 	// SaveGame 保存游戏
 	SaveGame(ctx context.Context, instance *RoomInstance, roomId, userId int64) (emulatorId, gameId int64, data []byte, err error)
-
+	// LoadSave 加载游戏存档
 	LoadSave(ctx context.Context, instance *RoomInstance, params LoadSaveParams) error
-
+	// GetControllerPlayers 获取控制器绑定的玩家
 	GetControllerPlayers(ctx context.Context, instance *RoomInstance) ([]*ControllerPlayer, error)
-
+	// SetControllerPlayer 设置控制器绑定的玩家
 	SetControllerPlayer(context.Context, []*ControllerPlayer, *RoomInstance) error
-
+	// GetGraphicOptions 获取游戏画面设置
 	GetGraphicOptions(ctx context.Context, instance *RoomInstance) (*GraphicOptions, error)
+	// SetGraphicOptions 设置游戏画面设置
 	SetGraphicOptions(ctx context.Context, instance *RoomInstance, options *GraphicOptions) error
 }
