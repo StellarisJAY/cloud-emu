@@ -22,6 +22,7 @@ service Game {
   rpc SetControllerPlayer(GameSrvSetControllerPlayerRequest) returns (GameSrvSetControllerPlayerResponse) {}
   rpc GetGraphicOptions(GameSrvGetGraphicOptionsRequest) returns (GameSrvGetGraphicOptionsResponse) {}
   rpc SetGraphicOptions(GameSrvSetGraphicOptionsRequest) returns (GameSrvSetGraphicOptionsResponse) {}
+  rpc ApplyMacro(GameSrvApplyMacroRequest) returns (GameSrvApplyMacroResponse) {}
 }
 
 message GetGameInstanceResult {
@@ -232,6 +233,17 @@ message GameSrvSetGraphicOptionsRequest {
 }
 
 message GameSrvSetGraphicOptionsResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message GameSrvApplyMacroRequest {
+  int64 roomId = 1;
+  repeated string keys = 2;
+  int64 userId = 3;
+}
+
+message GameSrvApplyMacroResponse {
   int32 code = 1;
   string message = 2;
 }

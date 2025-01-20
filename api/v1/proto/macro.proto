@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "platform/api/v1;v1";
+
+service Macro {
+  rpc ListMacros(ListMacrosRequest) returns (ListMacrosResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/macros"
+    };
+  }
+  rpc CreateMacro(CreateMacroRequest) returns (CreateMacroResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/macros"
+      body: "*"
+    };
+  }
+  rpc DeleteMacro(DeleteMacroRequest) returns (DeleteMacroResponse) {
+    option (google.api.http) = {
+      delete: "/v1/macros"
+    };
+  }
+  rpc ApplyMacro(ApplyMacroRequest) returns (ApplyMacroResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/macros/apply"
+      body: "*"
+    };
+  }
+}
+
+message MacroDto {
+  int64 macroId = 1;
+  string macroName = 2;
+  string emulatorType = 3;
+  int64 addUser = 4;
+  repeated string keyCodes = 5;
+  string shortcutKey = 6;
+}
+
+message ListMacrosRequest {
+  string emulatorType = 1;
+}
+
+message ListMacrosResponse {
+  int32 code = 1;
+  string message = 2;
+  repeated MacroDto data = 3;
+}
+
+message CreateMacroRequest {
+  string macroName = 1;
+  string emulatorType = 2;
+  repeated string keyCodes = 3;
+  string shortcutKey = 4;
+}
+
+message CreateMacroResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message DeleteMacroRequest {
+  int64 macroId = 1;
+}
+
+message DeleteMacroResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message ApplyMacroRequest {
+  int64 macroId = 1;
+  int64 roomId = 2;
+}
+
+message ApplyMacroResponse {
+  int32 code = 1;
+  string message = 2;
+}

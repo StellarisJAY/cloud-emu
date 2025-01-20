@@ -250,3 +250,11 @@ func (g *GameService) SetGraphicOptions(ctx context.Context, request *v1.GameSrv
 	}
 	return &v1.GameSrvSetGraphicOptionsResponse{Code: 200}, nil
 }
+
+func (g *GameService) ApplyMacro(ctx context.Context, request *v1.GameSrvApplyMacroRequest) (*v1.GameSrvApplyMacroResponse, error) {
+	err := g.uc.ApplyMacro(ctx, request.RoomId, request.Keys, request.UserId)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.GameSrvApplyMacroResponse{Code: 200}, nil
+}

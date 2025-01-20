@@ -34,6 +34,7 @@ const (
 	Game_SetControllerPlayer_FullMethodName        = "/v1.Game/SetControllerPlayer"
 	Game_GetGraphicOptions_FullMethodName          = "/v1.Game/GetGraphicOptions"
 	Game_SetGraphicOptions_FullMethodName          = "/v1.Game/SetGraphicOptions"
+	Game_ApplyMacro_FullMethodName                 = "/v1.Game/ApplyMacro"
 )
 
 // GameClient is the client API for Game service.
@@ -55,6 +56,7 @@ type GameClient interface {
 	SetControllerPlayer(ctx context.Context, in *GameSrvSetControllerPlayerRequest, opts ...grpc.CallOption) (*GameSrvSetControllerPlayerResponse, error)
 	GetGraphicOptions(ctx context.Context, in *GameSrvGetGraphicOptionsRequest, opts ...grpc.CallOption) (*GameSrvGetGraphicOptionsResponse, error)
 	SetGraphicOptions(ctx context.Context, in *GameSrvSetGraphicOptionsRequest, opts ...grpc.CallOption) (*GameSrvSetGraphicOptionsResponse, error)
+	ApplyMacro(ctx context.Context, in *GameSrvApplyMacroRequest, opts ...grpc.CallOption) (*GameSrvApplyMacroResponse, error)
 }
 
 type gameClient struct {
@@ -215,6 +217,16 @@ func (c *gameClient) SetGraphicOptions(ctx context.Context, in *GameSrvSetGraphi
 	return out, nil
 }
 
+func (c *gameClient) ApplyMacro(ctx context.Context, in *GameSrvApplyMacroRequest, opts ...grpc.CallOption) (*GameSrvApplyMacroResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GameSrvApplyMacroResponse)
+	err := c.cc.Invoke(ctx, Game_ApplyMacro_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GameServer is the server API for Game service.
 // All implementations must embed UnimplementedGameServer
 // for forward compatibility.
@@ -234,6 +246,7 @@ type GameServer interface {
 	SetControllerPlayer(context.Context, *GameSrvSetControllerPlayerRequest) (*GameSrvSetControllerPlayerResponse, error)
 	GetGraphicOptions(context.Context, *GameSrvGetGraphicOptionsRequest) (*GameSrvGetGraphicOptionsResponse, error)
 	SetGraphicOptions(context.Context, *GameSrvSetGraphicOptionsRequest) (*GameSrvSetGraphicOptionsResponse, error)
+	ApplyMacro(context.Context, *GameSrvApplyMacroRequest) (*GameSrvApplyMacroResponse, error)
 	mustEmbedUnimplementedGameServer()
 }
 
@@ -288,6 +301,9 @@ func (UnimplementedGameServer) GetGraphicOptions(context.Context, *GameSrvGetGra
 }
 func (UnimplementedGameServer) SetGraphicOptions(context.Context, *GameSrvSetGraphicOptionsRequest) (*GameSrvSetGraphicOptionsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetGraphicOptions not implemented")
+}
+func (UnimplementedGameServer) ApplyMacro(context.Context, *GameSrvApplyMacroRequest) (*GameSrvApplyMacroResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ApplyMacro not implemented")
 }
 func (UnimplementedGameServer) mustEmbedUnimplementedGameServer() {}
 func (UnimplementedGameServer) testEmbeddedByValue()              {}
@@ -580,6 +596,24 @@ func _Game_SetGraphicOptions_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Game_ApplyMacro_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GameSrvApplyMacroRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameServer).ApplyMacro(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Game_ApplyMacro_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServer).ApplyMacro(ctx, req.(*GameSrvApplyMacroRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Game_ServiceDesc is the grpc.ServiceDesc for Game service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -646,6 +680,10 @@ var Game_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetGraphicOptions",
 			Handler:    _Game_SetGraphicOptions_Handler,
+		},
+		{
+			MethodName: "ApplyMacro",
+			Handler:    _Game_ApplyMacro_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

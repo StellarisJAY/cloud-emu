@@ -435,6 +435,58 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.GetLoginUserDetailResponse'
+    /api/v1/macros:
+        get:
+            tags:
+                - Macro
+            operationId: Macro_ListMacros
+            parameters:
+                - name: emulatorType
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.ListMacrosResponse'
+        post:
+            tags:
+                - Macro
+            operationId: Macro_CreateMacro
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.CreateMacroRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.CreateMacroResponse'
+    /api/v1/macros/apply:
+        post:
+            tags:
+                - Macro
+            operationId: Macro_ApplyMacro
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.ApplyMacroRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.ApplyMacroResponse'
     /api/v1/register:
         post:
             tags:
@@ -936,6 +988,23 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.GetUserDetailResponse'
+    /v1/macros:
+        delete:
+            tags:
+                - Macro
+            operationId: Macro_DeleteMacro
+            parameters:
+                - name: macroId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.DeleteMacroResponse'
 components:
     schemas:
         v1.ActivateAccountRequest:
@@ -961,6 +1030,21 @@ components:
                 iceCandidate:
                     type: string
         v1.AddIceCandidateResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+        v1.ApplyMacroRequest:
+            type: object
+            properties:
+                macroId:
+                    type: string
+                roomId:
+                    type: string
+        v1.ApplyMacroResponse:
             type: object
             properties:
                 code:
@@ -1025,6 +1109,27 @@ components:
                     format: int32
                 message:
                     type: string
+        v1.CreateMacroRequest:
+            type: object
+            properties:
+                macroName:
+                    type: string
+                emulatorType:
+                    type: string
+                keyCodes:
+                    type: array
+                    items:
+                        type: string
+                shortcutKey:
+                    type: string
+        v1.CreateMacroResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
         v1.CreateRoomRequest:
             type: object
             properties:
@@ -1067,6 +1172,14 @@ components:
                 message:
                     type: string
         v1.DeleteKeyboardBindingResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+        v1.DeleteMacroResponse:
             type: object
             properties:
                 code:
@@ -1393,6 +1506,18 @@ components:
                 total:
                     type: integer
                     format: int32
+        v1.ListMacrosResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/v1.MacroDto'
         v1.ListRoomMemberResponse:
             type: object
             properties:
@@ -1469,6 +1594,23 @@ components:
                 message:
                     type: string
                 data:
+                    type: string
+        v1.MacroDto:
+            type: object
+            properties:
+                macroId:
+                    type: string
+                macroName:
+                    type: string
+                emulatorType:
+                    type: string
+                addUser:
+                    type: string
+                keyCodes:
+                    type: array
+                    items:
+                        type: string
+                shortcutKey:
                     type: string
         v1.NotificationDto:
             type: object
@@ -1818,6 +1960,7 @@ tags:
     - name: Emulator
     - name: GameSave
     - name: KeyboardBinding
+    - name: Macro
     - name: Notification
     - name: Room
     - name: RoomInstance

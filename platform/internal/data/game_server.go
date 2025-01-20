@@ -362,3 +362,24 @@ func (g *GameServerRepo) SetGraphicOptions(ctx context.Context, instance *biz.Ro
 	}
 	return nil
 }
+
+func (g *GameServerRepo) ApplyMacro(ctx context.Context, instance *biz.RoomInstance, macro *biz.Macro, userId int64) error {
+	client, err := common.NewGRPCClient(instance.ServerIp, int(instance.RpcPort))
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+	gameServer := v1.NewGameClient(client)
+	resp, err := gameServer.ApplyMacro(ctx, &v1.GameSrvApplyMacroRequest{
+		RoomId: instance.RoomId,
+		Keys:   macro.KeyCodes,
+		UserId: userId,
+	})
+	if err != nil {
+		return err
+	}
+	if resp.Code != 200 {
+		return errors.New(int(resp.Code), "Service Error", resp.Message)
+	}
+	return nil
+}

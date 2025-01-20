@@ -74,4 +74,6 @@ type GameServerRepo interface {
 	GetGraphicOptions(ctx context.Context, instance *RoomInstance) (*GraphicOptions, error)
 	// SetGraphicOptions 设置游戏画面设置
 	SetGraphicOptions(ctx context.Context, instance *RoomInstance, options *GraphicOptions) error
+	// ApplyMacro 应用宏
+	ApplyMacro(ctx context.Context, instance *RoomInstance, macro *Macro, userId int64) error
 }

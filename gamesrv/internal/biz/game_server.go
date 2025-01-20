@@ -336,3 +336,14 @@ func (uc *GameServerUseCase) SetGraphicOptions(_ context.Context, roomId int64, 
 	instance.SetGraphicOptions(opts)
 	return nil
 }
+
+func (uc *GameServerUseCase) ApplyMacro(_ context.Context, roomId int64, keys []string, userId int64) error {
+	uc.mutex.RLock()
+	instance, ok := uc.gameInstances[roomId]
+	uc.mutex.RUnlock()
+	if !ok {
+		return v1.ErrorServiceError("游戏实例不存在")
+	}
+	instance.ApplyMacro(userId, keys)
+	return nil
+}

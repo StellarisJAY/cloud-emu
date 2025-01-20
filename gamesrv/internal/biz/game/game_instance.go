@@ -32,6 +32,7 @@ const (
 	MsgResetController   byte = 19
 	MsgGetController     byte = 20
 	MsgGetGraphicOptions byte = 21
+	MsgApplyMacro        byte = 22
 )
 
 const (
@@ -188,6 +189,9 @@ func (g *Instance) MessageHandler(ctx context.Context) {
 					Success: true,
 					Data:    players,
 				}
+			case MsgApplyMacro:
+				g.handleApplyMacro(msg.Data.(applyMacroRequest))
+				msg.resultChan <- ConsumerResult{Success: true}
 			default:
 			}
 		}

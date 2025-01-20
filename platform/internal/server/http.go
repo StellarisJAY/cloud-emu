@@ -33,7 +33,8 @@ func NewWhiteListMatcher() selector.MatchFunc {
 func NewHTTPServer(c *conf.Server, ac *conf.Auth, userSrv v1.UserServer, roomSrv v1.RoomServer,
 	roomInstanceSrv v1.RoomInstanceServer, notificationServer v1.NotificationServer, roomMemberServer v1.RoomMemberServer,
 	emulatorServer v1.EmulatorServer, emulatorGameUC *biz.EmulatorGameUseCase, buttonLayoutServer v1.ButtonLayoutServer,
-	keyboardBindingServer v1.KeyboardBindingServer, gameSaveServer v1.GameSaveServer, logger log.Logger) *http.Server {
+	keyboardBindingServer v1.KeyboardBindingServer, gameSaveServer v1.GameSaveServer, macroServer v1.MacroServer,
+	logger log.Logger) *http.Server {
 	var opts = []http.ServerOption{
 		http.Timeout(3 * time.Second),
 		http.Middleware(
@@ -75,5 +76,6 @@ func NewHTTPServer(c *conf.Server, ac *conf.Auth, userSrv v1.UserServer, roomSrv
 	v1.RegisterButtonLayoutHTTPServer(srv, buttonLayoutServer)
 	v1.RegisterKeyboardBindingHTTPServer(srv, keyboardBindingServer)
 	v1.RegisterGameSaveHTTPServer(srv, gameSaveServer)
+	v1.RegisterMacroHTTPServer(srv, macroServer)
 	return srv
 }
