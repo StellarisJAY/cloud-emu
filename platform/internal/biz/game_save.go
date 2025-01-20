@@ -188,5 +188,11 @@ func (uc *GameSaveUseCase) LoadSave(ctx context.Context, roomId, userId int64, s
 		uc.logger.Error("加载存档错误:", err)
 		return v1.ErrorServiceError("加载存档错误")
 	}
+
+	ri.EmulatorId = save.EmulatorId
+	ri.EmulatorType = save.EmulatorType
+	ri.EmulatorCode = save.EmulatorCode
+	ri.GameId = save.GameId
+	_ = uc.roomInstanceRepo.SaveRoomInstance(ctx, ri)
 	return nil
 }

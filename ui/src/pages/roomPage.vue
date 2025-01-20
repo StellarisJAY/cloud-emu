@@ -10,13 +10,17 @@
           <a-button class="toolbar-button" type="primary" :disabled="saveBtnDisabled" @click="saveGame"
                     style="width: 90%">保存</a-button>
         </a-col>
-        <a-col :span="12">
-          <a-button class="toolbar-button" type="primary" @click="openRoomMemberDrawer" style="width: 90%">房间设置</a-button>
-        </a-col>
         <a-col :span="6">
           <a-button class="toolbar-button" type="primary" :disabled="loadBtnDisabled" @click="openSavedGamesDrawer"
                     style="width: 90%">读档</a-button>
         </a-col>
+        <a-col :span="6">
+          <a-button class="toolbar-button" type="primary" @click="openMacroListDrawer" style="width: 90%">按键宏</a-button>
+        </a-col>
+        <a-col :span="6">
+          <a-button class="toolbar-button" type="primary" @click="openRoomMemberDrawer" style="width: 90%">房间设置</a-button>
+        </a-col>
+
       </a-row>
       <a-row style="height: 70%">
         <div id="video-mask">
@@ -69,6 +73,9 @@
     <emulator-info-drawer :room-id="roomId"></emulator-info-drawer>
   </a-drawer>
 
+  <a-drawer v-model:open="macroListOpen" placement="right" title="按键宏">
+    <MacroList :show-action="true" :room-id="roomId"/>
+  </a-drawer>
   <div id="left-control-buttons">
     <a-row style="height: 33.33%;">
       <a-col :span="8" id="slot-l1"></a-col>
@@ -125,6 +132,7 @@ import EmulatorInfoDrawer from "../components/emulatorInfoDrawer.vue";
 import roomMemberAPI from "../api/roomMember.js";
 import router from "../router/index.js";
 import roomAPI from "../api/room.js";
+import MacroList from "../components/macroList.vue";
 
 const MessageGameButtonPressed = 0
 const MessageGameButtonReleased = 1
@@ -155,6 +163,7 @@ export default {
     SaveList,
     ASlider: Slider,
     EmulatorInfoDrawer,
+    MacroList: MacroList,
   },
   data() {
     return {
@@ -163,6 +172,7 @@ export default {
       chatModalOpen: false,
       emulatorInfoDrawerOpen: false,
       savedGameOpen: false,
+      macroListOpen: false,
 
       roomId: null,
       memberSelf: {},
@@ -305,6 +315,10 @@ export default {
     openRoomMemberDrawer() {
       this.membersDrawerOpen = true;
       dispatchEvent(new Event("memberDrawerOpen"));
+    },
+
+    openMacroListDrawer() {
+      this.macroListOpen = true;
     },
 
     openEmulatorInfoDrawer() {

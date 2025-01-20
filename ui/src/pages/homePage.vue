@@ -7,7 +7,8 @@
                 <a-menu-item key="3">通知</a-menu-item>
                 <a-menu-item key="4">个人</a-menu-item>
                 <a-menu-item key="6" v-if="isAdmin">游戏列表</a-menu-item>
-              <a-menu-item key="7" v-if="isAdmin">模拟器</a-menu-item>
+                <a-menu-item key="7" v-if="isAdmin">模拟器</a-menu-item>
+              <a-menu-item key="8" v-if="isAdmin">宏设置</a-menu-item>
                 <a-menu-item key="5" @click="logout">注销</a-menu-item>
             </a-menu>
         </a-layout-header>
@@ -20,6 +21,7 @@
                 <UserInfo v-else-if="headerSelectedKeys[0] === '4'"/>
                 <AdminGameList v-else-if="headerSelectedKeys[0] === '6'"></AdminGameList>
                 <AdminEmulatorList v-else-if="headerSelectedKeys[0] === '7'"/>
+                <MacroSettings v-else-if="headerSelectedKeys[0] === '8'"/>
             </a-col>
         </a-row>
     </a-layout>
@@ -37,6 +39,7 @@ import AdminInfo from "../components/adminGameList.vue";
 import userAPI from "../api/user.js";
 import AdminGameList from "../components/adminGameList.vue";
 import AdminEmulatorList from "../components/adminEmulatorList.vue";
+import MacroSettings from "../components/macroSettings.vue";
 
 export default {
     components: {
@@ -54,6 +57,7 @@ export default {
         UserInfo: UserInfo,
         AdminInfo: AdminInfo,
         AdminEmulatorList: AdminEmulatorList,
+        MacroSettings: MacroSettings,
     },
     data() {
         return {

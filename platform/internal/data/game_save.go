@@ -72,7 +72,8 @@ func (g *GameSaveRepo) List(ctx context.Context, query biz.GameSaveQuery, p *com
 	d := g.d.DB(ctx).Table(GameSaveTableName + " gs").Select("gs.*, emulator_name, game_name, room_name, e.emulator_type, e.emulator_code").
 		Joins("INNER JOIN emulator e ON gs.emulator_id = e.emulator_id").
 		Joins("INNER JOIN sys_room sr ON sr.room_id = gs.room_id").
-		Joins("INNER JOIN emulator_game eg ON gs.game_id = eg.game_id")
+		Joins("INNER JOIN emulator_game eg ON gs.game_id = eg.game_id").
+		Order("gs.save_id DESC")
 	if query.RoomId != 0 {
 		d = d.Where("gs.room_id = ?", query.RoomId)
 	}
