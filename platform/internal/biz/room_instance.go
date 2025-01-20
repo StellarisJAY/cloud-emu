@@ -34,6 +34,7 @@ type RoomInstanceRepo interface {
 	ListOnlineRoomMembers(ctx context.Context, roomInstance *RoomInstance) ([]int64, error)
 	SaveRoomInstance(ctx context.Context, roomInstance *RoomInstance) error
 	GetRoomInstance(_ context.Context, roomId int64) (*RoomInstance, error)
+	DeleteRoomInstance(ctx context.Context, roomId int64) error
 }
 
 type RoomInstance struct {
@@ -120,6 +121,10 @@ func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int6
 			if errors.Reason(err) != v1.ErrorReason_NOT_FOUND.String() {
 				uc.logger.Error("获取房间实例连接token错误:", err)
 				return v1.ErrorServiceError("获取房间实例连接token出错")
+			}
+			if err := uc.repo.DeleteRoomInstance(ctx, roomId); err != nil {
+				uc.logger.Error("删除房间实例错误:", err)
+				return v1.ErrorServiceError("创建房间实例出错")
 			}
 		}
 		if err != nil {

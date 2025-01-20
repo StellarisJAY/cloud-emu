@@ -108,6 +108,8 @@ func MakeGameInstance(roomId, emulatorId, gameId int64, emulatorCode string, gam
 		emulatorId:           emulatorId,
 		gameId:               gameId,
 		EmulatorCode:         emulatorCode,
+		audioSampleChan:      make(chan float32, DefaultAudioSampleRate/200),
+		audioSampleRate:      DefaultAudioSampleRate,
 	}
 
 	// 创建dummy模拟器，输出静止介绍画面
@@ -231,15 +233,6 @@ func (g *Instance) handleMsgNewConn(conn *Connection) ConsumerResult {
 		delete(g.connections, conn.userId)
 	}
 	g.connections[conn.userId] = conn
-	var controllers []int
-	for c, v := range g.controllerMap {
-		if v == conn.userId {
-			controllers = append(controllers, c)
-		}
-	}
-	for _, c := range controllers {
-		delete(g.controllerMap, c)
-	}
 	return ConsumerResult{Success: true}
 }
 
@@ -271,6 +264,11 @@ func (g *Instance) handleMsgCloseConn(conn *Connection) {
 	active := g.filterConnection(func(conn *Connection) bool {
 		return conn.pc.ConnectionState() == webrtc.PeerConnectionStateConnected
 	})
+	for k, v := range g.controllerMap {
+		if v == conn.userId {
+			delete(g.controllerMap, k)
+		}
+	}
 	// 在Pause之前必须释放连接列表锁，避免 模拟器goroutine和messageConsumer死锁
 	// 死锁循环等待：模拟器RenderCallback等待获取g.mutex, 之后消费processor.channel(无缓冲通道)
 	//             closeConn获取到了g.mutex, 之后向processor.channel发送消息。

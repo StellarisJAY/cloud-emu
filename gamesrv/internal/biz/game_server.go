@@ -80,6 +80,7 @@ func (uc *GameServerUseCase) CreateRoomInstance(_ context.Context, params Create
 	}
 	consumerCtx, consumerCancel := context.WithCancel(context.Background())
 	go instance.MessageHandler(consumerCtx)
+	go instance.AudioSampleListener(consumerCtx, uc.logger)
 	instance.Cancel = consumerCancel
 	uc.mutex.Lock()
 	defer uc.mutex.Unlock()

@@ -17,6 +17,7 @@ type DawnGbAdapter struct {
 	cancel        context.CancelFunc
 	audioBuffer   *bytes.Buffer
 	scale         int
+	audioChan     chan float32
 }
 
 func init() {
@@ -43,6 +44,7 @@ func newDawnGbAdapter(options IEmulatorOptions) (*DawnGbAdapter, error) {
 		frameConsumer: options.FrameConsumer(),
 		audioBuffer:   buffer,
 		scale:         1,
+		audioChan:     options.AudioSampleChan(),
 	}, nil
 }
 
@@ -58,6 +60,18 @@ func (d *DawnGbAdapter) emulatorLoop(ctx context.Context) {
 			screen := d.g.Screen()
 			d.frame.FromNRGBAColors(screen, d.scale)
 			d.frameConsumer(d.frame)
+		LOOP:
+			for {
+				b, err := d.audioBuffer.ReadByte()
+				if err != nil {
+					break LOOP
+				}
+				select {
+				case d.audioChan <- float32(b):
+				default:
+					break LOOP
+				}
+			}
 			interval := max(FrameInterval-time.Since(start), time.Millisecond*5)
 			d.ticker.Reset(interval)
 		}

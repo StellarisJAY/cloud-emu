@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func (g *Instance) audioSampleListener(ctx context.Context, logger *log.Helper) {
+func (g *Instance) AudioSampleListener(ctx context.Context, logger *log.Helper) {
 	// 每5毫秒发送一次，根据采样率计算buffer大小
 	buffer := make([]float32, 0, g.audioSampleRate*5/1000)
 	for {

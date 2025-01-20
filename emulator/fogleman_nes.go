@@ -41,6 +41,8 @@ func newFoglemanNesAdapter(options IEmulatorOptions) (*FoglemanNesAdapter, error
 	if err != nil {
 		return nil, err
 	}
+	console.SetAudioSampleRate(float64(options.AudioSampleRate()))
+	console.SetAudioChannel(options.AudioSampleChan())
 	adapter.console = console
 	adapter.frameConsumer = options.FrameConsumer()
 	return adapter, nil

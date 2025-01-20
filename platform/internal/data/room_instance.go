@@ -90,6 +90,11 @@ func (r *RoomInstanceRepo) GetRoomInstance(_ context.Context, roomId int64) (*bi
 	return result, nil
 }
 
+func (r *RoomInstanceRepo) DeleteRoomInstance(ctx context.Context, roomId int64) error {
+	_, err := r.data.consul.KV().Delete(fmt.Sprintf("cloudemu/room-instance/%d", roomId), nil)
+	return err
+}
+
 func convertRoomInstanceBizToEntity(dto *biz.RoomInstance) *RoomInstanceEntity {
 	return &RoomInstanceEntity{
 		RoomInstanceId: dto.RoomInstanceId,
