@@ -1,1 +1,7 @@
-Cloud game platform for retro game emulators.
+基于WebRTC的支持多种模拟器的云游戏平台。
+
+- 支持NES,GameBoy,GBC,GBA等多种模拟器
+- 最多四人多人游戏
+- 模拟器热重启，切换游戏或模拟器不会断开连接
+- 支持存档、按键宏
+- 分布式架构，游戏服务可扩展
