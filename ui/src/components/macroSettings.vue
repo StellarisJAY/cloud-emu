@@ -1,6 +1,6 @@
 <template>
   <a-card :bordered="false" class="center-card">
-    <macro-list :show-action="true"/>
+    <macro-list :show-action="false"/>
   </a-card>
 </template>
 

@@ -30,7 +30,7 @@ func (g *Instance) sendAudioSamples(buffer []float32, logger *log.Helper) {
 	if err != nil {
 		logger.Error("encode audio samples error: ", err)
 	}
-	sample := media.Sample{Data: data, Timestamp: time.Now()}
+	sample := media.Sample{Data: data, Timestamp: time.Now(), Duration: time.Millisecond * 5}
 	g.mutex.RLock()
 	defer g.mutex.RUnlock()
 	for _, conn := range g.connections {

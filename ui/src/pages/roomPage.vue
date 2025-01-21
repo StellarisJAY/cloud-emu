@@ -363,11 +363,13 @@ export default {
       });
       // on remote track
       pc.ontrack = ev => {
-        console.log("on track: ", ev);
-        if (ev.track.kind === "video") {
-          document.getElementById("video").srcObject = ev.streams[0]
-          document.getElementById("video").autoplay = true
-          document.getElementById("video").controls = true
+        const video = document.getElementById("video");
+        if (video.srcObject) {
+          video.srcObject.addTrack(ev.track);
+        }else {
+          video.srcObject = ev.streams[0];
+          video.autoplay = true;
+          video.controls = false;
         }
       };
 
