@@ -26,7 +26,8 @@ func (g *GameSaveService) ListGameSave(ctx context.Context, request *v1.ListGame
 		Page:     request.Page,
 		PageSize: request.PageSize,
 	}
-	query := biz.GameSaveQuery{RoomId: request.RoomId, EmulatorId: request.EmulatorId, GameId: request.GameId}
+	query := biz.GameSaveQuery{RoomId: request.RoomId, EmulatorId: request.EmulatorId, GameId: request.GameId,
+		HostId: request.HostId}
 	saves, err := g.gameSaveUC.List(ctx, query, &p)
 	if err != nil {
 		e := errors.FromError(err)
@@ -46,6 +47,7 @@ func (g *GameSaveService) ListGameSave(ctx context.Context, request *v1.ListGame
 			EmulatorName: save.EmulatorName,
 			GameName:     save.GameName,
 			AddTime:      save.AddTime.Format(time.DateTime),
+			SaveName:     save.SaveName,
 		}
 	}
 	return &v1.ListGameSaveResponse{
@@ -96,4 +98,32 @@ func (g *GameSaveService) SaveGame(ctx context.Context, request *v1.SaveGameRequ
 		}, nil
 	}
 	return &v1.SaveGameResponse{Code: 200, Message: "保存成功"}, nil
+}
+
+func (g *GameSaveService) TransferSave(ctx context.Context, request *v1.TransferSaveRequest) (*v1.TransferSaveResponse, error) {
+	c, _ := jwt.FromContext(ctx)
+	claims := c.(*biz.LoginClaims)
+	err := g.gameSaveUC.Transfer(ctx, request.SaveId, request.RoomId, claims.UserId)
+	if err != nil {
+		e := errors.FromError(err)
+		return &v1.TransferSaveResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
+	}
+	return &v1.TransferSaveResponse{Code: 200, Message: "转移成功"}, nil
+}
+
+func (g *GameSaveService) RenameSave(ctx context.Context, request *v1.RenameSaveRequest) (*v1.RenameSaveResponse, error) {
+	c, _ := jwt.FromContext(ctx)
+	claims := c.(*biz.LoginClaims)
+	err := g.gameSaveUC.Rename(ctx, request.SaveId, claims.UserId, request.SaveName)
+	if err != nil {
+		e := errors.FromError(err)
+		return &v1.RenameSaveResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
+	}
+	return &v1.RenameSaveResponse{Code: 200, Message: "重命名成功"}, nil
 }

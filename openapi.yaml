@@ -228,6 +228,10 @@ paths:
                   schema:
                     type: integer
                     format: int32
+                - name: hostId
+                  in: query
+                  schema:
+                    type: string
             responses:
                 "200":
                     description: OK
@@ -253,6 +257,24 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.LoadSaveResponse'
+    /api/v1/game-save/rename:
+        put:
+            tags:
+                - GameSave
+            operationId: GameSave_RenameSave
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.RenameSaveRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.RenameSaveResponse'
     /api/v1/game-save/save:
         post:
             tags:
@@ -271,6 +293,24 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.SaveGameResponse'
+    /api/v1/game-save/transfer:
+        post:
+            tags:
+                - GameSave
+            operationId: GameSave_TransferSave
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.TransferSaveRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.TransferSaveResponse'
     /api/v1/game-save/{saveId}:
         delete:
             tags:
@@ -887,6 +927,10 @@ paths:
                   in: query
                   schema:
                     type: string
+                - name: hostOnly
+                  in: query
+                  schema:
+                    type: boolean
             responses:
                 "200":
                     description: OK
@@ -927,6 +971,10 @@ paths:
                   in: query
                   schema:
                     type: string
+                - name: hostOnly
+                  in: query
+                  schema:
+                    type: boolean
             responses:
                 "200":
                     description: OK
@@ -1252,6 +1300,8 @@ components:
                 emulatorName:
                     type: string
                 gameName:
+                    type: string
+                saveName:
                     type: string
         v1.GetControllerPlayersResponse:
             type: object
@@ -1673,6 +1723,21 @@ components:
                     format: int32
                 message:
                     type: string
+        v1.RenameSaveRequest:
+            type: object
+            properties:
+                saveId:
+                    type: string
+                saveName:
+                    type: string
+        v1.RenameSaveResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
         v1.RestartRoomInstanceRequest:
             type: object
             properties:
@@ -1822,6 +1887,21 @@ components:
                 data:
                     $ref: '#/components/schemas/v1.GraphicOptions'
         v1.SetGraphicOptionsResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+        v1.TransferSaveRequest:
+            type: object
+            properties:
+                saveId:
+                    type: string
+                roomId:
+                    type: string
+        v1.TransferSaveResponse:
             type: object
             properties:
                 code:

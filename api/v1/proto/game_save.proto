@@ -29,6 +29,18 @@ service GameSave {
       body: "*"
     };
   }
+  rpc TransferSave(TransferSaveRequest) returns (TransferSaveResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/game-save/transfer"
+      body: "*"
+    };
+  }
+  rpc RenameSave(RenameSaveRequest) returns (RenameSaveResponse) {
+    option (google.api.http) = {
+      put: "/api/v1/game-save/rename"
+      body: "*"
+    };
+  }
 }
 
 message GameSaveDto {
@@ -40,6 +52,7 @@ message GameSaveDto {
   string roomName = 7;
   string emulatorName = 8;
   string gameName = 9;
+  string saveName = 10;
 }
 
 message ListGameSaveRequest {
@@ -48,6 +61,7 @@ message ListGameSaveRequest {
   int64 gameId = 3;
   int32 page = 4;
   int32 pageSize = 5;
+  int64 hostId = 6;
 }
 
 message ListGameSaveResponse {
@@ -81,6 +95,26 @@ message SaveGameRequest {
 }
 
 message SaveGameResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message TransferSaveRequest {
+  int64 saveId = 1;
+  int64 roomId = 2;
+}
+
+message TransferSaveResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message RenameSaveRequest {
+  int64 saveId = 1;
+  string saveName = 2;
+}
+
+message RenameSaveResponse {
   int32 code = 1;
   string message = 2;
 }

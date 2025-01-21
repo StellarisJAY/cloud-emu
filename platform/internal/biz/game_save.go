@@ -2,6 +2,8 @@ package biz
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	v1 "github.com/StellrisJAY/cloud-emu/api/v1"
 	"github.com/StellrisJAY/cloud-emu/common"
@@ -22,12 +24,16 @@ type GameSave struct {
 	GameName     string
 	AddTime      time.Time
 	FileUrl      string
+	SaveName     string
+	Md5          string
 }
 
 type GameSaveQuery struct {
 	RoomId     int64
 	EmulatorId int64
 	GameId     int64
+	SaveName   string
+	HostId     int64
 }
 
 type GameSaveRepo interface {
@@ -39,6 +45,8 @@ type GameSaveRepo interface {
 	DeleteFile(ctx context.Context, save *GameSave) error
 	Get(ctx context.Context, saveId int64) (*GameSave, error)
 	GetDetail(ctx context.Context, saveId int64) (*GameSave, error)
+	Rename(ctx context.Context, saveId int64, saveName string) error
+	Exist(ctx context.Context, roomId int64, md5 string) (bool, error)
 }
 
 type GameSaveUseCase struct {
@@ -125,7 +133,10 @@ func (uc *GameSaveUseCase) SaveGame(ctx context.Context, roomId, userId int64) e
 			GameId:     gameId,
 			AddTime:    time.Now(),
 		}
+		save.SaveName = save.AddTime.Format(time.DateTime)
 		save.FileUrl = fmt.Sprintf("mongo://cloud-emu/game_save/%d", save.SaveId)
+		hash := md5.Sum(saveData)
+		save.Md5 = hex.EncodeToString(hash[:])
 		if err := uc.gameSaveRepo.Create(ctx, save); err != nil {
 			uc.logger.Error("保存游戏sql错误:", err)
 			return v1.ErrorServiceError("保存出错")
@@ -195,4 +206,65 @@ func (uc *GameSaveUseCase) LoadSave(ctx context.Context, roomId, userId int64, s
 	ri.GameId = save.GameId
 	_ = uc.roomInstanceRepo.SaveRoomInstance(ctx, ri)
 	return nil
+}
+
+func (uc *GameSaveUseCase) Transfer(ctx context.Context, saveId, roomId, userId int64) error {
+	return uc.tm.Tx(ctx, func(ctx context.Context) error {
+		member, _ := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId)
+		if member == nil || member.Role != RoomMemberRoleHost {
+			return v1.ErrorAccessDenied("没有操作权限")
+		}
+		save, _ := uc.gameSaveRepo.GetDetail(ctx, saveId)
+		if save == nil {
+			return v1.ErrorNotFound("获取存档失败")
+		}
+		if save.RoomId == roomId {
+			return v1.ErrorServiceError("无法转移到相同房间")
+		}
+		exist, err := uc.gameSaveRepo.Exist(ctx, roomId, save.Md5)
+		if err != nil {
+			uc.logger.Error("获取存档失败:", err)
+			return v1.ErrorServiceError("转移存档失败")
+		}
+		if exist {
+			return v1.ErrorServiceError("存档已存在")
+		}
+		data, err := uc.gameSaveRepo.Download(ctx, save)
+		if err != nil {
+			uc.logger.Error("获取存档数据失败:", err)
+			return v1.ErrorServiceError("获取存档失败")
+		}
+		save.RoomId = roomId
+		save.SaveId = uc.snowflake.Generate().Int64()
+		save.FileUrl = fmt.Sprintf("mongo://cloud-emu/game_save/%d", save.SaveId)
+		save.AddTime = time.Now()
+		save.SaveName = save.AddTime.Format(time.DateTime)
+		if err := uc.gameSaveRepo.Create(ctx, save); err != nil {
+			uc.logger.Error("转移存档失败:", err)
+			return v1.ErrorServiceError("转移存档失败")
+		}
+		if err := uc.gameSaveRepo.Upload(ctx, save, data); err != nil {
+			uc.logger.Error("转移存档上传数据失败:", err)
+			return v1.ErrorServiceError("转移存档失败")
+		}
+		return nil
+	})
+}
+
+func (uc *GameSaveUseCase) Rename(ctx context.Context, saveId, userId int64, saveName string) error {
+	return uc.tm.Tx(ctx, func(ctx context.Context) error {
+		save, _ := uc.gameSaveRepo.GetDetail(ctx, saveId)
+		if save == nil {
+			return v1.ErrorNotFound("重命名失败")
+		}
+		member, _ := uc.roomMemberRepo.GetByRoomAndUser(ctx, save.RoomId, userId)
+		if member == nil || member.Role != RoomMemberRoleHost {
+			return v1.ErrorAccessDenied("没有权限")
+		}
+		if err := uc.gameSaveRepo.Rename(ctx, saveId, saveName); err != nil {
+			uc.logger.Error("重命名存档失败:", err)
+			return v1.ErrorServiceError("重命名失败")
+		}
+		return nil
+	})
 }

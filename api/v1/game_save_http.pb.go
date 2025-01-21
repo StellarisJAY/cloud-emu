@@ -22,13 +22,17 @@ const _ = http.SupportPackageIsVersion1
 const OperationGameSaveDeleteGameSave = "/v1.GameSave/DeleteGameSave"
 const OperationGameSaveListGameSave = "/v1.GameSave/ListGameSave"
 const OperationGameSaveLoadSave = "/v1.GameSave/LoadSave"
+const OperationGameSaveRenameSave = "/v1.GameSave/RenameSave"
 const OperationGameSaveSaveGame = "/v1.GameSave/SaveGame"
+const OperationGameSaveTransferSave = "/v1.GameSave/TransferSave"
 
 type GameSaveHTTPServer interface {
 	DeleteGameSave(context.Context, *DeleteGameSaveRequest) (*DeleteGameSaveResponse, error)
 	ListGameSave(context.Context, *ListGameSaveRequest) (*ListGameSaveResponse, error)
 	LoadSave(context.Context, *LoadSaveRequest) (*LoadSaveResponse, error)
+	RenameSave(context.Context, *RenameSaveRequest) (*RenameSaveResponse, error)
 	SaveGame(context.Context, *SaveGameRequest) (*SaveGameResponse, error)
+	TransferSave(context.Context, *TransferSaveRequest) (*TransferSaveResponse, error)
 }
 
 func RegisterGameSaveHTTPServer(s *http.Server, srv GameSaveHTTPServer) {
@@ -37,6 +41,8 @@ func RegisterGameSaveHTTPServer(s *http.Server, srv GameSaveHTTPServer) {
 	r.DELETE("/api/v1/game-save/{saveId}", _GameSave_DeleteGameSave0_HTTP_Handler(srv))
 	r.POST("/api/v1/game-save/load", _GameSave_LoadSave0_HTTP_Handler(srv))
 	r.POST("/api/v1/game-save/save", _GameSave_SaveGame0_HTTP_Handler(srv))
+	r.POST("/api/v1/game-save/transfer", _GameSave_TransferSave0_HTTP_Handler(srv))
+	r.PUT("/api/v1/game-save/rename", _GameSave_RenameSave0_HTTP_Handler(srv))
 }
 
 func _GameSave_ListGameSave0_HTTP_Handler(srv GameSaveHTTPServer) func(ctx http.Context) error {
@@ -124,11 +130,57 @@ func _GameSave_SaveGame0_HTTP_Handler(srv GameSaveHTTPServer) func(ctx http.Cont
 	}
 }
 
+func _GameSave_TransferSave0_HTTP_Handler(srv GameSaveHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in TransferSaveRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationGameSaveTransferSave)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.TransferSave(ctx, req.(*TransferSaveRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*TransferSaveResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _GameSave_RenameSave0_HTTP_Handler(srv GameSaveHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in RenameSaveRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationGameSaveRenameSave)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.RenameSave(ctx, req.(*RenameSaveRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*RenameSaveResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 type GameSaveHTTPClient interface {
 	DeleteGameSave(ctx context.Context, req *DeleteGameSaveRequest, opts ...http.CallOption) (rsp *DeleteGameSaveResponse, err error)
 	ListGameSave(ctx context.Context, req *ListGameSaveRequest, opts ...http.CallOption) (rsp *ListGameSaveResponse, err error)
 	LoadSave(ctx context.Context, req *LoadSaveRequest, opts ...http.CallOption) (rsp *LoadSaveResponse, err error)
+	RenameSave(ctx context.Context, req *RenameSaveRequest, opts ...http.CallOption) (rsp *RenameSaveResponse, err error)
 	SaveGame(ctx context.Context, req *SaveGameRequest, opts ...http.CallOption) (rsp *SaveGameResponse, err error)
+	TransferSave(ctx context.Context, req *TransferSaveRequest, opts ...http.CallOption) (rsp *TransferSaveResponse, err error)
 }
 
 type GameSaveHTTPClientImpl struct {
@@ -178,11 +230,37 @@ func (c *GameSaveHTTPClientImpl) LoadSave(ctx context.Context, in *LoadSaveReque
 	return &out, nil
 }
 
+func (c *GameSaveHTTPClientImpl) RenameSave(ctx context.Context, in *RenameSaveRequest, opts ...http.CallOption) (*RenameSaveResponse, error) {
+	var out RenameSaveResponse
+	pattern := "/api/v1/game-save/rename"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationGameSaveRenameSave))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 func (c *GameSaveHTTPClientImpl) SaveGame(ctx context.Context, in *SaveGameRequest, opts ...http.CallOption) (*SaveGameResponse, error) {
 	var out SaveGameResponse
 	pattern := "/api/v1/game-save/save"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationGameSaveSaveGame))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *GameSaveHTTPClientImpl) TransferSave(ctx context.Context, in *TransferSaveRequest, opts ...http.CallOption) (*TransferSaveResponse, error) {
+	var out TransferSaveResponse
+	pattern := "/api/v1/game-save/transfer"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationGameSaveTransferSave))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {

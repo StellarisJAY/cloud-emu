@@ -79,6 +79,9 @@ func (r *RoomRepo) ListJoinedRooms(ctx context.Context, query biz.RoomQuery, pag
 	if query.JoinType != 0 {
 		db = db.Where("join_type = ?", query.JoinType)
 	}
+	if query.HostOnly {
+		db = db.Where("rm.role = ?", biz.RoomMemberRoleHost)
+	}
 	err := db.Scopes(common.WithPagination(page)).WithContext(ctx).Scan(&rooms).Error
 	if err != nil {
 		return nil, err

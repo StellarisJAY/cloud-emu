@@ -24,6 +24,8 @@ type GameSaveEntity struct {
 	GameId     int64
 	AddTime    time.Time
 	FileUrl    string
+	SaveName   string
+	Md5        string
 }
 
 const GameSaveTableName = "game_save"
@@ -83,6 +85,9 @@ func (g *GameSaveRepo) List(ctx context.Context, query biz.GameSaveQuery, p *com
 	if query.GameId != 0 {
 		d = d.Where("gs.game_id = ?", query.GameId)
 	}
+	if query.HostId != 0 {
+		d = d.Where("sr.host_id = ?", query.HostId)
+	}
 	err := d.Scopes(common.WithPagination(p)).WithContext(ctx).Scan(&result).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -139,6 +144,30 @@ func (g *GameSaveRepo) GetDetail(ctx context.Context, saveId int64) (*biz.GameSa
 	}
 }
 
+func (g *GameSaveRepo) Rename(ctx context.Context, saveId int64, saveName string) error {
+	return g.d.DB(ctx).Table(GameSaveTableName).
+		Where("save_id =?", saveId).
+		Update("save_name", saveName).
+		WithContext(ctx).
+		Error
+}
+
+func (g *GameSaveRepo) Exist(ctx context.Context, roomId int64, md5 string) (bool, error) {
+	var result int64
+	err := g.d.DB(ctx).Table(GameSaveTableName).
+		Where("room_id =?", roomId).
+		Where("md5 =?", md5).
+		WithContext(ctx).
+		Count(&result).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return result > 0, nil
+}
+
 func gameSaveBizToEntity(save *biz.GameSave) *GameSaveEntity {
 	return &GameSaveEntity{
 		SaveId:     save.SaveId,
@@ -147,5 +176,7 @@ func gameSaveBizToEntity(save *biz.GameSave) *GameSaveEntity {
 		GameId:     save.GameId,
 		AddTime:    save.AddTime,
 		FileUrl:    save.FileUrl,
+		SaveName:   save.SaveName,
+		Md5:        save.Md5,
 	}
 }

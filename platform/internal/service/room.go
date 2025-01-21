@@ -28,6 +28,7 @@ func (r *RoomService) ListMyRooms(ctx context.Context, request *v1.ListRoomReque
 		HostName:   request.HostName,
 		JoinType:   request.JoinType,
 		EmulatorId: request.EmulatorId,
+		HostOnly:   request.HostOnly,
 	}
 	page := &common.Pagination{
 		Page:     request.Page,

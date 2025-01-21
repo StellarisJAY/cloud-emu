@@ -23,6 +23,8 @@ const (
 	GameSave_DeleteGameSave_FullMethodName = "/v1.GameSave/DeleteGameSave"
 	GameSave_LoadSave_FullMethodName       = "/v1.GameSave/LoadSave"
 	GameSave_SaveGame_FullMethodName       = "/v1.GameSave/SaveGame"
+	GameSave_TransferSave_FullMethodName   = "/v1.GameSave/TransferSave"
+	GameSave_RenameSave_FullMethodName     = "/v1.GameSave/RenameSave"
 )
 
 // GameSaveClient is the client API for GameSave service.
@@ -33,6 +35,8 @@ type GameSaveClient interface {
 	DeleteGameSave(ctx context.Context, in *DeleteGameSaveRequest, opts ...grpc.CallOption) (*DeleteGameSaveResponse, error)
 	LoadSave(ctx context.Context, in *LoadSaveRequest, opts ...grpc.CallOption) (*LoadSaveResponse, error)
 	SaveGame(ctx context.Context, in *SaveGameRequest, opts ...grpc.CallOption) (*SaveGameResponse, error)
+	TransferSave(ctx context.Context, in *TransferSaveRequest, opts ...grpc.CallOption) (*TransferSaveResponse, error)
+	RenameSave(ctx context.Context, in *RenameSaveRequest, opts ...grpc.CallOption) (*RenameSaveResponse, error)
 }
 
 type gameSaveClient struct {
@@ -83,6 +87,26 @@ func (c *gameSaveClient) SaveGame(ctx context.Context, in *SaveGameRequest, opts
 	return out, nil
 }
 
+func (c *gameSaveClient) TransferSave(ctx context.Context, in *TransferSaveRequest, opts ...grpc.CallOption) (*TransferSaveResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TransferSaveResponse)
+	err := c.cc.Invoke(ctx, GameSave_TransferSave_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gameSaveClient) RenameSave(ctx context.Context, in *RenameSaveRequest, opts ...grpc.CallOption) (*RenameSaveResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RenameSaveResponse)
+	err := c.cc.Invoke(ctx, GameSave_RenameSave_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GameSaveServer is the server API for GameSave service.
 // All implementations must embed UnimplementedGameSaveServer
 // for forward compatibility.
@@ -91,6 +115,8 @@ type GameSaveServer interface {
 	DeleteGameSave(context.Context, *DeleteGameSaveRequest) (*DeleteGameSaveResponse, error)
 	LoadSave(context.Context, *LoadSaveRequest) (*LoadSaveResponse, error)
 	SaveGame(context.Context, *SaveGameRequest) (*SaveGameResponse, error)
+	TransferSave(context.Context, *TransferSaveRequest) (*TransferSaveResponse, error)
+	RenameSave(context.Context, *RenameSaveRequest) (*RenameSaveResponse, error)
 	mustEmbedUnimplementedGameSaveServer()
 }
 
@@ -112,6 +138,12 @@ func (UnimplementedGameSaveServer) LoadSave(context.Context, *LoadSaveRequest) (
 }
 func (UnimplementedGameSaveServer) SaveGame(context.Context, *SaveGameRequest) (*SaveGameResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SaveGame not implemented")
+}
+func (UnimplementedGameSaveServer) TransferSave(context.Context, *TransferSaveRequest) (*TransferSaveResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TransferSave not implemented")
+}
+func (UnimplementedGameSaveServer) RenameSave(context.Context, *RenameSaveRequest) (*RenameSaveResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RenameSave not implemented")
 }
 func (UnimplementedGameSaveServer) mustEmbedUnimplementedGameSaveServer() {}
 func (UnimplementedGameSaveServer) testEmbeddedByValue()                  {}
@@ -206,6 +238,42 @@ func _GameSave_SaveGame_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GameSave_TransferSave_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TransferSaveRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameSaveServer).TransferSave(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GameSave_TransferSave_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameSaveServer).TransferSave(ctx, req.(*TransferSaveRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GameSave_RenameSave_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RenameSaveRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameSaveServer).RenameSave(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GameSave_RenameSave_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameSaveServer).RenameSave(ctx, req.(*RenameSaveRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GameSave_ServiceDesc is the grpc.ServiceDesc for GameSave service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -228,6 +296,14 @@ var GameSave_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SaveGame",
 			Handler:    _GameSave_SaveGame_Handler,
+		},
+		{
+			MethodName: "TransferSave",
+			Handler:    _GameSave_TransferSave_Handler,
+		},
+		{
+			MethodName: "RenameSave",
+			Handler:    _GameSave_RenameSave_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

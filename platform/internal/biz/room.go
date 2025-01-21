@@ -50,6 +50,7 @@ type RoomQuery struct {
 	JoinType   int32
 	MemberId   int64
 	EmulatorId int64
+	HostOnly   bool
 }
 
 const (

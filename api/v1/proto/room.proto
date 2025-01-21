@@ -71,6 +71,7 @@ message ListRoomRequest {
   string hostName = 4;
   int32 joinType = 5;
   int64 emulatorId = 6;
+  bool hostOnly = 7;
 }
 
 message ListRoomResponse {
