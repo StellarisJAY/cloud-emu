@@ -188,7 +188,7 @@ export default {
       saveBtnDisabled: true,
       loadBtnDisabled: true,
       chatBtnDisabled: true,
-      emulatorBtnDisabled: false,
+      emulatorBtnDisabled: true,
       graphicOptionsDisabled: true,
       emulatorSpeedSliderDisabled: true,
 
