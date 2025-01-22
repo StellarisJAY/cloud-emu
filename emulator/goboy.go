@@ -15,6 +15,7 @@ type GoboyAdapter struct {
 	frame         *GoboyFrame
 	frameConsumer func(frame IFrame)
 	game          string
+	boost         float64
 }
 
 func init() {
@@ -39,6 +40,7 @@ func newGoboyAdapter(options IEmulatorOptions) (IEmulator, error) {
 		frameConsumer: options.FrameConsumer(),
 		frame:         newGoboyFrame(),
 		game:          options.Game(),
+		boost:         1.0,
 	}
 	return g, nil
 }
@@ -51,7 +53,7 @@ func (g *GoboyAdapter) Start() error {
 }
 
 func (g *GoboyAdapter) emulatorLoop(ctx context.Context) {
-	g.ticker = time.NewTicker(FrameInterval)
+	g.ticker = time.NewTicker(getFrameInterval(g.boost))
 	defer func() {
 		if r := recover(); r != nil {
 		}
@@ -66,7 +68,7 @@ func (g *GoboyAdapter) emulatorLoop(ctx context.Context) {
 			g.gb.Update()
 			g.frame.reset(g.gb.PreparedData)
 			g.frameConsumer(g.frame)
-			interval := max(FrameInterval-time.Since(start), time.Millisecond*5)
+			interval := max(getFrameInterval(g.boost)-time.Since(start), time.Millisecond*5)
 			g.ticker.Reset(interval)
 		}
 	}
@@ -168,13 +170,12 @@ func (g *GoboyAdapter) GetGraphicOptions() *GraphicOptions {
 }
 
 func (g *GoboyAdapter) GetCPUBoostRate() float64 {
-	//TODO implement me
-	panic("implement me")
+	return g.boost
 }
 
 func (g *GoboyAdapter) SetCPUBoostRate(f float64) float64 {
-	//TODO implement me
-	panic("implement me")
+	g.boost = max(0.5, min(f, 2.0))
+	return g.boost
 }
 
 func (g *GoboyAdapter) OutputResolution() (width, height int) {

@@ -41,6 +41,8 @@ type RoomUseCase struct {
 	redSync          *redsync.Redsync
 	logger           *log.Helper
 	roomInstanceRepo RoomInstanceRepo
+	gameSaveRepo     GameSaveRepo
+	gameServerRepo   GameServerRepo
 }
 
 type RoomQuery struct {
@@ -67,9 +69,11 @@ type RoomRepo interface {
 }
 
 func NewRoomUseCase(repo RoomRepo, snowflakeId *snowflake.Node, userRepo UserRepo, tm Transaction,
-	roomMemberRepo RoomMemberRepo, redsync *redsync.Redsync, logger log.Logger, roomInstanceRepo RoomInstanceRepo) *RoomUseCase {
+	roomMemberRepo RoomMemberRepo, redsync *redsync.Redsync, logger log.Logger, roomInstanceRepo RoomInstanceRepo,
+	gameSaveRepo GameSaveRepo, gameServerRepo GameServerRepo) *RoomUseCase {
 	return &RoomUseCase{repo: repo, snowflakeId: snowflakeId, userRepo: userRepo, tm: tm, roomMemberRepo: roomMemberRepo,
-		redSync: redsync, logger: log.NewHelper(logger), roomInstanceRepo: roomInstanceRepo}
+		redSync: redsync, logger: log.NewHelper(logger), roomInstanceRepo: roomInstanceRepo, gameSaveRepo: gameSaveRepo,
+		gameServerRepo: gameServerRepo}
 }
 
 func (r *RoomUseCase) Create(ctx context.Context, room *Room) error {
@@ -221,6 +225,39 @@ func (r *RoomUseCase) UpdateRoom(ctx context.Context, room *Room, userId int64) 
 		if err := r.repo.Update(ctx, room); err != nil {
 			r.logger.Error("修改房间错误 ", err)
 			return v1.ErrorServiceError("修改房间错误")
+		}
+		return nil
+	})
+}
+
+func (r *RoomUseCase) Delete(ctx context.Context, roomId int64, userId int64) error {
+	return r.tm.Tx(ctx, func(ctx context.Context) error {
+		rm, _ := r.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId)
+		if rm == nil || rm.Role != RoomMemberRoleHost {
+			return v1.ErrorAccessDenied("没有权限删除房间")
+		}
+		// 删除所有房间成员
+		if err := r.roomMemberRepo.DeleteRoomAllMembers(ctx, roomId); err != nil {
+			r.logger.Error("删除所有房间成员错误 ", err)
+			return v1.ErrorServiceError("删除失败")
+		}
+		// 删除所有存档
+		if err := r.gameSaveRepo.DeleteRoomAllSaves(ctx, roomId); err != nil {
+			r.logger.Error("删除所有房间存档错误 ", err)
+			return v1.ErrorServiceError("删除失败")
+		}
+		instance, err := r.roomInstanceRepo.GetRoomInstance(ctx, roomId)
+		if err != nil {
+			r.logger.Error("获取房间实例错误 ", err)
+			return v1.ErrorServiceError("删除失败")
+		}
+		if instance != nil {
+			// 关闭房间实例
+			if err := r.gameServerRepo.Shutdown(ctx, instance); err != nil {
+				r.logger.Error("关闭房间实例错误  ", err)
+				return v1.ErrorServiceError("删除失败")
+			}
+			_ = r.roomInstanceRepo.DeleteRoomInstance(ctx, roomId)
 		}
 		return nil
 	})

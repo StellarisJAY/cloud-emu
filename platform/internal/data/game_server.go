@@ -383,3 +383,61 @@ func (g *GameServerRepo) ApplyMacro(ctx context.Context, instance *biz.RoomInsta
 	}
 	return nil
 }
+
+func (g *GameServerRepo) Shutdown(ctx context.Context, instance *biz.RoomInstance) error {
+	client, err := common.NewGRPCClient(instance.ServerIp, int(instance.RpcPort))
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+	gameServer := v1.NewGameClient(client)
+	resp, err := gameServer.ShutdownRoomInstance(ctx, &v1.ShutdownRoomInstanceRequest{
+		RoomId: instance.RoomId,
+	})
+	if err != nil {
+		return err
+	}
+	if resp.Code != 200 {
+		return errors.New(int(resp.Code), "Service Error", resp.Message)
+	}
+	return nil
+}
+
+func (g *GameServerRepo) GetEmulatorSpeed(ctx context.Context, instance *biz.RoomInstance) (float64, error) {
+	client, err := common.NewGRPCClient(instance.ServerIp, int(instance.RpcPort))
+	if err != nil {
+		return 0, err
+	}
+	defer client.Close()
+	gameServer := v1.NewGameClient(client)
+	resp, err := gameServer.GetEmulatorSpeed(ctx, &v1.GameSrvGetEmulatorSpeedRequest{
+		RoomId: instance.RoomId,
+	})
+	if err != nil {
+		return 0, err
+	}
+	if resp.Code != 200 {
+		return 0, errors.New(int(resp.Code), "Service Error", resp.Message)
+	}
+	return resp.Boost, nil
+}
+
+func (g *GameServerRepo) SetEmulatorSpeed(ctx context.Context, instance *biz.RoomInstance, boost float64) (float64, error) {
+	client, err := common.NewGRPCClient(instance.ServerIp, int(instance.RpcPort))
+	if err != nil {
+		return 0, err
+	}
+	defer client.Close()
+	gameServer := v1.NewGameClient(client)
+	resp, err := gameServer.SetEmulatorSpeed(ctx, &v1.GameSrvSetEmulatorSpeedRequest{
+		RoomId: instance.RoomId,
+		Boost:  boost,
+	})
+	if err != nil {
+		return 0, err
+	}
+	if resp.Code != 200 {
+		return 0, errors.New(int(resp.Code), "Service Error", resp.Message)
+	}
+	return resp.Boost, nil
+}

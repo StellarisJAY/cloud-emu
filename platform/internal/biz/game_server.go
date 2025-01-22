@@ -76,4 +76,9 @@ type GameServerRepo interface {
 	SetGraphicOptions(ctx context.Context, instance *RoomInstance, options *GraphicOptions) error
 	// ApplyMacro 应用宏
 	ApplyMacro(ctx context.Context, instance *RoomInstance, macro *Macro, userId int64) error
+	// Shutdown 关闭游戏实例
+	Shutdown(ctx context.Context, instance *RoomInstance) error
+
+	GetEmulatorSpeed(ctx context.Context, instance *RoomInstance) (float64, error)
+	SetEmulatorSpeed(ctx context.Context, instance *RoomInstance, boost float64) (float64, error)
 }

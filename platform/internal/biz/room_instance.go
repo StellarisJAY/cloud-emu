@@ -429,3 +429,23 @@ func (uc *RoomInstanceUseCase) SetGraphicOptions(ctx context.Context, roomId int
 	}
 	return uc.gameServerRepo.SetGraphicOptions(ctx, ri, opts)
 }
+
+func (uc *RoomInstanceUseCase) GetEmulatorSpeed(ctx context.Context, roomId int64) (float64, error) {
+	ri, _ := uc.repo.GetRoomInstance(ctx, roomId)
+	if ri == nil {
+		return 0, v1.ErrorNotFound("房间不存在")
+	}
+	return uc.gameServerRepo.GetEmulatorSpeed(ctx, ri)
+}
+
+func (uc *RoomInstanceUseCase) SetEmulatorSpeed(ctx context.Context, roomId int64, boost float64, userId int64) (float64, error) {
+	ri, _ := uc.repo.GetRoomInstance(ctx, roomId)
+	if ri == nil {
+		return 0, v1.ErrorNotFound("房间不存在")
+	}
+	currUser, _ := uc.roomMemberRepo.GetByRoomAndUser(ctx, roomId, userId)
+	if currUser == nil || currUser.Role != RoomMemberRoleHost {
+		return 0, v1.ErrorAccessDenied("没有权限")
+	}
+	return uc.gameServerRepo.SetEmulatorSpeed(ctx, ri, boost)
+}

@@ -1,7 +1,6 @@
 package game
 
 import (
-	"encoding/json"
 	"time"
 )
 
@@ -22,17 +21,6 @@ func (g *Instance) handlePlayerControl(keyCode string, action byte, userId int64
 		if v == userId {
 			g.e.SubmitInput(k, keyCode, action == MsgPlayerControlButtonPressed)
 		}
-	}
-}
-
-// handleChat 聊天消息处理, 广播给所有数据通道
-func (g *Instance) handleChat(msg *Message) {
-	g.mutex.RLock()
-	defer g.mutex.RUnlock()
-	resp := &Message{Type: MsgChat, From: msg.From, To: 0, Data: msg.Data}
-	for _, conn := range g.connections {
-		raw, _ := json.Marshal(resp)
-		_ = conn.dataChannel.Send(raw)
 	}
 }
 
@@ -118,4 +106,8 @@ func (g *Instance) handleApplyMacro(request applyMacroRequest) {
 			g.e.SubmitInput(controller, key, false)
 		}
 	}()
+}
+
+func (g *Instance) resetController() {
+	clear(g.controllerMap)
 }

@@ -77,6 +77,18 @@ service RoomInstance {
       body: "*"
     };
   }
+
+  rpc GetEmulatorSpeed(GetEmulatorSpeedRequest) returns (GetEmulatorSpeedResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/room-instance/emulator-speed"
+    };
+  }
+  rpc SetEmulatorSpeed(SetEmulatorSpeedRequest) returns (SetEmulatorSpeedResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/room-instance/emulator-speed"
+      body: "*"
+    };
+  }
 }
 
 message RoomInstanceDto {
@@ -225,4 +237,25 @@ message SetGraphicOptionsRequest {
 message SetGraphicOptionsResponse {
   int32 code = 1;
   string message = 2;
+}
+
+message GetEmulatorSpeedRequest {
+  int64 roomId = 1;
+}
+
+message GetEmulatorSpeedResponse {
+  int32 code = 1;
+  string message = 2;
+  double data = 3;
+}
+
+message SetEmulatorSpeedRequest {
+  int64 roomId = 1;
+  double boost = 2;
+}
+
+message SetEmulatorSpeedResponse {
+  int32 code = 1;
+  string message = 2;
+  double data = 3;
 }

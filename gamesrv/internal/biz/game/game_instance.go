@@ -6,7 +6,6 @@ import (
 	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/codec"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/pion/webrtc/v3"
-	"image"
 	"sync"
 	"time"
 )
@@ -36,7 +35,6 @@ const (
 )
 
 const (
-	EnhanceFrameScale      = 2
 	DefaultAudioSampleRate = 48000
 )
 
@@ -64,53 +62,40 @@ type GraphicOptions struct {
 }
 
 type Instance struct {
-	RoomId               int64
-	EmulatorCode         string             // 模拟器唯一标识码,用于区分不同模拟器
-	e                    emulator.IEmulator // 模拟器接口
-	game                 string
-	videoEncoder         codec.IVideoEncoder
-	audioSampleRate      int
-	audioEncoder         codec.IAudioEncoder
-	audioSampleChan      chan float32             // audioSampleChan 音频输出channel
-	messageChan          chan *Message            // 消息接收通道，单线程处理多个客户端发送的消息
-	Cancel               context.CancelFunc       // 消息接收和音频接收取消函数
-	connections          map[int64]*Connection    // 连接列表
-	mutex                *sync.RWMutex            // 连接列表mutex
-	createTime           time.Time                // 实例创建时间
-	allConnCloseCallback func(instance *Instance) // 所有连接关闭后回调，用于异步释放房间会话
-	enhancedFrame        *image.YCbCr             // 高分辨率画面缓存
-	enhanceFrameOpen     bool
-	frameEnhancer        func(frame emulator.IFrame) emulator.IFrame // 高分辨率画面生成器
-	reverseColorOpen     bool
-	grayscaleOpen        bool
-	lastFrameTime        time.Time
-
-	roomInstanceId int64
-	sessionKey     string
-	DoneChan       chan struct{}
-	emulatorId     int64
-	gameId         int64
-	controllerMap  map[int]int64
+	RoomId          int64
+	EmulatorCode    string             // 模拟器唯一标识码,用于区分不同模拟器
+	e               emulator.IEmulator // 模拟器接口
+	game            string
+	videoEncoder    codec.IVideoEncoder
+	audioSampleRate int
+	audioEncoder    codec.IAudioEncoder
+	audioSampleChan chan float32          // audioSampleChan 音频输出channel
+	messageChan     chan *Message         // 消息接收通道，单线程处理多个客户端发送的消息
+	Cancel          context.CancelFunc    // 消息接收和音频接收取消函数
+	connections     map[int64]*Connection // 连接列表
+	mutex           *sync.RWMutex         // 连接列表mutex
+	createTime      time.Time             // 实例创建时间
+	lastFrameTime   time.Time
+	DoneChan        chan struct{}
+	emulatorId      int64
+	gameId          int64
+	controllerMap   map[int]int64
 }
 
 // MakeGameInstance 创建初始的游戏实例，其中运行dummy模拟器，该模拟器只输出一个提示玩家选择游戏的单帧画面（后期考虑动画）
 func MakeGameInstance(roomId, emulatorId, gameId int64, emulatorCode string, gameData []byte) (*Instance, error) {
 	instance := &Instance{
-		RoomId:      roomId,
-		messageChan: make(chan *Message),
-		connections: make(map[int64]*Connection),
-		mutex:       &sync.RWMutex{},
-		createTime:  time.Now(),
-		frameEnhancer: func(frame emulator.IFrame) emulator.IFrame {
-			return frame
-		},
-		allConnCloseCallback: func(instance *Instance) {},
-		lastFrameTime:        time.Now(),
-		emulatorId:           emulatorId,
-		gameId:               gameId,
-		EmulatorCode:         emulatorCode,
-		audioSampleChan:      make(chan float32, DefaultAudioSampleRate/200),
-		audioSampleRate:      DefaultAudioSampleRate,
+		RoomId:          roomId,
+		messageChan:     make(chan *Message),
+		connections:     make(map[int64]*Connection),
+		mutex:           &sync.RWMutex{},
+		createTime:      time.Now(),
+		lastFrameTime:   time.Now(),
+		emulatorId:      emulatorId,
+		gameId:          gameId,
+		EmulatorCode:    emulatorCode,
+		audioSampleChan: make(chan float32, DefaultAudioSampleRate/200),
+		audioSampleRate: DefaultAudioSampleRate,
 	}
 
 	// 创建dummy模拟器，输出静止介绍画面
@@ -168,8 +153,6 @@ func (g *Instance) MessageHandler(ctx context.Context) {
 				msg.resultChan <- g.handleLoadSave(msg.Data.(*emulatorLoadSaveRequest))
 			case MsgRestartEmulator:
 				msg.resultChan <- g.handleRestartEmulator(msg.Data.(*emulatorRestartRequest))
-			case MsgChat:
-				g.handleChat(msg)
 			case MsgSetGraphicOptions:
 				msg.resultChan <- g.setGraphicOptions(msg.Data.(*GraphicOptions))
 			case MsgGetGraphicOptions:
@@ -281,7 +264,6 @@ func (g *Instance) handleMsgCloseConn(conn *Connection) {
 	// 没有活跃连接，暂停模拟器
 	if len(active) == 0 {
 		_ = g.e.Pause()
-		g.allConnCloseCallback(g)
 	}
 }
 
@@ -303,4 +285,16 @@ func (g *Instance) GetOnlineUsers() []int64 {
 		result = append(result, userId)
 	}
 	return result
+}
+
+func (g *Instance) Shutdown() {
+	g.Cancel()
+	_ = g.e.Stop()
+	close(g.DoneChan)
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
+	for _, conn := range g.connections {
+		conn.Close()
+	}
+	clear(g.connections)
 }

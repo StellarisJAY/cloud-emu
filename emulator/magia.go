@@ -16,6 +16,7 @@ type MagiaAdapter struct {
 	ticker        *time.Ticker
 	buttons       [10]bool
 	scale         int
+	boost         float64
 }
 
 func init() {
@@ -38,6 +39,7 @@ func newMagiaAdapter(options IEmulatorOptions) (*MagiaAdapter, error) {
 		frame:         MakeEmptyBaseFrame(image.Rect(0, 0, 240, 160)),
 		frameConsumer: options.FrameConsumer(),
 		scale:         1,
+		boost:         1.0,
 	}
 	handlers := [10]func() bool{}
 	for i := 0; i < 10; i++ {
@@ -58,7 +60,7 @@ func (m *MagiaAdapter) Start() error {
 }
 
 func (m *MagiaAdapter) emulatorLoop(ctx context.Context) {
-	m.ticker = time.NewTicker(FrameInterval)
+	m.ticker = time.NewTicker(getFrameInterval(m.boost))
 	defer func() {
 		if r := recover(); r != nil {
 		}
@@ -74,7 +76,7 @@ func (m *MagiaAdapter) emulatorLoop(ctx context.Context) {
 			m.frame.FromRGBARaw(m.e.Draw(), m.scale)
 			m.frameConsumer(m.frame)
 			processTime := time.Since(start)
-			interval := max(FrameInterval-processTime, time.Millisecond*5)
+			interval := max(getFrameInterval(m.boost)-processTime, time.Millisecond*5)
 			m.ticker.Reset(interval)
 		}
 	}
@@ -163,13 +165,12 @@ func (m *MagiaAdapter) GetGraphicOptions() *GraphicOptions {
 }
 
 func (m *MagiaAdapter) GetCPUBoostRate() float64 {
-	//TODO implement me
-	panic("implement me")
+	return m.boost
 }
 
 func (m *MagiaAdapter) SetCPUBoostRate(f float64) float64 {
-	//TODO implement me
-	panic("implement me")
+	m.boost = max(0.5, min(f, 2.0))
+	return m.boost
 }
 
 func (m *MagiaAdapter) OutputResolution() (width, height int) {

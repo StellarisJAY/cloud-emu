@@ -30,6 +30,8 @@ const (
 	RoomInstance_SetControllerPlayer_FullMethodName   = "/v1.RoomInstance/SetControllerPlayer"
 	RoomInstance_GetGraphicOptions_FullMethodName     = "/v1.RoomInstance/GetGraphicOptions"
 	RoomInstance_SetGraphicOptions_FullMethodName     = "/v1.RoomInstance/SetGraphicOptions"
+	RoomInstance_GetEmulatorSpeed_FullMethodName      = "/v1.RoomInstance/GetEmulatorSpeed"
+	RoomInstance_SetEmulatorSpeed_FullMethodName      = "/v1.RoomInstance/SetEmulatorSpeed"
 )
 
 // RoomInstanceClient is the client API for RoomInstance service.
@@ -47,6 +49,8 @@ type RoomInstanceClient interface {
 	SetControllerPlayer(ctx context.Context, in *SetControllerPlayerRequest, opts ...grpc.CallOption) (*SetControllerPlayerResponse, error)
 	GetGraphicOptions(ctx context.Context, in *GetGraphicOptionsRequest, opts ...grpc.CallOption) (*GetGraphicOptionsResponse, error)
 	SetGraphicOptions(ctx context.Context, in *SetGraphicOptionsRequest, opts ...grpc.CallOption) (*SetGraphicOptionsResponse, error)
+	GetEmulatorSpeed(ctx context.Context, in *GetEmulatorSpeedRequest, opts ...grpc.CallOption) (*GetEmulatorSpeedResponse, error)
+	SetEmulatorSpeed(ctx context.Context, in *SetEmulatorSpeedRequest, opts ...grpc.CallOption) (*SetEmulatorSpeedResponse, error)
 }
 
 type roomInstanceClient struct {
@@ -167,6 +171,26 @@ func (c *roomInstanceClient) SetGraphicOptions(ctx context.Context, in *SetGraph
 	return out, nil
 }
 
+func (c *roomInstanceClient) GetEmulatorSpeed(ctx context.Context, in *GetEmulatorSpeedRequest, opts ...grpc.CallOption) (*GetEmulatorSpeedResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetEmulatorSpeedResponse)
+	err := c.cc.Invoke(ctx, RoomInstance_GetEmulatorSpeed_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *roomInstanceClient) SetEmulatorSpeed(ctx context.Context, in *SetEmulatorSpeedRequest, opts ...grpc.CallOption) (*SetEmulatorSpeedResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetEmulatorSpeedResponse)
+	err := c.cc.Invoke(ctx, RoomInstance_SetEmulatorSpeed_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RoomInstanceServer is the server API for RoomInstance service.
 // All implementations must embed UnimplementedRoomInstanceServer
 // for forward compatibility.
@@ -182,6 +206,8 @@ type RoomInstanceServer interface {
 	SetControllerPlayer(context.Context, *SetControllerPlayerRequest) (*SetControllerPlayerResponse, error)
 	GetGraphicOptions(context.Context, *GetGraphicOptionsRequest) (*GetGraphicOptionsResponse, error)
 	SetGraphicOptions(context.Context, *SetGraphicOptionsRequest) (*SetGraphicOptionsResponse, error)
+	GetEmulatorSpeed(context.Context, *GetEmulatorSpeedRequest) (*GetEmulatorSpeedResponse, error)
+	SetEmulatorSpeed(context.Context, *SetEmulatorSpeedRequest) (*SetEmulatorSpeedResponse, error)
 	mustEmbedUnimplementedRoomInstanceServer()
 }
 
@@ -224,6 +250,12 @@ func (UnimplementedRoomInstanceServer) GetGraphicOptions(context.Context, *GetGr
 }
 func (UnimplementedRoomInstanceServer) SetGraphicOptions(context.Context, *SetGraphicOptionsRequest) (*SetGraphicOptionsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetGraphicOptions not implemented")
+}
+func (UnimplementedRoomInstanceServer) GetEmulatorSpeed(context.Context, *GetEmulatorSpeedRequest) (*GetEmulatorSpeedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetEmulatorSpeed not implemented")
+}
+func (UnimplementedRoomInstanceServer) SetEmulatorSpeed(context.Context, *SetEmulatorSpeedRequest) (*SetEmulatorSpeedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetEmulatorSpeed not implemented")
 }
 func (UnimplementedRoomInstanceServer) mustEmbedUnimplementedRoomInstanceServer() {}
 func (UnimplementedRoomInstanceServer) testEmbeddedByValue()                      {}
@@ -444,6 +476,42 @@ func _RoomInstance_SetGraphicOptions_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RoomInstance_GetEmulatorSpeed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetEmulatorSpeedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomInstanceServer).GetEmulatorSpeed(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoomInstance_GetEmulatorSpeed_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomInstanceServer).GetEmulatorSpeed(ctx, req.(*GetEmulatorSpeedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RoomInstance_SetEmulatorSpeed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetEmulatorSpeedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomInstanceServer).SetEmulatorSpeed(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoomInstance_SetEmulatorSpeed_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomInstanceServer).SetEmulatorSpeed(ctx, req.(*SetEmulatorSpeedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RoomInstance_ServiceDesc is the grpc.ServiceDesc for RoomInstance service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -494,6 +562,14 @@ var RoomInstance_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetGraphicOptions",
 			Handler:    _RoomInstance_SetGraphicOptions_Handler,
+		},
+		{
+			MethodName: "GetEmulatorSpeed",
+			Handler:    _RoomInstance_GetEmulatorSpeed_Handler,
+		},
+		{
+			MethodName: "SetEmulatorSpeed",
+			Handler:    _RoomInstance_SetEmulatorSpeed_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

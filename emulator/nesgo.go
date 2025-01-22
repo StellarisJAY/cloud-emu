@@ -15,6 +15,7 @@ type NesEmulatorAdapter struct {
 	ticker        *time.Ticker
 	frameConsumer func(IFrame)
 	scale         int
+	boost         float64
 }
 
 func init() {
@@ -38,6 +39,7 @@ func makeNESEmulatorAdapter(options IEmulatorOptions) (IEmulator, error) {
 		e:             e,
 		frameConsumer: options.FrameConsumer(),
 		scale:         1,
+		boost:         1,
 	}, nil
 }
 
@@ -67,7 +69,7 @@ func (n *NesEmulatorAdapter) Start() error {
 }
 
 func (n *NesEmulatorAdapter) emulatorLoop(ctx context.Context) {
-	n.ticker = time.NewTicker(FrameInterval)
+	n.ticker = time.NewTicker(getFrameInterval(n.boost))
 	defer func() {
 		if r := recover(); r != nil {
 		}
@@ -81,7 +83,7 @@ func (n *NesEmulatorAdapter) emulatorLoop(ctx context.Context) {
 			start := time.Now()
 			n.e.StepOneFrame()
 			n.frameConsumer(n.e.Frame())
-			interval := max(FrameInterval-time.Since(start), time.Millisecond*5)
+			interval := max(getFrameInterval(n.boost)-time.Since(start), time.Millisecond*5)
 			n.ticker.Reset(interval)
 		}
 	}
@@ -183,11 +185,12 @@ func (n *NesEmulatorAdapter) GetGraphicOptions() *GraphicOptions {
 }
 
 func (n *NesEmulatorAdapter) GetCPUBoostRate() float64 {
-	return n.e.CPUBoostRate()
+	return n.boost
 }
 
 func (n *NesEmulatorAdapter) SetCPUBoostRate(rate float64) float64 {
-	return n.e.SetCPUBoostRate(rate)
+	n.boost = max(0.5, min(rate, 2.0))
+	return n.boost
 }
 
 func (n *NesEmulatorAdapter) OutputResolution() (width, height int) {

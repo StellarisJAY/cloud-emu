@@ -90,3 +90,10 @@ func (r *RoomMemberRepo) CountRoomMember(ctx context.Context, roomId int64) (int
 	}
 	return int32(count), nil
 }
+
+func (r *RoomMemberRepo) DeleteRoomAllMembers(ctx context.Context, roomId int64) error {
+	return r.data.DB(ctx).Table(RoomMemberTableName).
+		Where("room_id=?", roomId).
+		WithContext(ctx).
+		Delete(&biz.RoomMember{}).Error
+}

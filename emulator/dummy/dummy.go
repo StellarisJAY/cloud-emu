@@ -14,6 +14,7 @@ type Emulator struct {
 	i              int
 	Width          int
 	Height         int
+	ticker         *time.Ticker
 }
 
 func MakeDummyEmulator(game []byte, frameConsumer func(frame *Frame)) (*Emulator, error) {
@@ -22,6 +23,7 @@ func MakeDummyEmulator(game []byte, frameConsumer func(frame *Frame)) (*Emulator
 		pauseChan:      make(chan struct{}),
 		resumeChan:     make(chan struct{}),
 		i:              0,
+		ticker:         time.NewTicker(time.Second),
 	}
 	frames, w, h, err := parseGif(game)
 	if err != nil {
@@ -33,22 +35,18 @@ func MakeDummyEmulator(game []byte, frameConsumer func(frame *Frame)) (*Emulator
 	return e, nil
 }
 
-const dummyEmulatorFrameTick = 10 * time.Millisecond
+const dummyEmulatorFrameTick = 5 * time.Millisecond
 
 func (d *Emulator) Start(ctx context.Context) {
-	ticker := time.NewTicker(dummyEmulatorFrameTick)
+	d.ticker.Reset(dummyEmulatorFrameTick)
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-d.pauseChan:
-			ticker.Stop()
-		case <-d.resumeChan:
-			ticker.Reset(dummyEmulatorFrameTick)
-		case <-ticker.C:
+		case <-d.ticker.C:
 			frame := d.nextFrame()
 			d.renderCallback(frame)
-			ticker.Reset(frame.duration)
+			d.ticker.Reset(frame.duration)
 		}
 	}
 }
@@ -63,11 +61,11 @@ func (d *Emulator) nextFrame() *Frame {
 }
 
 func (d *Emulator) Pause() {
-	d.pauseChan <- struct{}{}
+	d.ticker.Stop()
 }
 
 func (d *Emulator) Resume() {
-	d.resumeChan <- struct{}{}
+	d.ticker.Reset(dummyEmulatorFrameTick)
 }
 
 func (d *Emulator) Stop() {

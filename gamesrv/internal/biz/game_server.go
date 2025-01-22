@@ -347,3 +347,39 @@ func (uc *GameServerUseCase) ApplyMacro(_ context.Context, roomId int64, keys []
 	instance.ApplyMacro(userId, keys)
 	return nil
 }
+
+func (uc *GameServerUseCase) Shutdown(_ context.Context, roomId int64) error {
+	uc.mutex.RLock()
+	instance, ok := uc.gameInstances[roomId]
+	uc.mutex.RUnlock()
+	if !ok {
+		return v1.ErrorServiceError("游戏实例不存在")
+	}
+	instance.Shutdown()
+	uc.mutex.Lock()
+	delete(uc.gameInstances, roomId)
+	uc.mutex.Unlock()
+	return nil
+}
+
+func (uc *GameServerUseCase) GetEmulatorSpeed(_ context.Context, roomId int64) (float64, error) {
+	uc.mutex.RLock()
+	instance, ok := uc.gameInstances[roomId]
+	uc.mutex.RUnlock()
+	if !ok {
+		return 0, v1.ErrorServiceError("游戏实例不存在")
+	}
+	boost := instance.GetEmulatorSpeed()
+	return boost, nil
+}
+
+func (uc *GameServerUseCase) SetEmulatorSpeed(_ context.Context, roomId int64, boost float64) (float64, error) {
+	uc.mutex.RLock()
+	instance, ok := uc.gameInstances[roomId]
+	uc.mutex.RUnlock()
+	if !ok {
+		return 0, v1.ErrorServiceError("游戏实例不存在")
+	}
+	boost = instance.SetEmulatorSpeed(boost)
+	return boost, nil
+}

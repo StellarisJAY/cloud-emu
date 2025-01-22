@@ -35,6 +35,8 @@ const (
 	Game_GetGraphicOptions_FullMethodName          = "/v1.Game/GetGraphicOptions"
 	Game_SetGraphicOptions_FullMethodName          = "/v1.Game/SetGraphicOptions"
 	Game_ApplyMacro_FullMethodName                 = "/v1.Game/ApplyMacro"
+	Game_GetEmulatorSpeed_FullMethodName           = "/v1.Game/GetEmulatorSpeed"
+	Game_SetEmulatorSpeed_FullMethodName           = "/v1.Game/SetEmulatorSpeed"
 )
 
 // GameClient is the client API for Game service.
@@ -57,6 +59,8 @@ type GameClient interface {
 	GetGraphicOptions(ctx context.Context, in *GameSrvGetGraphicOptionsRequest, opts ...grpc.CallOption) (*GameSrvGetGraphicOptionsResponse, error)
 	SetGraphicOptions(ctx context.Context, in *GameSrvSetGraphicOptionsRequest, opts ...grpc.CallOption) (*GameSrvSetGraphicOptionsResponse, error)
 	ApplyMacro(ctx context.Context, in *GameSrvApplyMacroRequest, opts ...grpc.CallOption) (*GameSrvApplyMacroResponse, error)
+	GetEmulatorSpeed(ctx context.Context, in *GameSrvGetEmulatorSpeedRequest, opts ...grpc.CallOption) (*GameSrvGetEmulatorSpeedResponse, error)
+	SetEmulatorSpeed(ctx context.Context, in *GameSrvSetEmulatorSpeedRequest, opts ...grpc.CallOption) (*GameSrvSetEmulatorSpeedResponse, error)
 }
 
 type gameClient struct {
@@ -227,6 +231,26 @@ func (c *gameClient) ApplyMacro(ctx context.Context, in *GameSrvApplyMacroReques
 	return out, nil
 }
 
+func (c *gameClient) GetEmulatorSpeed(ctx context.Context, in *GameSrvGetEmulatorSpeedRequest, opts ...grpc.CallOption) (*GameSrvGetEmulatorSpeedResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GameSrvGetEmulatorSpeedResponse)
+	err := c.cc.Invoke(ctx, Game_GetEmulatorSpeed_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gameClient) SetEmulatorSpeed(ctx context.Context, in *GameSrvSetEmulatorSpeedRequest, opts ...grpc.CallOption) (*GameSrvSetEmulatorSpeedResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GameSrvSetEmulatorSpeedResponse)
+	err := c.cc.Invoke(ctx, Game_SetEmulatorSpeed_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GameServer is the server API for Game service.
 // All implementations must embed UnimplementedGameServer
 // for forward compatibility.
@@ -247,6 +271,8 @@ type GameServer interface {
 	GetGraphicOptions(context.Context, *GameSrvGetGraphicOptionsRequest) (*GameSrvGetGraphicOptionsResponse, error)
 	SetGraphicOptions(context.Context, *GameSrvSetGraphicOptionsRequest) (*GameSrvSetGraphicOptionsResponse, error)
 	ApplyMacro(context.Context, *GameSrvApplyMacroRequest) (*GameSrvApplyMacroResponse, error)
+	GetEmulatorSpeed(context.Context, *GameSrvGetEmulatorSpeedRequest) (*GameSrvGetEmulatorSpeedResponse, error)
+	SetEmulatorSpeed(context.Context, *GameSrvSetEmulatorSpeedRequest) (*GameSrvSetEmulatorSpeedResponse, error)
 	mustEmbedUnimplementedGameServer()
 }
 
@@ -304,6 +330,12 @@ func (UnimplementedGameServer) SetGraphicOptions(context.Context, *GameSrvSetGra
 }
 func (UnimplementedGameServer) ApplyMacro(context.Context, *GameSrvApplyMacroRequest) (*GameSrvApplyMacroResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ApplyMacro not implemented")
+}
+func (UnimplementedGameServer) GetEmulatorSpeed(context.Context, *GameSrvGetEmulatorSpeedRequest) (*GameSrvGetEmulatorSpeedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetEmulatorSpeed not implemented")
+}
+func (UnimplementedGameServer) SetEmulatorSpeed(context.Context, *GameSrvSetEmulatorSpeedRequest) (*GameSrvSetEmulatorSpeedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetEmulatorSpeed not implemented")
 }
 func (UnimplementedGameServer) mustEmbedUnimplementedGameServer() {}
 func (UnimplementedGameServer) testEmbeddedByValue()              {}
@@ -614,6 +646,42 @@ func _Game_ApplyMacro_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Game_GetEmulatorSpeed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GameSrvGetEmulatorSpeedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameServer).GetEmulatorSpeed(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Game_GetEmulatorSpeed_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServer).GetEmulatorSpeed(ctx, req.(*GameSrvGetEmulatorSpeedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Game_SetEmulatorSpeed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GameSrvSetEmulatorSpeedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameServer).SetEmulatorSpeed(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Game_SetEmulatorSpeed_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServer).SetEmulatorSpeed(ctx, req.(*GameSrvSetEmulatorSpeedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Game_ServiceDesc is the grpc.ServiceDesc for Game service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -684,6 +752,14 @@ var Game_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ApplyMacro",
 			Handler:    _Game_ApplyMacro_Handler,
+		},
+		{
+			MethodName: "GetEmulatorSpeed",
+			Handler:    _Game_GetEmulatorSpeed_Handler,
+		},
+		{
+			MethodName: "SetEmulatorSpeed",
+			Handler:    _Game_SetEmulatorSpeed_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

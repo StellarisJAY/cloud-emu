@@ -64,7 +64,8 @@
         <a-switch v-model:checked="graphicOptions.highResolution" :disabled="graphicOptionsDisabled" @change="setGraphicOptions"></a-switch>
       </a-form-item>
       <a-form-item label="模拟器速度">
-        <a-slider v-model:value="emulatorSpeedRate" :min="0.5" :max="2.0" :marks="allowedEmulatorSpeedRates" :step="null" @afterChange="setEmulatorSpeed" :disabled="emulatorSpeedSliderDisabled"></a-slider>
+        <a-slider v-model:value="emulatorSpeedRate" :min="0.5" :max="2.0" :marks="allowedEmulatorSpeedRates" :step="null"
+                  @afterChange="setEmulatorSpeed" :disabled="emulatorSpeedSliderDisabled"></a-slider>
       </a-form-item>
     </a-form>
   </a-drawer>
@@ -187,7 +188,7 @@ export default {
       saveBtnDisabled: true,
       loadBtnDisabled: true,
       chatBtnDisabled: true,
-      emulatorBtnDisabled: true,
+      emulatorBtnDisabled: false,
       graphicOptionsDisabled: true,
       emulatorSpeedSliderDisabled: true,
 
@@ -369,7 +370,7 @@ export default {
         }else {
           video.srcObject = ev.streams[0];
           video.autoplay = true;
-          video.controls = false;
+          video.controls = true;
         }
       };
 
@@ -477,6 +478,7 @@ export default {
       this.loadBtnDisabled = this.memberSelf.role !== 1;
       this.emulatorBtnDisabled = false;
       this.graphicOptionsDisabled = this.memberSelf.role !== 1;
+      this.emulatorSpeedSliderDisabled = this.memberSelf.role !== 1;
     },
     onDisconnected() {
       message.warn("连接断开");
@@ -526,6 +528,8 @@ export default {
     },
 
     openSettingDrawer() {
+      this.getGraphicOptions();
+      this.getEmulatorSpeed();
       this.settingDrawerOpen = true;
     },
 
@@ -601,18 +605,25 @@ export default {
     },
 
     setEmulatorSpeed: function() {
-      const _this = this;
       this.emulatorSpeedSliderDisabled = true;
-      api.post("/game/speed", {
+      api.post("/room-instance/emulator-speed", {
         "roomId": this.roomId,
-        "rate": this.emulatorSpeedRate
+        "boost": this.emulatorSpeedRate
       }).then(resp=>{
-        _this.emulatorSpeedSliderDisabled = false;
-        _this.emulatorSpeedRate = resp["rate"];
+        this.emulatorSpeedSliderDisabled = false;
+        this.emulatorSpeedRate = resp["boost"];
         message.success("设置成功");
-      }).catch(_=>{
-        _this.emulatorSpeedSliderDisabled = false;
-        message.error("设置失败");
+      }).catch(resp=>{
+        this.emulatorSpeedSliderDisabled = false;
+        message.error(resp.message);
+      });
+    },
+
+    getEmulatorSpeed: function() {
+      api.get("/room-instance/emulator-speed", {
+        "roomId": this.roomId,
+      }).then(resp=>{
+        this.emulatorSpeedRate = resp["data"];
       });
     },
 

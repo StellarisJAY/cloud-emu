@@ -23,6 +23,8 @@ service Game {
   rpc GetGraphicOptions(GameSrvGetGraphicOptionsRequest) returns (GameSrvGetGraphicOptionsResponse) {}
   rpc SetGraphicOptions(GameSrvSetGraphicOptionsRequest) returns (GameSrvSetGraphicOptionsResponse) {}
   rpc ApplyMacro(GameSrvApplyMacroRequest) returns (GameSrvApplyMacroResponse) {}
+  rpc GetEmulatorSpeed(GameSrvGetEmulatorSpeedRequest) returns (GameSrvGetEmulatorSpeedResponse) {}
+  rpc SetEmulatorSpeed(GameSrvSetEmulatorSpeedRequest) returns (GameSrvSetEmulatorSpeedResponse) {}
 }
 
 message GetGameInstanceResult {
@@ -246,4 +248,24 @@ message GameSrvApplyMacroRequest {
 message GameSrvApplyMacroResponse {
   int32 code = 1;
   string message = 2;
+}
+
+message GameSrvGetEmulatorSpeedRequest {
+  int64 roomId = 1;
+}
+message GameSrvGetEmulatorSpeedResponse {
+  int32 code = 1;
+  string message = 2;
+  double boost = 3;
+}
+
+message GameSrvSetEmulatorSpeedRequest {
+  int64 roomId = 1;
+  double boost = 2;
+}
+
+message GameSrvSetEmulatorSpeedResponse {
+  int32 code = 1;
+  string message = 2;
+  double boost = 3;
 }

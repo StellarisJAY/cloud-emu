@@ -41,6 +41,7 @@ type RoomMemberRepo interface {
 	List(ctx context.Context, roomId int64) ([]*RoomMember, error)
 	GetByRoomAndUser(ctx context.Context, roomId, userId int64) (*RoomMember, error)
 	CountRoomMember(ctx context.Context, roomId int64) (int32, error)
+	DeleteRoomAllMembers(ctx context.Context, roomId int64) error
 }
 
 type RoomMemberUseCase struct {

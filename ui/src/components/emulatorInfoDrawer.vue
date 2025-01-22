@@ -76,14 +76,12 @@ export default {
   created() {
     this.updateForm.roomId = this.roomId;
     this.getUserRoomMember();
-    this.getRoomDetail();
-    this.listEmulator();
+    this.getRoomDetail().then(this.listEmulator).then(this.listGames);
     addEventListener("emulatorInfoDrawerOpen", _=>{
       this.selectedEmulator = null;
       this.selectedGame = null;
       this.getUserRoomMember();
-      this.listEmulator();
-      this.getRoomDetail();
+      this.getRoomDetail().then(this.listEmulator).then(this.listGames);
     });
   },
   methods: {
@@ -95,7 +93,7 @@ export default {
     },
 
     listEmulator() {
-      emulatorAPI.listEmulator().then(resp => {
+      return emulatorAPI.listEmulator().then(resp => {
         const data = resp.data;
         this.emulators = data;
         this.emulatorOptions = data.map(item => {
@@ -104,19 +102,17 @@ export default {
             value: item["emulatorId"]
           }
         });
-        const emulator = this.emulators.find(item => item.emulatorId === this.updateForm.emulatorId);
-        if (emulator) {
-          this.selectedEmulator = emulator;
-        }else {
-          this.selectedEmulator = this.emulators[0];
-          this.updateForm.emulatorId = this.emulators[0].emulatorId;
+        if (this.updateForm.emulatorId !== "0") {
+          this.selectedEmulator = this.emulators.find(item => item.emulatorId === this.updateForm.emulatorId);
+          if (this.selectedEmulator) return;
         }
-        this.listGames();
+        this.updateForm.emulatorId = this.emulators[0]['emulatorId'];
+        this.selectedEmulator = this.emulators[0];
       });
     },
 
     listGames() {
-      emulatorAPI.listGame(this.selectedEmulator.emulatorType).then(resp => {
+      return emulatorAPI.listGame(this.selectedEmulator.emulatorType).then(resp => {
         const data = resp.data;
         this.emulatorGames = data;
         this.emulatorGameOptions = data.map(item => {
@@ -125,23 +121,20 @@ export default {
             value: item["gameId"]
           }
         });
-        const game = this.emulatorGames.find(item => item.gameId === this.updateForm.gameId);
-        if (game) {
-          this.selectedGame = game;
-        }else {
-          this.updateForm.gameId = this.emulatorGames[0].gameId;
-          this.selectedGame = this.emulatorGames[0];
+        if (this.updateForm.gameId !== "0") {
+          this.selectedGame = this.emulatorGames.find(item => item.gameId === this.updateForm.gameId);
+          if (this.selectedGame) return;
         }
-      })
+        this.updateForm.gameId = this.emulatorGames[0]['gameId'];
+        this.selectedGame = this.emulatorGames[0];
+      });
     },
 
     getRoomDetail() {
-      roomAPI.getRoomDetail(this.roomId).then(resp=>{
+      return roomAPI.getRoomDetail(this.roomId).then(resp=>{
         this.roomDetail = resp.data;
         this.updateForm.emulatorId = this.roomDetail.emulatorId;
         this.updateForm.gameId = this.roomDetail.gameId;
-        this.selectedEmulator = this.emulators.find(item => item.emulatorId === this.updateForm.emulatorId);
-        this.selectedGame = this.emulatorGames.find(item => item.gameId === this.updateForm.gameId);
       });
     },
 

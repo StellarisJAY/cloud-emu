@@ -649,6 +649,40 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.SetControllerPlayerResponse'
+    /api/v1/room-instance/emulator-speed:
+        get:
+            tags:
+                - RoomInstance
+            operationId: RoomInstance_GetEmulatorSpeed
+            parameters:
+                - name: roomId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.GetEmulatorSpeedResponse'
+        post:
+            tags:
+                - RoomInstance
+            operationId: RoomInstance_SetEmulatorSpeed
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.SetEmulatorSpeedRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.SetEmulatorSpeedResponse'
     /api/v1/room-instance/graphic-options:
         get:
             tags:
@@ -1315,6 +1349,17 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/v1.ControllerPlayer'
+        v1.GetEmulatorSpeedResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    type: number
+                    format: double
         v1.GetGraphicOptionsResponse:
             type: object
             properties:
@@ -1879,6 +1924,25 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/v1.ControllerPlayer'
+        v1.SetEmulatorSpeedRequest:
+            type: object
+            properties:
+                roomId:
+                    type: string
+                boost:
+                    type: number
+                    format: double
+        v1.SetEmulatorSpeedResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    type: number
+                    format: double
         v1.SetGraphicOptionsRequest:
             type: object
             properties:

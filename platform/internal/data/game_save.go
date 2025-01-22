@@ -168,6 +168,14 @@ func (g *GameSaveRepo) Exist(ctx context.Context, roomId int64, md5 string) (boo
 	return result > 0, nil
 }
 
+func (g *GameSaveRepo) DeleteRoomAllSaves(ctx context.Context, roomId int64) error {
+	return g.d.DB(ctx).Table(GameSaveTableName).
+		Where("room_id =?", roomId).
+		Delete(&GameSaveEntity{}).
+		WithContext(ctx).
+		Error
+}
+
 func gameSaveBizToEntity(save *biz.GameSave) *GameSaveEntity {
 	return &GameSaveEntity{
 		SaveId:     save.SaveId,

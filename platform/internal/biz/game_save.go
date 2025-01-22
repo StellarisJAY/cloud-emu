@@ -47,6 +47,7 @@ type GameSaveRepo interface {
 	GetDetail(ctx context.Context, saveId int64) (*GameSave, error)
 	Rename(ctx context.Context, saveId int64, saveName string) error
 	Exist(ctx context.Context, roomId int64, md5 string) (bool, error)
+	DeleteRoomAllSaves(ctx context.Context, roomId int64) error
 }
 
 type GameSaveUseCase struct {

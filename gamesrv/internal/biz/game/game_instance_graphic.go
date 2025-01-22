@@ -10,7 +10,6 @@ import (
 )
 
 func (g *Instance) RenderCallback(frame emulator.IFrame, logger *log.Helper) {
-	frame = g.frameEnhancer(frame)
 	data, release, err := g.videoEncoder.Encode(frame)
 	if err != nil {
 		logger.Error("encode frame error", "err", err)
@@ -84,7 +83,6 @@ func (g *Instance) SetEmulatorSpeed(boostRate float64) float64 {
 	result := <-resultCh
 	close(resultCh)
 	return result.Data.(float64)
-
 }
 
 func (g *Instance) setEmulatorSpeed(boostRate float64) ConsumerResult {
@@ -92,4 +90,8 @@ func (g *Instance) setEmulatorSpeed(boostRate float64) ConsumerResult {
 	defer g.e.Resume()
 	rate := g.e.SetCPUBoostRate(boostRate)
 	return ConsumerResult{Success: true, Error: nil, Data: rate}
+}
+
+func (g *Instance) GetEmulatorSpeed() float64 {
+	return g.e.GetCPUBoostRate()
 }

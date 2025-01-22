@@ -94,6 +94,7 @@ func (g *Instance) onRestartSuccess(emulatorId, gameId int64, emulatorCode, emul
 	for _, conn := range g.connections {
 		_ = conn.dataChannel.Send(raw)
 	}
+	g.resetController()
 }
 
 func (g *Instance) makeEmulatorOptions(emulatorName string, game string, gameData []byte) (emulator.IEmulatorOptions, error) {

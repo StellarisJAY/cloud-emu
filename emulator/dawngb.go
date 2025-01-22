@@ -3,6 +3,7 @@ package emulator
 import (
 	"bytes"
 	"context"
+	"encoding/binary"
 	"github.com/StellrisJAY/cloud-emu/emulator/dawngb/gb"
 	"image"
 	"strings"
@@ -18,6 +19,7 @@ type DawnGbAdapter struct {
 	audioBuffer   *bytes.Buffer
 	scale         int
 	audioChan     chan float32
+	boost         float64
 }
 
 func init() {
@@ -45,11 +47,12 @@ func newDawnGbAdapter(options IEmulatorOptions) (*DawnGbAdapter, error) {
 		audioBuffer:   buffer,
 		scale:         1,
 		audioChan:     options.AudioSampleChan(),
+		boost:         1.0,
 	}, nil
 }
 
 func (d *DawnGbAdapter) emulatorLoop(ctx context.Context) {
-	d.ticker = time.NewTicker(FrameInterval)
+	d.ticker = time.NewTicker(getFrameInterval(d.boost))
 	for {
 		select {
 		case <-ctx.Done():
@@ -62,17 +65,18 @@ func (d *DawnGbAdapter) emulatorLoop(ctx context.Context) {
 			d.frameConsumer(d.frame)
 		LOOP:
 			for {
-				b, err := d.audioBuffer.ReadByte()
+				var s int16 = 0
+				err := binary.Read(d.audioBuffer, binary.LittleEndian, &s)
 				if err != nil {
 					break LOOP
 				}
 				select {
-				case d.audioChan <- float32(b):
+				case d.audioChan <- float32(s) / 32767.0:
 				default:
 					break LOOP
 				}
 			}
-			interval := max(FrameInterval-time.Since(start), time.Millisecond*5)
+			interval := max(getFrameInterval(d.boost)-time.Since(start), time.Millisecond*5)
 			d.ticker.Reset(interval)
 		}
 	}
@@ -142,20 +146,19 @@ func (d *DawnGbAdapter) SetGraphicOptions(options *GraphicOptions) {
 	}
 }
 
-func (g *DawnGbAdapter) GetGraphicOptions() *GraphicOptions {
+func (d *DawnGbAdapter) GetGraphicOptions() *GraphicOptions {
 	return &GraphicOptions{
-		HighResolution: g.scale > 1,
+		HighResolution: d.scale > 1,
 	}
 }
 
 func (d *DawnGbAdapter) GetCPUBoostRate() float64 {
-	//TODO implement me
-	panic("implement me")
+	return d.boost
 }
 
 func (d *DawnGbAdapter) SetCPUBoostRate(f float64) float64 {
-	//TODO implement me
-	panic("implement me")
+	d.boost = max(0.5, min(f, 2.0))
+	return d.boost
 }
 
 func (d *DawnGbAdapter) OutputResolution() (width, height int) {

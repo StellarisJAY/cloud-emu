@@ -66,8 +66,6 @@ type IEmulator interface {
 	SetCPUBoostRate(float64) float64
 	// OutputResolution 获取模拟器输出分辨率
 	OutputResolution() (width, height int)
-
-	MultiController() bool
 	ControllerInfos() []ControllerInfo
 }
 
@@ -285,4 +283,8 @@ func GetSupportedEmulatorTypes() []string {
 		result = append(result, k)
 	}
 	return result
+}
+
+func getFrameInterval(boost float64) time.Duration {
+	return time.Second / time.Duration(boost*60)
 }

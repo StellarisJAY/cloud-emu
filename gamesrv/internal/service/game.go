@@ -59,8 +59,13 @@ func (g *GameService) GetRoomInstanceAccessToken(ctx context.Context, request *v
 }
 
 func (g *GameService) ShutdownRoomInstance(ctx context.Context, request *v1.ShutdownRoomInstanceRequest) (*v1.ShutdownRoomInstanceResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	err := g.uc.Shutdown(ctx, request.RoomId)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.ShutdownRoomInstanceResponse{
+		Code: 200,
+	}, nil
 }
 
 func (g *GameService) OpenGameConnection(ctx context.Context, request *v1.GameSrvOpenGameConnectionRequest) (*v1.GameSrvOpenGameConnectionResponse, error) {
@@ -257,4 +262,28 @@ func (g *GameService) ApplyMacro(ctx context.Context, request *v1.GameSrvApplyMa
 		return nil, err
 	}
 	return &v1.GameSrvApplyMacroResponse{Code: 200}, nil
+}
+
+func (g *GameService) GetEmulatorSpeed(ctx context.Context, request *v1.GameSrvGetEmulatorSpeedRequest) (*v1.GameSrvGetEmulatorSpeedResponse, error) {
+	boost, err := g.uc.GetEmulatorSpeed(ctx, request.RoomId)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.GameSrvGetEmulatorSpeedResponse{
+		Code:    200,
+		Message: "获取成功",
+		Boost:   boost,
+	}, nil
+}
+
+func (g *GameService) SetEmulatorSpeed(ctx context.Context, request *v1.GameSrvSetEmulatorSpeedRequest) (*v1.GameSrvSetEmulatorSpeedResponse, error) {
+	boost, err := g.uc.SetEmulatorSpeed(ctx, request.RoomId, request.Boost)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.GameSrvSetEmulatorSpeedResponse{
+		Code:    200,
+		Message: "设置成功",
+		Boost:   boost,
+	}, nil
 }

@@ -18,6 +18,7 @@ type FoglemanNesAdapter struct {
 	buttons       [2][8]bool
 	game          string
 	scale         int
+	boost         float64
 }
 
 func init() {
@@ -36,6 +37,7 @@ func newFoglemanNesAdapter(options IEmulatorOptions) (*FoglemanNesAdapter, error
 	adapter := &FoglemanNesAdapter{}
 	adapter.game = options.Game()
 	adapter.scale = 1
+	adapter.boost = 1.0
 	adapter.frame = MakeEmptyBaseFrame(image.Rect(0, 0, 256, 240))
 	console, err := nes.NewConsole(options.GameData())
 	if err != nil {
@@ -56,7 +58,7 @@ func (f *FoglemanNesAdapter) Start() error {
 }
 
 func (f *FoglemanNesAdapter) emulatorLoop(ctx context.Context) {
-	f.ticker = time.NewTicker(FrameInterval)
+	f.ticker = time.NewTicker(getFrameInterval(f.boost))
 	defer func() {
 		if r := recover(); r != nil {
 		}
@@ -72,7 +74,7 @@ func (f *FoglemanNesAdapter) emulatorLoop(ctx context.Context) {
 			frame := f.console.Buffer()
 			f.frame.FromRGBA(frame, f.scale)
 			f.frameConsumer(f.frame)
-			interval := max(FrameInterval-time.Since(start), time.Millisecond*5)
+			interval := max(getFrameInterval(f.boost)-time.Since(start), time.Millisecond*5)
 			f.ticker.Reset(interval)
 		}
 	}
@@ -163,13 +165,12 @@ func (f *FoglemanNesAdapter) GetGraphicOptions() *GraphicOptions {
 }
 
 func (f *FoglemanNesAdapter) GetCPUBoostRate() float64 {
-	//TODO implement me
-	panic("implement me")
+	return f.boost
 }
 
-func (f *FoglemanNesAdapter) SetCPUBoostRate(f2 float64) float64 {
-	//TODO implement me
-	panic("implement me")
+func (f *FoglemanNesAdapter) SetCPUBoostRate(r float64) float64 {
+	f.boost = max(0.5, min(r, 2.0))
+	return f.boost
 }
 
 func (f *FoglemanNesAdapter) OutputResolution() (width, height int) {
