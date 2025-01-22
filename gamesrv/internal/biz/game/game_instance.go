@@ -96,6 +96,7 @@ func MakeGameInstance(roomId, emulatorId, gameId int64, emulatorCode string, gam
 		EmulatorCode:    emulatorCode,
 		audioSampleChan: make(chan float32, DefaultAudioSampleRate/200),
 		audioSampleRate: DefaultAudioSampleRate,
+		DoneChan:        make(chan struct{}),
 	}
 
 	// 创建dummy模拟器，输出静止介绍画面

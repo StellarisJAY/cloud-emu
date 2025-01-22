@@ -62,7 +62,6 @@ export default {
         {title: "游戏名称", dataIndex: "gameName"},
         {title: "模拟器类型", dataIndex: "emulatorType"},
         {title: "大小", dataIndex: "size"},
-        {title: "上传时间", dataIndex: "addTime"},
       ],
 
       uploadModalOpen: false,

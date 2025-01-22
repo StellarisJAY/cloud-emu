@@ -62,6 +62,7 @@ message RoomDto {
   int64 gameId = 12;
   string gameName = 13;
   string emulatorType = 14;
+  bool isHost = 15;
 }
 
 message ListRoomRequest {

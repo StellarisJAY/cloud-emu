@@ -329,6 +329,18 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.DeleteGameSaveResponse'
+    /api/v1/inbox/clear:
+        delete:
+            tags:
+                - Notification
+            operationId: Notification_ClearInbox
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.ClearInboxResponse'
     /api/v1/inbox/notifications:
         get:
             tags:
@@ -352,6 +364,23 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.ListInboxNotificationResponse'
+        post:
+            tags:
+                - Notification
+            operationId: Notification_DeleteInboxNotifications
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/v1.DeleteInboxNotificationRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.DeleteInboxNotificationResponse'
     /api/v1/keyboard-binding:
         get:
             tags:
@@ -1147,6 +1176,14 @@ components:
                     type: string
                 layout:
                     type: string
+        v1.ClearInboxResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
         v1.ControllerPlayer:
             type: object
             properties:
@@ -1246,6 +1283,21 @@ components:
                 message:
                     type: string
         v1.DeleteGameSaveResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+        v1.DeleteInboxNotificationRequest:
+            type: object
+            properties:
+                notificationIds:
+                    type: array
+                    items:
+                        type: string
+        v1.DeleteInboxNotificationResponse:
             type: object
             properties:
                 code:
@@ -1834,6 +1886,8 @@ components:
                     type: string
                 emulatorType:
                     type: string
+                isHost:
+                    type: boolean
         v1.RoomInstanceDto:
             type: object
             properties:

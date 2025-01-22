@@ -128,6 +128,7 @@ func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int6
 			}
 		}
 		if err != nil {
+			uc.logger.Error("获取房间实例错误:", err)
 			return v1.ErrorServiceError("获取房间实例出错")
 		}
 
@@ -138,7 +139,8 @@ func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int6
 		// 获取所有可用的游戏服务器
 		servers, err := uc.gameServerRepo.ListActiveGameServers(ctx)
 		if err != nil {
-			return v1.ErrorServiceError("获取可用游戏服务器出错", err)
+			uc.logger.Error("获取可用游戏服务器错误:", err)
+			return v1.ErrorServiceError("无法找到可用的游戏服务器")
 		}
 		if len(servers) == 0 {
 			return v1.ErrorServiceError("无法找到可用的游戏服务器")

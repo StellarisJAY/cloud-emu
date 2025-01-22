@@ -53,3 +53,35 @@ func (n *NotificationService) ListInboxNotifications(ctx context.Context, reques
 		Total:   page.Total,
 	}, nil
 }
+
+func (n *NotificationService) DeleteInboxNotifications(ctx context.Context, request *v1.DeleteInboxNotificationRequest) (*v1.DeleteInboxNotificationResponse, error) {
+	err := n.notificationUC.Delete(ctx, request.NotificationIds)
+	if err != nil {
+		e := errors.FromError(err)
+		return &v1.DeleteInboxNotificationResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
+	}
+	return &v1.DeleteInboxNotificationResponse{
+		Code:    200,
+		Message: "删除成功",
+	}, nil
+}
+
+func (n *NotificationService) ClearInbox(ctx context.Context, request *v1.ClearInboxRequest) (*v1.ClearInboxResponse, error) {
+	c, _ := jwt.FromContext(ctx)
+	claims := c.(*biz.LoginClaims)
+	err := n.notificationUC.ClearInbox(ctx, claims.UserId)
+	if err != nil {
+		e := errors.FromError(err)
+		return &v1.ClearInboxResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
+	}
+	return &v1.ClearInboxResponse{
+		Code:    200,
+		Message: "清空成功",
+	}, nil
+}

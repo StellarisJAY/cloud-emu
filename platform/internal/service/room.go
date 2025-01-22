@@ -54,6 +54,7 @@ func (r *RoomService) ListMyRooms(ctx context.Context, request *v1.ListRoomReque
 			AddTime:     room.AddTime.Format(time.DateTime),
 			EmulatorId:  room.EmulatorId,
 			JoinType:    room.JoinType,
+			IsHost:      room.IsHost,
 		})
 	}
 	return &v1.ListRoomResponse{
@@ -178,8 +179,20 @@ func (r *RoomService) JoinRoom(ctx context.Context, request *v1.JoinRoomRequest)
 }
 
 func (r *RoomService) DeleteRoom(ctx context.Context, request *v1.DeleteRoomRequest) (*v1.DeleteRoomResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	c, _ := jwt.FromContext(ctx)
+	claims := c.(*biz.LoginClaims)
+	err := r.roomUC.Delete(ctx, request.RoomId, claims.UserId)
+	if err != nil {
+		e := errors.FromError(err)
+		return &v1.DeleteRoomResponse{
+			Code:    e.Code,
+			Message: e.Message,
+		}, nil
+	}
+	return &v1.DeleteRoomResponse{
+		Code:    200,
+		Message: "删除成功",
+	}, nil
 }
 
 func (r *RoomService) UpdateRoom(ctx context.Context, request *v1.UpdateRoomRequest) (*v1.UpdateRoomResponse, error) {

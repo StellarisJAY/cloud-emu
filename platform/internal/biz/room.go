@@ -30,6 +30,7 @@ type Room struct {
 	GameName     string    `json:"gameName"`
 	EmulatorType string    `json:"emulatorType"`
 	EmulatorCode string    `json:"emulatorCode"`
+	IsHost       bool      `json:"isHost"`
 }
 
 type RoomUseCase struct {
@@ -66,6 +67,7 @@ type RoomRepo interface {
 	Update(ctx context.Context, room *Room) error
 	ListJoinedRooms(ctx context.Context, query RoomQuery, page *common.Pagination) ([]*Room, error)
 	ListRooms(ctx context.Context, query RoomQuery, page *common.Pagination) ([]*Room, error)
+	Delete(ctx context.Context, id int64) error
 }
 
 func NewRoomUseCase(repo RoomRepo, snowflakeId *snowflake.Node, userRepo UserRepo, tm Transaction,
@@ -111,6 +113,9 @@ func (r *RoomUseCase) ListMyRooms(ctx context.Context, userId int64, query RoomQ
 	for _, room := range rooms {
 		if err := r.buildRoomDto(ctx, room); err != nil {
 			return nil, err
+		}
+		if room.HostId == userId {
+			room.IsHost = true
 		}
 	}
 	return rooms, nil
@@ -236,16 +241,20 @@ func (r *RoomUseCase) Delete(ctx context.Context, roomId int64, userId int64) er
 		if rm == nil || rm.Role != RoomMemberRoleHost {
 			return v1.ErrorAccessDenied("没有权限删除房间")
 		}
-		// 删除所有房间成员
-		if err := r.roomMemberRepo.DeleteRoomAllMembers(ctx, roomId); err != nil {
-			r.logger.Error("删除所有房间成员错误 ", err)
+		// 获取分布式锁，避免删除时有用户正在创建房间实例
+		mutexName := openRoomInstanceMutexName(roomId)
+		mutex := r.redSync.NewMutex(mutexName, redsync.WithExpiry(time.Second*30))
+		if err := mutex.Lock(); err != nil {
+			r.logger.Error("删除房间获取分布式锁错误 ", err)
 			return v1.ErrorServiceError("删除失败")
 		}
-		// 删除所有存档
-		if err := r.gameSaveRepo.DeleteRoomAllSaves(ctx, roomId); err != nil {
-			r.logger.Error("删除所有房间存档错误 ", err)
+		defer mutex.Unlock()
+		// 删除房间实体
+		if err := r.repo.Delete(ctx, roomId); err != nil {
+			r.logger.Error("删除房间错误 ", err)
 			return v1.ErrorServiceError("删除失败")
 		}
+		// 关闭并删除房间实例
 		instance, err := r.roomInstanceRepo.GetRoomInstance(ctx, roomId)
 		if err != nil {
 			r.logger.Error("获取房间实例错误 ", err)
@@ -259,6 +268,28 @@ func (r *RoomUseCase) Delete(ctx context.Context, roomId int64, userId int64) er
 			}
 			_ = r.roomInstanceRepo.DeleteRoomInstance(ctx, roomId)
 		}
+
+		// 删除所有房间成员
+		if err := r.roomMemberRepo.DeleteRoomAllMembers(ctx, roomId); err != nil {
+			r.logger.Error("删除所有房间成员错误 ", err)
+			return v1.ErrorServiceError("删除失败")
+		}
+		// 删除所有存档文件
+		saveIds, err := r.gameSaveRepo.ListSaveIds(ctx, roomId)
+		if err != nil {
+			r.logger.Error("获取房间所有存档错误 ", err)
+			return v1.ErrorServiceError("删除失败")
+		}
+		if err := r.gameSaveRepo.DeleteFiles(ctx, saveIds); err != nil {
+			r.logger.Error("删除房间存档数据失败 ", roomId, saveIds, err)
+		}
+
+		// 删除所有存档
+		if err := r.gameSaveRepo.DeleteRoomAllSaves(ctx, roomId); err != nil {
+			r.logger.Error("删除所有房间存档错误 ", err)
+			return v1.ErrorServiceError("删除失败")
+		}
+
 		return nil
 	})
 }

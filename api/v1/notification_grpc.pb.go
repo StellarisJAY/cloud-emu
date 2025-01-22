@@ -19,7 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Notification_ListInboxNotifications_FullMethodName = "/v1.Notification/ListInboxNotifications"
+	Notification_ListInboxNotifications_FullMethodName   = "/v1.Notification/ListInboxNotifications"
+	Notification_DeleteInboxNotifications_FullMethodName = "/v1.Notification/DeleteInboxNotifications"
+	Notification_ClearInbox_FullMethodName               = "/v1.Notification/ClearInbox"
 )
 
 // NotificationClient is the client API for Notification service.
@@ -27,6 +29,8 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type NotificationClient interface {
 	ListInboxNotifications(ctx context.Context, in *ListInboxNotificationRequest, opts ...grpc.CallOption) (*ListInboxNotificationResponse, error)
+	DeleteInboxNotifications(ctx context.Context, in *DeleteInboxNotificationRequest, opts ...grpc.CallOption) (*DeleteInboxNotificationResponse, error)
+	ClearInbox(ctx context.Context, in *ClearInboxRequest, opts ...grpc.CallOption) (*ClearInboxResponse, error)
 }
 
 type notificationClient struct {
@@ -47,11 +51,33 @@ func (c *notificationClient) ListInboxNotifications(ctx context.Context, in *Lis
 	return out, nil
 }
 
+func (c *notificationClient) DeleteInboxNotifications(ctx context.Context, in *DeleteInboxNotificationRequest, opts ...grpc.CallOption) (*DeleteInboxNotificationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteInboxNotificationResponse)
+	err := c.cc.Invoke(ctx, Notification_DeleteInboxNotifications_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *notificationClient) ClearInbox(ctx context.Context, in *ClearInboxRequest, opts ...grpc.CallOption) (*ClearInboxResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ClearInboxResponse)
+	err := c.cc.Invoke(ctx, Notification_ClearInbox_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NotificationServer is the server API for Notification service.
 // All implementations must embed UnimplementedNotificationServer
 // for forward compatibility.
 type NotificationServer interface {
 	ListInboxNotifications(context.Context, *ListInboxNotificationRequest) (*ListInboxNotificationResponse, error)
+	DeleteInboxNotifications(context.Context, *DeleteInboxNotificationRequest) (*DeleteInboxNotificationResponse, error)
+	ClearInbox(context.Context, *ClearInboxRequest) (*ClearInboxResponse, error)
 	mustEmbedUnimplementedNotificationServer()
 }
 
@@ -64,6 +90,12 @@ type UnimplementedNotificationServer struct{}
 
 func (UnimplementedNotificationServer) ListInboxNotifications(context.Context, *ListInboxNotificationRequest) (*ListInboxNotificationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListInboxNotifications not implemented")
+}
+func (UnimplementedNotificationServer) DeleteInboxNotifications(context.Context, *DeleteInboxNotificationRequest) (*DeleteInboxNotificationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteInboxNotifications not implemented")
+}
+func (UnimplementedNotificationServer) ClearInbox(context.Context, *ClearInboxRequest) (*ClearInboxResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClearInbox not implemented")
 }
 func (UnimplementedNotificationServer) mustEmbedUnimplementedNotificationServer() {}
 func (UnimplementedNotificationServer) testEmbeddedByValue()                      {}
@@ -104,6 +136,42 @@ func _Notification_ListInboxNotifications_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Notification_DeleteInboxNotifications_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteInboxNotificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NotificationServer).DeleteInboxNotifications(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Notification_DeleteInboxNotifications_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NotificationServer).DeleteInboxNotifications(ctx, req.(*DeleteInboxNotificationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Notification_ClearInbox_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClearInboxRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NotificationServer).ClearInbox(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Notification_ClearInbox_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NotificationServer).ClearInbox(ctx, req.(*ClearInboxRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Notification_ServiceDesc is the grpc.ServiceDesc for Notification service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -114,6 +182,14 @@ var Notification_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListInboxNotifications",
 			Handler:    _Notification_ListInboxNotifications_Handler,
+		},
+		{
+			MethodName: "DeleteInboxNotifications",
+			Handler:    _Notification_DeleteInboxNotifications_Handler,
+		},
+		{
+			MethodName: "ClearInbox",
+			Handler:    _Notification_ClearInbox_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

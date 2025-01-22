@@ -45,6 +45,22 @@ func (nr *NotificationRepo) ListInbox(ctx context.Context, userId int64, p *comm
 	return result, nil
 }
 
+func (nr *NotificationRepo) Delete(ctx context.Context, notificationIds []int64) error {
+	return nr.data.DB(ctx).Table(NotificationTableName).
+		WithContext(ctx).
+		Where("notification_id IN ?", notificationIds).
+		Delete(&Notification{}).
+		Error
+}
+
+func (nr *NotificationRepo) ClearInbox(ctx context.Context, userId int64) error {
+	return nr.data.DB(ctx).Table(NotificationTableName).
+		WithContext(ctx).
+		Where("receiver_id = ?", userId).
+		Delete(&Notification{}).
+		Error
+}
+
 func convertNotificationBizToEntity(notification *biz.Notification) *Notification {
 	return &Notification{
 		NotificationId: notification.NotificationId,

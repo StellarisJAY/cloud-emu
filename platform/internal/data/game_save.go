@@ -88,7 +88,10 @@ func (g *GameSaveRepo) List(ctx context.Context, query biz.GameSaveQuery, p *com
 	if query.HostId != 0 {
 		d = d.Where("sr.host_id = ?", query.HostId)
 	}
-	err := d.Scopes(common.WithPagination(p)).WithContext(ctx).Scan(&result).Error
+	if p != nil {
+		d = d.Scopes(common.WithPagination(p))
+	}
+	err := d.WithContext(ctx).Scan(&result).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -174,6 +177,33 @@ func (g *GameSaveRepo) DeleteRoomAllSaves(ctx context.Context, roomId int64) err
 		Delete(&GameSaveEntity{}).
 		WithContext(ctx).
 		Error
+}
+
+func (g *GameSaveRepo) ListSaveIds(ctx context.Context, roomId int64) ([]int64, error) {
+	var result []int64
+	err := g.d.DB(ctx).Table(GameSaveTableName).
+		Select("save_id").
+		Where("room_id =?", roomId).
+		WithContext(ctx).
+		Scan(&result).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (g *GameSaveRepo) DeleteFiles(_ context.Context, saveIds []int64) error {
+	bucket, err := g.d.getGridFSBucket(MongoDBName, GameSaveBucketName)
+	if err != nil {
+		return err
+	}
+	for _, id := range saveIds {
+		if err := bucket.Delete(id); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func gameSaveBizToEntity(save *biz.GameSave) *GameSaveEntity {

@@ -12,6 +12,17 @@ service Notification {
       get: "/api/v1/inbox/notifications"
     };
   }
+  rpc DeleteInboxNotifications(DeleteInboxNotificationRequest) returns (DeleteInboxNotificationResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/inbox/notifications"
+      body: "*"
+    };
+  }
+  rpc ClearInbox(ClearInboxRequest) returns (ClearInboxResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/inbox/clear"
+    };
+  }
 }
 
 message NotificationDto {
@@ -34,5 +45,20 @@ message ListInboxNotificationResponse {
   string message = 2;
   repeated NotificationDto data = 3;
   int32 total = 4;
+}
+
+message DeleteInboxNotificationRequest {
+  repeated int64 notificationIds = 1;
+}
+message DeleteInboxNotificationResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message ClearInboxRequest {}
+
+message ClearInboxResponse {
+  int32 code = 1;
+  string message = 2;
 }
 

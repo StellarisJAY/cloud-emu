@@ -19,15 +19,21 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
+const OperationNotificationClearInbox = "/v1.Notification/ClearInbox"
+const OperationNotificationDeleteInboxNotifications = "/v1.Notification/DeleteInboxNotifications"
 const OperationNotificationListInboxNotifications = "/v1.Notification/ListInboxNotifications"
 
 type NotificationHTTPServer interface {
+	ClearInbox(context.Context, *ClearInboxRequest) (*ClearInboxResponse, error)
+	DeleteInboxNotifications(context.Context, *DeleteInboxNotificationRequest) (*DeleteInboxNotificationResponse, error)
 	ListInboxNotifications(context.Context, *ListInboxNotificationRequest) (*ListInboxNotificationResponse, error)
 }
 
 func RegisterNotificationHTTPServer(s *http.Server, srv NotificationHTTPServer) {
 	r := s.Route("/")
 	r.GET("/api/v1/inbox/notifications", _Notification_ListInboxNotifications0_HTTP_Handler(srv))
+	r.POST("/api/v1/inbox/notifications", _Notification_DeleteInboxNotifications0_HTTP_Handler(srv))
+	r.DELETE("/api/v1/inbox/clear", _Notification_ClearInbox0_HTTP_Handler(srv))
 }
 
 func _Notification_ListInboxNotifications0_HTTP_Handler(srv NotificationHTTPServer) func(ctx http.Context) error {
@@ -49,7 +55,50 @@ func _Notification_ListInboxNotifications0_HTTP_Handler(srv NotificationHTTPServ
 	}
 }
 
+func _Notification_DeleteInboxNotifications0_HTTP_Handler(srv NotificationHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in DeleteInboxNotificationRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationNotificationDeleteInboxNotifications)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.DeleteInboxNotifications(ctx, req.(*DeleteInboxNotificationRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*DeleteInboxNotificationResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Notification_ClearInbox0_HTTP_Handler(srv NotificationHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in ClearInboxRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationNotificationClearInbox)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.ClearInbox(ctx, req.(*ClearInboxRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ClearInboxResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 type NotificationHTTPClient interface {
+	ClearInbox(ctx context.Context, req *ClearInboxRequest, opts ...http.CallOption) (rsp *ClearInboxResponse, err error)
+	DeleteInboxNotifications(ctx context.Context, req *DeleteInboxNotificationRequest, opts ...http.CallOption) (rsp *DeleteInboxNotificationResponse, err error)
 	ListInboxNotifications(ctx context.Context, req *ListInboxNotificationRequest, opts ...http.CallOption) (rsp *ListInboxNotificationResponse, err error)
 }
 
@@ -59,6 +108,32 @@ type NotificationHTTPClientImpl struct {
 
 func NewNotificationHTTPClient(client *http.Client) NotificationHTTPClient {
 	return &NotificationHTTPClientImpl{client}
+}
+
+func (c *NotificationHTTPClientImpl) ClearInbox(ctx context.Context, in *ClearInboxRequest, opts ...http.CallOption) (*ClearInboxResponse, error) {
+	var out ClearInboxResponse
+	pattern := "/api/v1/inbox/clear"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationNotificationClearInbox))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "DELETE", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *NotificationHTTPClientImpl) DeleteInboxNotifications(ctx context.Context, in *DeleteInboxNotificationRequest, opts ...http.CallOption) (*DeleteInboxNotificationResponse, error) {
+	var out DeleteInboxNotificationResponse
+	pattern := "/api/v1/inbox/notifications"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationNotificationDeleteInboxNotifications))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
 
 func (c *NotificationHTTPClientImpl) ListInboxNotifications(ctx context.Context, in *ListInboxNotificationRequest, opts ...http.CallOption) (*ListInboxNotificationResponse, error) {

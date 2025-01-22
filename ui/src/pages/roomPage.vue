@@ -343,7 +343,7 @@ export default {
         });
         await this.createWebRTCPeerConnection(resp.data);
       } catch (errResp) {
-        message.warn("连接失败，请重试");
+        message.warn(errResp["message"]);
         this.connectBtnDisabled = false;
       }
     },
@@ -491,6 +491,8 @@ export default {
       this.graphicOptionsDisabled = true;
       this.emulatorBtnDisabled = true;
       this.connectBtnDisabled = false;
+      const video = document.getElementById("video");
+      video.srcObject = null;
     },
     sendAction(code, pressed) {
       const msg = JSON.stringify({

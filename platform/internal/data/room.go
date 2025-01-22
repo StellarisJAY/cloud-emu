@@ -109,6 +109,14 @@ func (r *RoomRepo) ListRooms(ctx context.Context, query biz.RoomQuery, page *com
 	return rooms, nil
 }
 
+func (r *RoomRepo) Delete(ctx context.Context, id int64) error {
+	return r.data.DB(ctx).Table(RoomTableName).
+		Where("room_id = ?", id).
+		Delete(&RoomEntity{}).
+		WithContext(ctx).
+		Error
+}
+
 func convertRoomBizToEntity(room *biz.Room) *RoomEntity {
 	return &RoomEntity{
 		RoomId:      room.RoomId,

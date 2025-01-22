@@ -55,7 +55,7 @@ func wireApp(confServer *conf.Server, confData *conf.Data, auth *conf.Auth, regi
 	emulatorGameRepo := data.NewEmulatorGameRepo(dataData)
 	roomInstanceUseCase := biz.NewRoomInstanceUseCase(roomInstanceRepo, node, redsync, gameServerRepo, roomRepo, roomMemberRepo, transaction, emulatorRepo, emulatorGameRepo, logger)
 	roomInstanceServer := service.NewRoomInstanceService(roomInstanceUseCase)
-	notificationUseCase := biz.NewNotificationUseCase(notificationRepo)
+	notificationUseCase := biz.NewNotificationUseCase(notificationRepo, logger)
 	notificationServer := service.NewNotificationService(notificationUseCase)
 	roomMemberServer := service.NewRoomMemberService(roomMemberUseCase)
 	emulatorUseCase := biz.NewEmulatorUseCase(emulatorRepo, userRepo)

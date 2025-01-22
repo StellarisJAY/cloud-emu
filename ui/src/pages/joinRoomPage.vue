@@ -1,5 +1,5 @@
 <template>
-  <a-card v-if="roomDetail['joinType'] === 2">
+  <a-card v-if="roomDetail && roomDetail['joinType'] === 2">
     <a-form>
       <a-form-item label="房间密码">
         <a-input-password v-model:value="password"></a-input-password>
@@ -46,7 +46,10 @@ export default {
       if (this.roomDetail["joinType"] === RoomJoinTypeInvite || this.roomDetail["joinType"] === RoomJoinTypePublic) {
         this.joinRoom();
       }
-    });
+    }).catch(resp=>{
+      message.error(resp["message"]);
+      router.push("/");
+    })
   },
   unmounted() {
   },

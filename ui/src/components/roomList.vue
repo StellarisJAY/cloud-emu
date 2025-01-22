@@ -30,7 +30,7 @@
         <a-list-item>
           <a-card :title="item.roomName">
             <template #extra v-if="joined">
-              <a-button v-if="item.role === 1" danger>删除</a-button>
+              <a-button v-if="item['isHost']" danger @click="confirmDelete(item)">删除</a-button>
               <a-button v-else danger>退出</a-button>
             </template>
             <template #actions>
@@ -51,7 +51,7 @@
     <a-pagination v-model:current="listRoomQuery.page" v-model:pageSize="listRoomQuery.pageSize" :total="total" @change="onPageChange">
     </a-pagination>
 
-    <a-modal v-if="joined" :open="createRoomModalOpen" title="新建房间">
+    <a-modal v-if="joined" :open="createRoomModalOpen" title="新建房间" @cancel="_ => { createRoomModalOpen = false }">
       <template #footer>
         <a-button @click="_ => { createRoomModalOpen = false }">取消</a-button>
         <a-button type="primary" @click="createRoom()" html-type="submit">创建</a-button>
@@ -70,6 +70,11 @@
           <a-input-number v-model:value="createRoomState.memberLimit" :max="4" :min="1"></a-input-number>
         </a-form-item>
       </a-form>
+    </a-modal>
+    <a-modal v-if="joined" :open="deleteRoomModalOpen" title="警告" @cancel="closeConfirmDelete" @ok="deleteRoom">
+      <p>删除房间会同时永久删除所有存档文件，你可以先将存档转移到其他房间</p>
+      <p>请在下方输入框输入房间名：{{deletedRoom["roomName"]}}</p>
+      <a-input v-model:value="deleteRoomConfirmInput"></a-input>
     </a-modal>
   </a-card>
 </template>
@@ -148,6 +153,9 @@ export default {
         pageSize: 10
       },
       total: 0,
+      deleteRoomModalOpen: false,
+      deletedRoom: null,
+      deleteRoomConfirmInput: "",
     }
   },
   created() {
@@ -187,6 +195,12 @@ export default {
         message.warn("请输入房间名");
         return;
       }
+      if (this.createRoomState.joinType === 2) {
+        if (this.createRoomState.password === "") {
+          message.warn("请输入房间密码");
+          return;
+        }
+      }
       const _this = this;
       api.post("/room", this.createRoomState).then(_ => {
         _this.listJoinedRooms();
@@ -206,6 +220,26 @@ export default {
     },
     getJoinTypeName(id) {
       return configs.getEnumName("roomJoinTypeEnum", id);
+    },
+    confirmDelete(room) {
+      this.deletedRoom = room;
+      this.deleteRoomModalOpen = true;
+    },
+    closeConfirmDelete() {
+      this.deleteRoomModalOpen = false;
+    },
+    deleteRoom() {
+      if (this.deleteRoomConfirmInput !== this.deletedRoom["roomName"]) {
+        message.warn("请正确输入房间名称");
+        return;
+      }
+      api.delete("/room/"+this.deletedRoom["roomId"]).then(_=>{
+        message.success("删除成功");
+        this.listRoom();
+        this.closeConfirmDelete();
+      }).catch(resp=>{
+        message.error(resp["message"]);
+      });
     },
   }
 }
