@@ -5,23 +5,14 @@ import (
 	"context"
 	"encoding/binary"
 	"github.com/StellrisJAY/cloud-emu/emulator/dawngb/gb"
-	"image"
 	"strings"
-	"time"
 )
 
 type DawnGbAdapter struct {
-	g             *gb.GB
-	frame         *BaseFrame
-	frameConsumer func(IFrame)
-	ticker        *time.Ticker
-	cancel        context.CancelFunc
-	audioBuffer   *bytes.Buffer
-	scale         int
-	audioChan     chan float32
-	boost         float64
-	pauseChan     chan struct{}
-	resumeChan    chan struct{}
+	BaseEmulatorAdapter
+	g           *gb.GB
+	audioBuffer *bytes.Buffer
+	audioChan   chan float32
 }
 
 func init() {
@@ -42,59 +33,14 @@ func newDawnGbAdapter(options IEmulatorOptions) (*DawnGbAdapter, error) {
 	if err := g.Load(gb.LOAD_ROM, options.GameData()); err != nil {
 		return nil, err
 	}
-	return &DawnGbAdapter{
-		g:             g,
-		frame:         MakeEmptyBaseFrame(image.Rect(0, 0, 160, 144)),
-		frameConsumer: options.FrameConsumer(),
-		audioBuffer:   buffer,
-		scale:         1,
-		audioChan:     options.AudioSampleChan(),
-		boost:         1.0,
-		pauseChan:     make(chan struct{}),
-		resumeChan:    make(chan struct{}),
-	}, nil
-}
-
-func (d *DawnGbAdapter) emulatorLoop(ctx context.Context) {
-	d.ticker = time.NewTicker(getFrameInterval(d.boost))
-	defer func() {
-		if r := recover(); r != nil {
-		}
-		d.ticker.Stop()
-	}()
-	for {
-		select {
-		case <-ctx.Done():
-			close(d.pauseChan)
-			close(d.resumeChan)
-			return
-		case <-d.pauseChan:
-			d.ticker.Stop()
-		case <-d.resumeChan:
-			d.ticker.Reset(getFrameInterval(d.boost))
-		case <-d.ticker.C:
-			start := time.Now()
-			d.g.RunFrame()
-			screen := d.g.Screen()
-			d.frame.FromNRGBAColors(screen, d.scale)
-			d.frameConsumer(d.frame)
-		LOOP:
-			for {
-				var s int16 = 0
-				err := binary.Read(d.audioBuffer, binary.LittleEndian, &s)
-				if err != nil {
-					break LOOP
-				}
-				select {
-				case d.audioChan <- float32(s) / 32767.0:
-				default:
-					break LOOP
-				}
-			}
-			interval := max(getFrameInterval(d.boost)-time.Since(start), time.Millisecond*5)
-			d.ticker.Reset(interval)
-		}
+	a := &DawnGbAdapter{
+		g:                   g,
+		audioBuffer:         buffer,
+		audioChan:           options.AudioSampleChan(),
+		BaseEmulatorAdapter: newBaseEmulatorAdapter(160, 144, options),
 	}
+	a.stepFunc = a.step
+	return a, nil
 }
 
 func (d *DawnGbAdapter) Start() error {
@@ -105,14 +51,24 @@ func (d *DawnGbAdapter) Start() error {
 	return nil
 }
 
-func (d *DawnGbAdapter) Pause() error {
-	d.pauseChan <- struct{}{}
-	return nil
-}
-
-func (d *DawnGbAdapter) Resume() error {
-	d.resumeChan <- struct{}{}
-	return nil
+func (d *DawnGbAdapter) step() {
+	d.g.RunFrame()
+	screen := d.g.Screen()
+	d.frame.FromNRGBAColors(screen, d.scale)
+	d.frameConsumer(d.frame)
+LOOP:
+	for {
+		var s int16 = 0
+		err := binary.Read(d.audioBuffer, binary.LittleEndian, &s)
+		if err != nil {
+			break LOOP
+		}
+		select {
+		case d.audioChan <- float32(s) / 32767.0:
+		default:
+			break LOOP
+		}
+	}
 }
 
 func (d *DawnGbAdapter) Save() (IEmulatorSave, error) {
@@ -135,53 +91,16 @@ func (d *DawnGbAdapter) Restart(options IEmulatorOptions) error {
 	if err := g.Load(gb.LOAD_ROM, options.GameData()); err != nil {
 		return err
 	}
-	d.cancel()
+	_ = d.Stop()
 	d.g = g
+	d.audioBuffer = buffer
+	d.audioChan = options.AudioSampleChan()
 	d.frameConsumer = options.FrameConsumer()
-	d.g.Reset(false)
 	return d.Start()
 }
 
-func (d *DawnGbAdapter) Stop() error {
-	d.cancel()
-	return nil
-}
-
-func (d *DawnGbAdapter) SubmitInput(controllerId int, keyCode string, pressed bool) {
+func (d *DawnGbAdapter) SubmitInput(_ int, keyCode string, pressed bool) {
 	d.g.SetKeyInput(strings.ToUpper(keyCode), pressed)
-}
-
-func (d *DawnGbAdapter) SetGraphicOptions(options *GraphicOptions) {
-	if options.HighResolution {
-		d.scale = 2
-		d.frame = MakeEmptyBaseFrame(image.Rect(0, 0, 160*d.scale, 144*d.scale))
-	} else {
-		d.scale = 1
-		d.frame = MakeEmptyBaseFrame(image.Rect(0, 0, 160, 144))
-	}
-}
-
-func (d *DawnGbAdapter) GetGraphicOptions() *GraphicOptions {
-	return &GraphicOptions{
-		HighResolution: d.scale > 1,
-	}
-}
-
-func (d *DawnGbAdapter) GetCPUBoostRate() float64 {
-	return d.boost
-}
-
-func (d *DawnGbAdapter) SetCPUBoostRate(f float64) float64 {
-	d.boost = max(0.5, min(f, 2.0))
-	return d.boost
-}
-
-func (d *DawnGbAdapter) OutputResolution() (width, height int) {
-	return 160 * d.scale, 144 * d.scale
-}
-
-func (d *DawnGbAdapter) MultiController() bool {
-	return true
 }
 
 func (d *DawnGbAdapter) ControllerInfos() []ControllerInfo {

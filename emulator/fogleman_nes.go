@@ -5,22 +5,13 @@ import (
 	"context"
 	"encoding/gob"
 	"github.com/StellrisJAY/cloud-emu/emulator/fogleman_nes/nes"
-	"image"
-	"time"
 )
 
 type FoglemanNesAdapter struct {
-	console       *nes.Console
-	cancel        context.CancelFunc
-	ticker        *time.Ticker
-	frame         *BaseFrame
-	frameConsumer func(frame IFrame)
-	buttons       [2][8]bool
-	game          string
-	scale         int
-	boost         float64
-	pauseChan     chan struct{}
-	resumeChan    chan struct{}
+	BaseEmulatorAdapter
+	console *nes.Console
+	buttons [2][8]bool
+	game    string
 }
 
 func init() {
@@ -36,13 +27,11 @@ func init() {
 }
 
 func newFoglemanNesAdapter(options IEmulatorOptions) (*FoglemanNesAdapter, error) {
-	adapter := &FoglemanNesAdapter{}
-	adapter.game = options.Game()
-	adapter.scale = 1
-	adapter.boost = 1.0
-	adapter.pauseChan = make(chan struct{})
-	adapter.resumeChan = make(chan struct{})
-	adapter.frame = MakeEmptyBaseFrame(image.Rect(0, 0, 256, 240))
+	adapter := &FoglemanNesAdapter{
+		BaseEmulatorAdapter: newBaseEmulatorAdapter(256, 240, options),
+		game:                options.Game(),
+	}
+	adapter.stepFunc = adapter.step
 	console, err := nes.NewConsole(options.GameData())
 	if err != nil {
 		return nil, err
@@ -50,7 +39,6 @@ func newFoglemanNesAdapter(options IEmulatorOptions) (*FoglemanNesAdapter, error
 	console.SetAudioSampleRate(float64(options.AudioSampleRate()))
 	console.SetAudioChannel(options.AudioSampleChan())
 	adapter.console = console
-	adapter.frameConsumer = options.FrameConsumer()
 	return adapter, nil
 }
 
@@ -61,45 +49,11 @@ func (f *FoglemanNesAdapter) Start() error {
 	return nil
 }
 
-func (f *FoglemanNesAdapter) emulatorLoop(ctx context.Context) {
-	f.ticker = time.NewTicker(getFrameInterval(f.boost))
-	defer func() {
-		if r := recover(); r != nil {
-		}
-		f.ticker.Stop()
-	}()
-	for {
-		select {
-		case <-ctx.Done():
-			close(f.pauseChan)
-			close(f.resumeChan)
-			return
-		case <-f.pauseChan:
-			f.ticker.Stop()
-		case <-f.resumeChan:
-			f.ticker.Reset(getFrameInterval(f.boost))
-		case <-f.ticker.C:
-			start := time.Now()
-			f.console.StepFrame()
-			frame := f.console.Buffer()
-			f.frame.FromRGBA(frame, f.scale)
-			f.frameConsumer(f.frame)
-			interval := max(getFrameInterval(f.boost)-time.Since(start), time.Millisecond*5)
-			f.ticker.Reset(interval)
-		}
-	}
-}
-
-func (f *FoglemanNesAdapter) Pause() error {
-	// 直接stop可能会被emulatorLoop中每帧后的reset覆盖，这里使用pauseChan将stop操作交给emulatorLoop
-	// f.ticker.Stop()
-	f.pauseChan <- struct{}{}
-	return nil
-}
-
-func (f *FoglemanNesAdapter) Resume() error {
-	f.resumeChan <- struct{}{}
-	return nil
+func (f *FoglemanNesAdapter) step() {
+	f.console.StepFrame()
+	frame := f.console.Buffer()
+	f.frame.FromRGBA(frame, f.scale)
+	f.frameConsumer(f.frame)
 }
 
 func (f *FoglemanNesAdapter) Save() (IEmulatorSave, error) {
@@ -131,11 +85,6 @@ func (f *FoglemanNesAdapter) Restart(options IEmulatorOptions) error {
 	return f.Start()
 }
 
-func (f *FoglemanNesAdapter) Stop() error {
-	f.cancel()
-	return nil
-}
-
 func (f *FoglemanNesAdapter) SubmitInput(controllerId int, keyCode string, pressed bool) {
 	switch keyCode {
 	case "A":
@@ -157,40 +106,6 @@ func (f *FoglemanNesAdapter) SubmitInput(controllerId int, keyCode string, press
 	}
 	f.console.SetButtons1(f.buttons[0])
 	f.console.SetButtons2(f.buttons[1])
-}
-
-func (f *FoglemanNesAdapter) SetGraphicOptions(options *GraphicOptions) {
-	_ = f.Pause()
-	if options.HighResolution {
-		f.scale = 2
-	} else {
-		f.scale = 1
-	}
-	f.frame = MakeEmptyBaseFrame(image.Rect(0, 0, 256*f.scale, 240*f.scale))
-	_ = f.Resume()
-}
-
-func (f *FoglemanNesAdapter) GetGraphicOptions() *GraphicOptions {
-	return &GraphicOptions{
-		HighResolution: f.scale > 1,
-	}
-}
-
-func (f *FoglemanNesAdapter) GetCPUBoostRate() float64 {
-	return f.boost
-}
-
-func (f *FoglemanNesAdapter) SetCPUBoostRate(r float64) float64 {
-	f.boost = max(0.5, min(r, 2.0))
-	return f.boost
-}
-
-func (f *FoglemanNesAdapter) OutputResolution() (width, height int) {
-	return 256, 240
-}
-
-func (f *FoglemanNesAdapter) MultiController() bool {
-	return true
 }
 
 func (f *FoglemanNesAdapter) ControllerInfos() []ControllerInfo {

@@ -5,19 +5,11 @@ import (
 	"github.com/StellrisJAY/cloud-emu/emulator/nes"
 	"github.com/StellrisJAY/cloud-emu/emulator/nes/bus"
 	"github.com/StellrisJAY/cloud-emu/emulator/nes/config"
-	"github.com/StellrisJAY/cloud-emu/emulator/nes/ppu"
-	"time"
 )
 
 type NesEmulatorAdapter struct {
-	e             *nes.Emulator
-	cancelFunc    context.CancelFunc
-	ticker        *time.Ticker
-	frameConsumer func(IFrame)
-	scale         int
-	boost         float64
-	pauseChan     chan struct{}
-	resumeChan    chan struct{}
+	BaseEmulatorAdapter
+	e *nes.Emulator
 }
 
 func init() {
@@ -37,14 +29,12 @@ func makeNESEmulatorAdapter(options IEmulatorOptions) (IEmulator, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &NesEmulatorAdapter{
-		e:             e,
-		frameConsumer: options.FrameConsumer(),
-		scale:         1,
-		boost:         1,
-		pauseChan:     make(chan struct{}),
-		resumeChan:    make(chan struct{}),
-	}, nil
+	n := &NesEmulatorAdapter{
+		e:                   e,
+		BaseEmulatorAdapter: newBaseEmulatorAdapter(256, 240, options),
+	}
+	n.stepFunc = n.step
+	return n, nil
 }
 
 func makeNESEmulator(options IEmulatorOptions) (*nes.Emulator, error) {
@@ -66,54 +56,20 @@ func makeNESEmulator(options IEmulatorOptions) (*nes.Emulator, error) {
 // Start 启动NES模拟器，创建单独的goroutine运行CPU循环，使用context打断
 func (n *NesEmulatorAdapter) Start() error {
 	ctx, cancelFunc := context.WithCancel(context.Background())
-	n.cancelFunc = cancelFunc
+	n.cancel = cancelFunc
 	n.e.Reset()
 	go n.emulatorLoop(ctx)
 	return nil
 }
 
-func (n *NesEmulatorAdapter) emulatorLoop(ctx context.Context) {
-	n.ticker = time.NewTicker(getFrameInterval(n.boost))
-	defer func() {
-		if r := recover(); r != nil {
-		}
-		n.ticker.Stop()
-	}()
-	for {
-		select {
-		case <-ctx.Done():
-			close(n.pauseChan)
-			close(n.resumeChan)
-			return
-		case <-n.pauseChan:
-			n.ticker.Stop()
-		case <-n.resumeChan:
-			n.ticker.Reset(getFrameInterval(n.boost))
-		case <-n.ticker.C:
-			start := time.Now()
-			n.e.StepOneFrame()
-			n.frameConsumer(n.e.Frame())
-			interval := max(getFrameInterval(n.boost)-time.Since(start), time.Millisecond*5)
-			n.ticker.Reset(interval)
-		}
-	}
-}
-
-// Pause 暂停NES模拟器
-func (n *NesEmulatorAdapter) Pause() error {
-	n.pauseChan <- struct{}{}
-	return nil
-}
-
-// Resume 恢复NES模拟器
-func (n *NesEmulatorAdapter) Resume() error {
-	n.resumeChan <- struct{}{}
-	return nil
+func (n *NesEmulatorAdapter) step() {
+	n.e.StepOneFrame()
+	n.frameConsumer(n.e.Frame())
 }
 
 // Restart 重启NES模拟器，结束旧模拟器goroutine，创建并运行新模拟器
 func (n *NesEmulatorAdapter) Restart(options IEmulatorOptions) error {
-	n.cancelFunc()
+	_ = n.Stop()
 	e, err := makeNESEmulator(options)
 	if err != nil {
 		return err
@@ -123,13 +79,7 @@ func (n *NesEmulatorAdapter) Restart(options IEmulatorOptions) error {
 	n.frameConsumer = options.FrameConsumer()
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	go n.emulatorLoop(ctx)
-	n.cancelFunc = cancelFunc
-	return nil
-}
-
-// Stop 关闭NES模拟器
-func (n *NesEmulatorAdapter) Stop() error {
-	n.cancelFunc()
+	n.cancel = cancelFunc
 	return nil
 }
 
@@ -186,23 +136,6 @@ func (n *NesEmulatorAdapter) GetGraphicOptions() *GraphicOptions {
 	return &GraphicOptions{
 		HighResolution: n.scale > 1,
 	}
-}
-
-func (n *NesEmulatorAdapter) GetCPUBoostRate() float64 {
-	return n.boost
-}
-
-func (n *NesEmulatorAdapter) SetCPUBoostRate(rate float64) float64 {
-	n.boost = max(0.5, min(rate, 2.0))
-	return n.boost
-}
-
-func (n *NesEmulatorAdapter) OutputResolution() (width, height int) {
-	return ppu.WIDTH, ppu.HEIGHT
-}
-
-func (n *NesEmulatorAdapter) MultiController() bool {
-	return true
 }
 
 func (n *NesEmulatorAdapter) ControllerInfos() []ControllerInfo {

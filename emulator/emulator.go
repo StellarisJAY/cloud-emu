@@ -17,8 +17,6 @@ const (
 	CodeDawnGB      = "DAWNGB"
 )
 
-const FrameInterval = time.Second / 60
-
 var (
 	supportedEmulators = make(map[string]Info)
 )
@@ -149,14 +147,6 @@ func (s *BaseEmulatorSave) SaveData() []byte {
 	return s.Data
 }
 
-func MakeBaseFrame(image *image.YCbCr, width, height int) IFrame {
-	return &BaseFrame{
-		image:  image,
-		width:  width,
-		height: height,
-	}
-}
-
 func MakeEmptyBaseFrame(rect image.Rectangle) *BaseFrame {
 	return &BaseFrame{
 		image:  image.NewYCbCr(rect, image.YCbCrSubsampleRatio420),
@@ -229,6 +219,24 @@ func (b *BaseFrame) FromNRGBAColors(rgbaColors []color.NRGBA, scale int) {
 				b.image.Y[yOff] = Y
 				b.image.Cb[cOff] = Cb
 				b.image.Cr[cOff] = Cr
+			}
+		}
+	}
+}
+
+func (b *BaseFrame) FromRGBRaw(data [][][3]uint8, scale int) {
+	for x := 0; x < b.width/scale; x++ {
+		for y := 0; y < b.height/scale; y++ {
+			Y, cb, cr := color.RGBToYCbCr(data[x][y][0], data[x][y][1], data[x][y][2])
+			x0, y0 := x*scale, y*scale
+			for i := 0; i < scale; i++ {
+				for j := 0; j < scale; j++ {
+					yOff := b.image.YOffset(x0+i, y0+j)
+					cOff := b.image.COffset(x0+i, y0+j)
+					b.image.Y[yOff] = Y
+					b.image.Cb[cOff] = cb
+					b.image.Cr[cOff] = cr
+				}
 			}
 		}
 	}
