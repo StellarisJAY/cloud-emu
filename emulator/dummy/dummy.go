@@ -9,7 +9,6 @@ type Emulator struct {
 	cancelFunc     context.CancelFunc
 	renderCallback func(frame *Frame)
 	pauseChan      chan struct{}
-	resumeChan     chan struct{}
 	frames         []*Frame
 	i              int
 	Width          int
@@ -21,7 +20,6 @@ func MakeDummyEmulator(game []byte, frameConsumer func(frame *Frame)) (*Emulator
 	e := &Emulator{
 		renderCallback: frameConsumer,
 		pauseChan:      make(chan struct{}),
-		resumeChan:     make(chan struct{}),
 		i:              0,
 		ticker:         time.NewTicker(time.Second),
 	}
@@ -43,6 +41,8 @@ func (d *Emulator) Start(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
+		case <-d.pauseChan:
+			d.ticker.Stop()
 		case <-d.ticker.C:
 			frame := d.nextFrame()
 			d.renderCallback(frame)
@@ -61,7 +61,7 @@ func (d *Emulator) nextFrame() *Frame {
 }
 
 func (d *Emulator) Pause() {
-	d.ticker.Stop()
+	d.pauseChan <- struct{}{}
 }
 
 func (d *Emulator) Resume() {

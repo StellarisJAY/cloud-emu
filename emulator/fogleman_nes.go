@@ -19,6 +19,7 @@ type FoglemanNesAdapter struct {
 	game          string
 	scale         int
 	boost         float64
+	pauseChan     chan struct{}
 }
 
 func init() {
@@ -38,6 +39,7 @@ func newFoglemanNesAdapter(options IEmulatorOptions) (*FoglemanNesAdapter, error
 	adapter.game = options.Game()
 	adapter.scale = 1
 	adapter.boost = 1.0
+	adapter.pauseChan = make(chan struct{})
 	adapter.frame = MakeEmptyBaseFrame(image.Rect(0, 0, 256, 240))
 	console, err := nes.NewConsole(options.GameData())
 	if err != nil {
@@ -68,6 +70,8 @@ func (f *FoglemanNesAdapter) emulatorLoop(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
+		case <-f.pauseChan:
+			f.ticker.Stop()
 		case <-f.ticker.C:
 			start := time.Now()
 			f.console.StepFrame()
@@ -81,12 +85,14 @@ func (f *FoglemanNesAdapter) emulatorLoop(ctx context.Context) {
 }
 
 func (f *FoglemanNesAdapter) Pause() error {
-	f.ticker.Stop()
+	// 直接stop可能会被emulatorLoop中每帧后的reset覆盖，这里使用pauseChan将stop操作交给emulatorLoop
+	// f.ticker.Stop()
+	f.pauseChan <- struct{}{}
 	return nil
 }
 
 func (f *FoglemanNesAdapter) Resume() error {
-	f.ticker.Reset(FrameInterval)
+	f.ticker.Reset(getFrameInterval(f.boost))
 	return nil
 }
 
@@ -121,6 +127,7 @@ func (f *FoglemanNesAdapter) Restart(options IEmulatorOptions) error {
 
 func (f *FoglemanNesAdapter) Stop() error {
 	f.cancel()
+	close(f.pauseChan)
 	return nil
 }
 

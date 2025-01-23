@@ -17,6 +17,7 @@ type MagiaAdapter struct {
 	buttons       [10]bool
 	scale         int
 	boost         float64
+	pauseChan     chan struct{}
 }
 
 func init() {
@@ -40,6 +41,7 @@ func newMagiaAdapter(options IEmulatorOptions) (*MagiaAdapter, error) {
 		frameConsumer: options.FrameConsumer(),
 		scale:         1,
 		boost:         1.0,
+		pauseChan:     make(chan struct{}),
 	}
 	handlers := [10]func() bool{}
 	for i := 0; i < 10; i++ {
@@ -70,6 +72,8 @@ func (m *MagiaAdapter) emulatorLoop(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
+		case <-m.pauseChan:
+			m.ticker.Stop()
 		case <-m.ticker.C:
 			start := time.Now()
 			m.e.Update()
@@ -83,12 +87,12 @@ func (m *MagiaAdapter) emulatorLoop(ctx context.Context) {
 }
 
 func (m *MagiaAdapter) Pause() error {
-	m.ticker.Stop()
+	m.pauseChan <- struct{}{}
 	return nil
 }
 
 func (m *MagiaAdapter) Resume() error {
-	m.ticker.Reset(FrameInterval)
+	m.ticker.Reset(getFrameInterval(m.boost))
 	return nil
 }
 
@@ -119,6 +123,7 @@ func (m *MagiaAdapter) Restart(options IEmulatorOptions) error {
 
 func (m *MagiaAdapter) Stop() error {
 	m.cancel()
+	close(m.pauseChan)
 	return nil
 }
 

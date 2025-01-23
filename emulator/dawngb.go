@@ -20,6 +20,7 @@ type DawnGbAdapter struct {
 	scale         int
 	audioChan     chan float32
 	boost         float64
+	pauseChan     chan struct{}
 }
 
 func init() {
@@ -48,15 +49,23 @@ func newDawnGbAdapter(options IEmulatorOptions) (*DawnGbAdapter, error) {
 		scale:         1,
 		audioChan:     options.AudioSampleChan(),
 		boost:         1.0,
+		pauseChan:     make(chan struct{}),
 	}, nil
 }
 
 func (d *DawnGbAdapter) emulatorLoop(ctx context.Context) {
 	d.ticker = time.NewTicker(getFrameInterval(d.boost))
+	defer func() {
+		if r := recover(); r != nil {
+		}
+		d.ticker.Stop()
+	}()
 	for {
 		select {
 		case <-ctx.Done():
 			return
+		case <-d.pauseChan:
+			d.ticker.Stop()
 		case <-d.ticker.C:
 			start := time.Now()
 			d.g.RunFrame()
@@ -91,12 +100,12 @@ func (d *DawnGbAdapter) Start() error {
 }
 
 func (d *DawnGbAdapter) Pause() error {
-	d.ticker.Stop()
+	d.pauseChan <- struct{}{}
 	return nil
 }
 
 func (d *DawnGbAdapter) Resume() error {
-	d.ticker.Reset(FrameInterval)
+	d.ticker.Reset(getFrameInterval(d.boost))
 	return nil
 }
 
@@ -129,6 +138,8 @@ func (d *DawnGbAdapter) Restart(options IEmulatorOptions) error {
 
 func (d *DawnGbAdapter) Stop() error {
 	d.cancel()
+	close(d.pauseChan)
+	close(d.audioChan)
 	return nil
 }
 

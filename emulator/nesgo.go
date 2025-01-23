@@ -16,6 +16,7 @@ type NesEmulatorAdapter struct {
 	frameConsumer func(IFrame)
 	scale         int
 	boost         float64
+	pauseChan     chan struct{}
 }
 
 func init() {
@@ -40,6 +41,7 @@ func makeNESEmulatorAdapter(options IEmulatorOptions) (IEmulator, error) {
 		frameConsumer: options.FrameConsumer(),
 		scale:         1,
 		boost:         1,
+		pauseChan:     make(chan struct{}),
 	}, nil
 }
 
@@ -79,6 +81,8 @@ func (n *NesEmulatorAdapter) emulatorLoop(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
+		case <-n.pauseChan:
+			n.ticker.Stop()
 		case <-n.ticker.C:
 			start := time.Now()
 			n.e.StepOneFrame()
@@ -91,16 +95,14 @@ func (n *NesEmulatorAdapter) emulatorLoop(ctx context.Context) {
 
 // Pause 暂停NES模拟器
 func (n *NesEmulatorAdapter) Pause() error {
-	if n.ticker != nil {
-		n.ticker.Stop()
-	}
+	n.pauseChan <- struct{}{}
 	return nil
 }
 
 // Resume 恢复NES模拟器
 func (n *NesEmulatorAdapter) Resume() error {
 	if n.ticker != nil {
-		n.ticker.Reset(FrameInterval)
+		n.ticker.Reset(getFrameInterval(n.boost))
 	}
 	return nil
 }
@@ -124,6 +126,7 @@ func (n *NesEmulatorAdapter) Restart(options IEmulatorOptions) error {
 // Stop 关闭NES模拟器
 func (n *NesEmulatorAdapter) Stop() error {
 	n.cancelFunc()
+	close(n.pauseChan)
 	return nil
 }
 
