@@ -148,6 +148,7 @@ func (r *RoomUseCase) buildRoomDto(ctx context.Context, room *Room) error {
 		room.GameId = instance.GameId
 		room.EmulatorType = instance.EmulatorType
 		room.EmulatorCode = instance.EmulatorCode
+		room.GameName = instance.GameName
 	}
 	return nil
 }

@@ -45,16 +45,19 @@ func (r *RoomService) ListMyRooms(ctx context.Context, request *v1.ListRoomReque
 	result := make([]*v1.RoomDto, 0, len(rooms))
 	for _, room := range rooms {
 		result = append(result, &v1.RoomDto{
-			RoomId:      room.RoomId,
-			RoomName:    room.RoomName,
-			HostId:      room.HostId,
-			HostName:    room.HostName,
-			MemberCount: room.MemberCount,
-			MemberLimit: room.MemberLimit,
-			AddTime:     room.AddTime.Format(time.DateTime),
-			EmulatorId:  room.EmulatorId,
-			JoinType:    room.JoinType,
-			IsHost:      room.IsHost,
+			RoomId:       room.RoomId,
+			RoomName:     room.RoomName,
+			HostId:       room.HostId,
+			HostName:     room.HostName,
+			MemberCount:  room.MemberCount,
+			MemberLimit:  room.MemberLimit,
+			AddTime:      room.AddTime.Format(time.DateTime),
+			EmulatorId:   room.EmulatorId,
+			JoinType:     room.JoinType,
+			IsHost:       room.IsHost,
+			EmulatorName: room.EmulatorName,
+			GameName:     room.GameName,
+			GameId:       room.GameId,
 		})
 	}
 	return &v1.ListRoomResponse{
@@ -87,15 +90,18 @@ func (r *RoomService) ListAllRooms(ctx context.Context, request *v1.ListRoomRequ
 	result := make([]*v1.RoomDto, 0, len(rooms))
 	for _, room := range rooms {
 		result = append(result, &v1.RoomDto{
-			RoomId:      room.RoomId,
-			RoomName:    room.RoomName,
-			HostId:      room.HostId,
-			HostName:    room.HostName,
-			MemberCount: room.MemberCount,
-			MemberLimit: room.MemberLimit,
-			AddTime:     room.AddTime.Format(time.DateTime),
-			EmulatorId:  room.EmulatorId,
-			JoinType:    room.JoinType,
+			RoomId:       room.RoomId,
+			RoomName:     room.RoomName,
+			HostId:       room.HostId,
+			HostName:     room.HostName,
+			MemberCount:  room.MemberCount,
+			MemberLimit:  room.MemberLimit,
+			AddTime:      room.AddTime.Format(time.DateTime),
+			EmulatorId:   room.EmulatorId,
+			JoinType:     room.JoinType,
+			EmulatorName: room.EmulatorName,
+			GameName:     room.GameName,
+			GameId:       room.GameId,
 		})
 	}
 	return &v1.ListRoomResponse{

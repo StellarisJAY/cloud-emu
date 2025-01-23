@@ -40,9 +40,6 @@ type RoomInstanceRepo interface {
 type RoomInstance struct {
 	RoomInstanceId int64     `json:"roomInstanceId"`
 	RoomId         int64     `json:"roomId"`
-	RoomName       string    `json:"roomName"`
-	HostId         int64     `json:"hostId"`
-	HostName       string    `json:"hostName"`
 	EmulatorId     int64     `json:"emulatorId"`
 	EmulatorName   string    `json:"emulatorName"`
 	AddTime        time.Time `json:"addTime"`
@@ -54,6 +51,7 @@ type RoomInstance struct {
 	SessionKey     string
 	EmulatorType   string
 	EmulatorCode   string
+	GameName       string
 }
 
 const (
@@ -176,6 +174,7 @@ func (uc *RoomInstanceUseCase) OpenRoomInstance(ctx context.Context, roomId int6
 			return v1.ErrorServiceError("无法获取默认游戏配置")
 		}
 		instance.GameId = game.GameId
+		instance.GameName = game.GameName
 		gameData, err := uc.emulatorGameRepo.Download(ctx, game)
 		if err != nil || len(gameData) == 0 {
 			return v1.ErrorServiceError("无法获取默认游戏配置")
@@ -328,6 +327,9 @@ func (uc *RoomInstanceUseCase) Restart(ctx context.Context, roomId, userId, emul
 		if emulator == nil {
 			return v1.ErrorServiceError("重启失败，模拟器不存在")
 		}
+		if emulator.Disabled {
+			return v1.ErrorServiceError("重启失败，模拟器被禁用")
+		}
 		game, _ := uc.emulatorGameRepo.GetById(ctx, gameId)
 		if game == nil || game.EmulatorType != emulator.EmulatorType {
 			uc.logger.Error("重启获取游戏信息错误:", game.EmulatorType, emulator.EmulatorType)
@@ -362,6 +364,8 @@ func (uc *RoomInstanceUseCase) Restart(ctx context.Context, roomId, userId, emul
 		instance.GameId = game.GameId
 		instance.EmulatorName = emulator.EmulatorName
 		instance.EmulatorType = emulator.EmulatorType
+		instance.EmulatorCode = emulator.EmulatorCode
+		instance.GameName = game.GameName
 		err = uc.repo.SaveRoomInstance(ctx, instance)
 		if err != nil {
 			uc.logger.Error("重启更新房间实例错误:", err)

@@ -38,6 +38,8 @@
               <a-button v-else type="link" @click="joinRoom(item)">加入</a-button>
             </template>
             <ul style="text-align: left">
+              <li>模拟器：{{item["emulatorId"]==='0'?'无':item["emulatorName"]}}</li>
+              <li>游戏：{{item["gameId"]==='0'?'无':item["gameName"]}}</li>
               <li>房主：{{ item["hostName"] }}</li>
               <li>人数：{{ item["memberCount"] }}/{{ item["memberLimit"] }}</li>
               <li>访问权限：{{ getJoinTypeName(item["joinType"]) }}</li>
