@@ -501,6 +501,11 @@ export default {
       });
       this.rtcSession.dataChannel.send(msg);
     },
+    sendActions(codes, pressed) {
+      codes.forEach((code) => {
+        this.sendAction(code, pressed);
+      });
+    },
 
     openSavedGamesDrawer() {
       this.savedGameOpen = true;
@@ -643,10 +648,10 @@ export default {
         button.style.backgroundColor = "#9c253d"
         button.style.position="relative"
         button.style.color = "white";
-        button.addEventListener("mousedown", _=>this.sendAction(item["code"], MessageGameButtonPressed));
-        button.addEventListener("mouseup", _=>this.sendAction(item["code"], MessageGameButtonReleased));
-        button.addEventListener("touchstart", _=>this.sendAction(item["code"], MessageGameButtonPressed));
-        button.addEventListener("touchend", _=>this.sendAction(item["code"], MessageGameButtonReleased));
+        button.addEventListener("mousedown", _=>this.sendActions(item["codes"], MessageGameButtonPressed));
+        button.addEventListener("mouseup", _=>this.sendActions(item["codes"], MessageGameButtonReleased));
+        button.addEventListener("touchstart", _=>this.sendActions(item["codes"], MessageGameButtonPressed));
+        button.addEventListener("touchend", _=>this.sendActions(item["codes"], MessageGameButtonReleased));
         const id = "slot-"+item["slot"];
         document.getElementById(id).appendChild(button);
       });
