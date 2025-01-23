@@ -53,11 +53,10 @@ func (g *Instance) GetGraphicOptions() *GraphicOptions {
 
 func (g *Instance) setGraphicOptions(options *GraphicOptions) ConsumerResult {
 	_ = g.e.Pause()
-	defer g.e.Resume()
-
+	defer func() {
+		_ = g.e.Resume()
+	}()
 	g.e.SetGraphicOptions(&emulator.GraphicOptions{
-		//Grayscale:    options.Grayscale,
-		//ReverseColor: options.ReverseColor,
 		HighResolution: options.HighResOpen,
 	})
 	w, h := g.e.OutputResolution()
@@ -87,8 +86,8 @@ func (g *Instance) SetEmulatorSpeed(boostRate float64) float64 {
 
 func (g *Instance) setEmulatorSpeed(boostRate float64) ConsumerResult {
 	_ = g.e.Pause()
-	defer g.e.Resume()
 	rate := g.e.SetCPUBoostRate(boostRate)
+	_ = g.e.Resume()
 	return ConsumerResult{Success: true, Error: nil, Data: rate}
 }
 

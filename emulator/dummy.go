@@ -81,23 +81,22 @@ func (d *DummyAdapter) Stop() error {
 func (d *DummyAdapter) SubmitInput(controllerId int, keyCode string, pressed bool) {
 }
 
-func (d *DummyAdapter) SetGraphicOptions(options *GraphicOptions) {
-	//TODO implement me
-	panic("implement me")
+func (d *DummyAdapter) SetGraphicOptions(_ *GraphicOptions) {
+
 }
 
 func (d *DummyAdapter) GetGraphicOptions() *GraphicOptions {
-	panic("not implemented")
+	return &GraphicOptions{
+		HighResolution: false,
+	}
 }
 
 func (d *DummyAdapter) GetCPUBoostRate() float64 {
-	//TODO implement me
-	panic("implement me")
+	return 1.0
 }
 
 func (d *DummyAdapter) SetCPUBoostRate(f float64) float64 {
-	//TODO implement me
-	panic("implement me")
+	return 1.0
 }
 
 func (d *DummyAdapter) OutputResolution() (width, height int) {

@@ -17,6 +17,7 @@ type GoboyAdapter struct {
 	game          string
 	boost         float64
 	pauseChan     chan struct{}
+	resumeChan    chan struct{}
 }
 
 func init() {
@@ -43,6 +44,7 @@ func newGoboyAdapter(options IEmulatorOptions) (IEmulator, error) {
 		game:          options.Game(),
 		boost:         1.0,
 		pauseChan:     make(chan struct{}),
+		resumeChan:    make(chan struct{}),
 	}
 	return g, nil
 }
@@ -64,10 +66,15 @@ func (g *GoboyAdapter) emulatorLoop(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			close(g.resumeChan)
+			close(g.pauseChan)
 			return
 		case <-g.pauseChan:
 			g.ticker.Stop()
 			g.gb.ExecutionPaused = true
+		case <-g.resumeChan:
+			g.ticker.Reset(getFrameInterval(g.boost))
+			g.gb.ExecutionPaused = false
 		case <-g.ticker.C:
 			start := time.Now()
 			g.gb.Update()
@@ -85,8 +92,7 @@ func (g *GoboyAdapter) Pause() error {
 }
 
 func (g *GoboyAdapter) Resume() error {
-	g.gb.ExecutionPaused = false
-	g.ticker.Reset(getFrameInterval(g.boost))
+	g.resumeChan <- struct{}{}
 	return nil
 }
 
@@ -122,7 +128,6 @@ func (g *GoboyAdapter) Restart(options IEmulatorOptions) error {
 
 func (g *GoboyAdapter) Stop() error {
 	g.cancel()
-	close(g.pauseChan)
 	return nil
 }
 

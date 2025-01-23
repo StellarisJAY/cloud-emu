@@ -17,6 +17,7 @@ type NesEmulatorAdapter struct {
 	scale         int
 	boost         float64
 	pauseChan     chan struct{}
+	resumeChan    chan struct{}
 }
 
 func init() {
@@ -42,6 +43,7 @@ func makeNESEmulatorAdapter(options IEmulatorOptions) (IEmulator, error) {
 		scale:         1,
 		boost:         1,
 		pauseChan:     make(chan struct{}),
+		resumeChan:    make(chan struct{}),
 	}, nil
 }
 
@@ -80,9 +82,13 @@ func (n *NesEmulatorAdapter) emulatorLoop(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			close(n.pauseChan)
+			close(n.resumeChan)
 			return
 		case <-n.pauseChan:
 			n.ticker.Stop()
+		case <-n.resumeChan:
+			n.ticker.Reset(getFrameInterval(n.boost))
 		case <-n.ticker.C:
 			start := time.Now()
 			n.e.StepOneFrame()
@@ -101,9 +107,7 @@ func (n *NesEmulatorAdapter) Pause() error {
 
 // Resume 恢复NES模拟器
 func (n *NesEmulatorAdapter) Resume() error {
-	if n.ticker != nil {
-		n.ticker.Reset(getFrameInterval(n.boost))
-	}
+	n.resumeChan <- struct{}{}
 	return nil
 }
 
@@ -126,7 +130,6 @@ func (n *NesEmulatorAdapter) Restart(options IEmulatorOptions) error {
 // Stop 关闭NES模拟器
 func (n *NesEmulatorAdapter) Stop() error {
 	n.cancelFunc()
-	close(n.pauseChan)
 	return nil
 }
 
@@ -171,14 +174,12 @@ func (n *NesEmulatorAdapter) SubmitInput(controlId int, keyCode string, pressed 
 }
 
 func (n *NesEmulatorAdapter) SetGraphicOptions(opts *GraphicOptions) {
-	_ = n.Pause()
 	if opts.HighResolution {
 		n.scale = 2
 	} else {
 		n.scale = 1
 	}
 	n.e.Frame().SetScale(n.scale)
-	_ = n.Resume()
 }
 
 func (n *NesEmulatorAdapter) GetGraphicOptions() *GraphicOptions {
