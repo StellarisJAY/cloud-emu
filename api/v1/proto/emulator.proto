@@ -42,6 +42,7 @@ message EmulatorDto {
   bool supportGraphicSetting = 6;
   string emulatorType = 7;
   string emulatorCode = 8;
+  bool disabled = 9;
 }
 
 message GameDto {
@@ -60,6 +61,7 @@ message ListEmulatorRequest {
   string provider = 2;
   bool supportSave = 3;
   bool supportGraphicSetting = 4;
+  bool showDisabled = 5;
 }
 
 message ListEmulatorResponse {
@@ -99,6 +101,7 @@ message UpdateEmulatorRequest {
   string provider = 4;
   bool supportSave = 5;
   bool supportGraphicSetting = 6;
+  bool disabled = 7;
 }
 
 message UpdateEmulatorResponse {

@@ -26,6 +26,7 @@ func (e *EmulatorService) ListEmulator(ctx context.Context, request *v1.ListEmul
 		Provider:              request.Provider,
 		SupportSave:           request.SupportSave,
 		SupportGraphicSetting: request.SupportGraphicSetting,
+		ShowDisabled:          request.ShowDisabled,
 	})
 	if err != nil {
 		e := errors.FromError(err)
@@ -45,6 +46,7 @@ func (e *EmulatorService) ListEmulator(ctx context.Context, request *v1.ListEmul
 			SupportGraphicSetting: emulator.SupportGraphicSetting,
 			EmulatorType:          emulator.EmulatorType,
 			EmulatorCode:          emulator.EmulatorCode,
+			Disabled:              emulator.Disabled,
 		}
 	}
 	return &v1.ListEmulatorResponse{
@@ -106,6 +108,7 @@ func (e *EmulatorService) UpdateEmulator(ctx context.Context, request *v1.Update
 		Provider:              request.Provider,
 		SupportSave:           request.SupportSave,
 		SupportGraphicSetting: request.SupportGraphicSetting,
+		Disabled:              request.Disabled,
 	}, claims.UserId)
 	if err != nil {
 		e := errors.FromError(err)

@@ -15,6 +15,7 @@ type Emulator struct {
 	SupportGraphicSetting bool   `json:"supportGraphicSetting"`
 	EmulatorType          string `json:"emulatorType"`
 	EmulatorCode          string `json:"emulatorCode"`
+	Disabled              bool   `json:"disabled"`
 }
 
 type EmulatorUseCase struct {
@@ -35,6 +36,7 @@ type EmulatorQuery struct {
 	SupportSave           bool
 	SupportGraphicSetting bool
 	EmulatorType          string
+	ShowDisabled          bool
 }
 
 func NewEmulatorUseCase(repo EmulatorRepo, userRepo UserRepo) *EmulatorUseCase {

@@ -133,6 +133,10 @@ paths:
                   in: query
                   schema:
                     type: boolean
+                - name: showDisabled
+                  in: query
+                  schema:
+                    type: boolean
             responses:
                 "200":
                     description: OK
@@ -1348,6 +1352,8 @@ components:
                     type: string
                 emulatorCode:
                     type: string
+                disabled:
+                    type: boolean
         v1.GameDto:
             type: object
             properties:
@@ -2058,6 +2064,8 @@ components:
                 supportSave:
                     type: boolean
                 supportGraphicSetting:
+                    type: boolean
+                disabled:
                     type: boolean
         v1.UpdateEmulatorResponse:
             type: object

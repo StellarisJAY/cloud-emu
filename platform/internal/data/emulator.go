@@ -78,6 +78,9 @@ func (e *EmulatorRepo) ListEmulator(ctx context.Context, query biz.EmulatorQuery
 	if query.Provider != "" {
 		d = d.Where("provider = ?", query.Provider)
 	}
+	if !query.ShowDisabled {
+		d = d.Where("disabled = ?", false)
+	}
 	err := d.WithContext(ctx).Scan(&result).Error
 	if err != nil {
 		return nil, err
@@ -118,6 +121,7 @@ func (e *EmulatorRepo) Update(ctx context.Context, emulator *biz.Emulator) error
 			"support_graphic_setting": emulator.SupportGraphicSetting,
 			"description":             emulator.Description,
 			"emulator_name":           emulator.EmulatorName,
+			"disabled":                emulator.Disabled,
 		}).
 		WithContext(ctx).Error
 	if err != nil {
