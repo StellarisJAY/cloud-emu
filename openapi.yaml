@@ -560,6 +560,24 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.ApplyMacroResponse'
+    /api/v1/macros/{macroId}:
+        delete:
+            tags:
+                - Macro
+            operationId: Macro_DeleteMacro
+            parameters:
+                - name: macroId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/v1.DeleteMacroResponse'
     /api/v1/register:
         post:
             tags:
@@ -1103,23 +1121,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/v1.GetUserDetailResponse'
-    /v1/macros:
-        delete:
-            tags:
-                - Macro
-            operationId: Macro_DeleteMacro
-            parameters:
-                - name: macroId
-                  in: query
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/v1.DeleteMacroResponse'
 components:
     schemas:
         v1.ActivateAccountRequest:
