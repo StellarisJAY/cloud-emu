@@ -117,7 +117,6 @@ func (uc *GameServerUseCase) OpenGameConnection(_ context.Context, roomId int64,
 	if !ok {
 		return "", v1.ErrorAccessDenied("连接失败，游戏实例不存在")
 	}
-	// TODO stun server config
 	_, sdpOffer, err := uc.connFactory.NewConnection(auth.UserId, instance)
 	if err != nil {
 		uc.logger.Error("创建连接出错:", err)

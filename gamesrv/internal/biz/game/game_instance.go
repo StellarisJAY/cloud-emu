@@ -97,6 +97,7 @@ func MakeGameInstance(roomId, emulatorId, gameId int64, emulatorCode string, gam
 		audioSampleChan: make(chan float32, DefaultAudioSampleRate/200),
 		audioSampleRate: DefaultAudioSampleRate,
 		DoneChan:        make(chan struct{}),
+		controllerMap:   make(map[int]int64),
 	}
 
 	// 创建dummy模拟器，输出静止介绍画面
@@ -221,6 +222,10 @@ func (g *Instance) handleMsgNewConn(conn *Connection) ConsumerResult {
 		delete(g.connections, conn.userId)
 	}
 	g.connections[conn.userId] = conn
+	// 默认给第一个连接控制权
+	if len(g.controllerMap) == 0 {
+		g.controllerMap[1] = conn.userId
+	}
 	return ConsumerResult{Success: true}
 }
 
@@ -252,6 +257,7 @@ func (g *Instance) handleMsgCloseConn(conn *Connection) {
 	active := g.filterConnection(func(conn *Connection) bool {
 		return conn.pc.ConnectionState() == webrtc.PeerConnectionStateConnected
 	})
+	// 连接断开，移除控制权
 	for k, v := range g.controllerMap {
 		if v == conn.userId {
 			delete(g.controllerMap, k)

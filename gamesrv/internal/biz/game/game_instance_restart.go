@@ -94,7 +94,20 @@ func (g *Instance) onRestartSuccess(emulatorId, gameId int64, emulatorCode, emul
 	for _, conn := range g.connections {
 		_ = conn.dataChannel.Send(raw)
 	}
-	g.resetController()
+	// 移除新模拟器没有的控制器权限
+	controllerInfos := g.e.ControllerInfos()
+	for k, _ := range g.controllerMap {
+		exist := false
+		for _, info := range controllerInfos {
+			if info.ControllerId == k {
+				exist = true
+				break
+			}
+		}
+		if !exist {
+			delete(g.controllerMap, k)
+		}
+	}
 }
 
 func (g *Instance) makeEmulatorOptions(emulatorName string, game string, gameData []byte) (emulator.IEmulatorOptions, error) {

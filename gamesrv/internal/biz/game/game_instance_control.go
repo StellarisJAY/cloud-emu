@@ -36,14 +36,10 @@ func (g *Instance) SetController(cp []ControllerPlayer) []ControllerPlayer {
 }
 
 func (g *Instance) handleSetController(cp []ControllerPlayer) {
-	g.controllerMap = make(map[int]int64)
+	clear(g.controllerMap)
 	for _, cp := range cp {
 		g.controllerMap[cp.ControllerId] = cp.UserId
 	}
-}
-
-func (g *Instance) handleResetController(controllerId int) {
-
 }
 
 func (g *Instance) GetControllerPlayers() []ControllerPlayer {
@@ -101,6 +97,7 @@ func (g *Instance) handleApplyMacro(request applyMacroRequest) {
 	// TODO 模拟按键按下后，等待一段时间，再释放按键
 	timer := time.NewTimer(time.Millisecond * 300)
 	go func() {
+		defer timer.Stop()
 		<-timer.C
 		for _, key := range request.Keys {
 			g.e.SubmitInput(controller, key, false)
