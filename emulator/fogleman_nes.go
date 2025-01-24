@@ -75,7 +75,7 @@ func (f *FoglemanNesAdapter) LoadSave(save IEmulatorSave) error {
 }
 
 func (f *FoglemanNesAdapter) Restart(options IEmulatorOptions) error {
-	f.cancel()
+	_ = f.Stop()
 	console, err := nes.NewConsole(options.GameData())
 	if err != nil {
 		return err
