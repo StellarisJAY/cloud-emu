@@ -3,16 +3,17 @@ package emulator
 import (
 	"bytes"
 	"context"
-	"encoding/binary"
+	_ "encoding/binary"
 	"github.com/StellrisJAY/cloud-emu/emulator/dawngb/gb"
 	"strings"
 )
 
 type DawnGbAdapter struct {
 	BaseEmulatorAdapter
-	g           *gb.GB
-	audioBuffer *bytes.Buffer
-	audioChan   chan float32
+	g              *gb.GB
+	audioBuffer    *bytes.Buffer
+	leftAudioChan  chan float32
+	rightAudioChan chan float32
 }
 
 func init() {
@@ -28,15 +29,15 @@ func init() {
 }
 
 func newDawnGbAdapter(options IEmulatorOptions) (*DawnGbAdapter, error) {
-	buffer := bytes.NewBuffer([]byte{})
-	g := gb.New(gb.MODEL_CGB, buffer)
+	//buffer := bytes.NewBuffer([]byte{})
+	g := gb.New(gb.MODEL_CGB, options.LeftAudioChan(), options.RightAudioChan())
 	if err := g.Load(gb.LOAD_ROM, options.GameData()); err != nil {
 		return nil, err
 	}
 	a := &DawnGbAdapter{
 		g:                   g,
-		audioBuffer:         buffer,
-		audioChan:           options.AudioSampleChan(),
+		leftAudioChan:       options.LeftAudioChan(),
+		rightAudioChan:      options.RightAudioChan(),
 		BaseEmulatorAdapter: newBaseEmulatorAdapter(160, 144, options),
 	}
 	a.stepFunc = a.step
@@ -56,19 +57,6 @@ func (d *DawnGbAdapter) step() {
 	screen := d.g.Screen()
 	d.frame.FromNRGBAColors(screen, d.scale)
 	d.frameConsumer(d.frame)
-LOOP:
-	for {
-		var s int16 = 0
-		err := binary.Read(d.audioBuffer, binary.LittleEndian, &s)
-		if err != nil {
-			break LOOP
-		}
-		select {
-		case d.audioChan <- float32(s) / 32767.0:
-		default:
-			break LOOP
-		}
-	}
 }
 
 func (d *DawnGbAdapter) Save() (IEmulatorSave, error) {
@@ -87,14 +75,15 @@ func (d *DawnGbAdapter) LoadSave(save IEmulatorSave) error {
 
 func (d *DawnGbAdapter) Restart(options IEmulatorOptions) error {
 	buffer := bytes.NewBuffer([]byte{})
-	g := gb.New(gb.MODEL_CGB, buffer)
+	g := gb.New(gb.MODEL_CGB, options.LeftAudioChan(), options.RightAudioChan())
 	if err := g.Load(gb.LOAD_ROM, options.GameData()); err != nil {
 		return err
 	}
 	_ = d.Stop()
 	d.g = g
 	d.audioBuffer = buffer
-	d.audioChan = options.AudioSampleChan()
+	d.leftAudioChan = options.LeftAudioChan()
+	d.rightAudioChan = options.RightAudioChan()
 	d.frameConsumer = options.FrameConsumer()
 	return d.Start()
 }

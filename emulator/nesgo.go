@@ -46,7 +46,7 @@ func makeNESEmulator(options IEmulatorOptions) (*nes.Emulator, error) {
 		MuteApu:            false,
 		Debug:              false,
 	}
-	e, err := nes.NewEmulatorWithGameData(options.GameData(), configs, options.AudioSampleChan(), options.AudioSampleRate())
+	e, err := nes.NewEmulatorWithGameData(options.GameData(), configs, options.LeftAudioChan(), options.AudioSampleRate())
 	if err != nil {
 		return nil, err
 	}

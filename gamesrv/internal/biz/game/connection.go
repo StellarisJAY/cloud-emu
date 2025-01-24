@@ -10,11 +10,12 @@ import (
 )
 
 type Connection struct {
-	pc          *webrtc.PeerConnection         // webrtc 连接
-	videoTrack  *webrtc.TrackLocalStaticSample // 视频轨道，发送模拟器画面输出
-	audioTrack  *webrtc.TrackLocalStaticSample // 音频轨道，发送模拟器音频输出
-	dataChannel *webrtc.DataChannel            // 数据通道，接收客户端操作、心跳，发送服务端事件（重启、下线）
-	userId      int64                          // 连接的用户id
+	pc              *webrtc.PeerConnection         // webrtc 连接
+	videoTrack      *webrtc.TrackLocalStaticSample // 视频轨道，发送模拟器画面输出
+	leftAudioTrack  *webrtc.TrackLocalStaticSample
+	rightAudioTrack *webrtc.TrackLocalStaticSample
+	dataChannel     *webrtc.DataChannel // 数据通道，接收客户端操作、心跳，发送服务端事件（重启、下线）
+	userId          int64               // 连接的用户id
 
 	localCandidates []*webrtc.ICECandidate // 本地ICE候选地址
 	mutex           *sync.Mutex            // ICE候选地址 锁
@@ -74,15 +75,22 @@ func (cf *ConnectionFactory) NewConnection(userId int64, g *Instance) (*Connecti
 	if err != nil {
 		panic(fmt.Errorf("create video track error: %v", err))
 	}
-	audioTrack, err := webrtc.NewTrackLocalStaticSample(webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeOpus}, "audio", "CloudEmuAudio")
+	leftAudioTrack, err := webrtc.NewTrackLocalStaticSample(webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeOpus}, "audio", "CloudEmuLeftAudio")
 	if err != nil {
-		panic(fmt.Errorf("create audio track error: %v", err))
+		panic(fmt.Errorf("create left audio track error: %v", err))
+	}
+	rightAudioTrack, err := webrtc.NewTrackLocalStaticSample(webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeOpus}, "audio", "CloudEmuRightAudio")
+	if err != nil {
+		panic(fmt.Errorf("create right audio track error: %v", err))
 	}
 	if _, err := pc.AddTrack(videoTrack); err != nil {
 		panic(fmt.Errorf("add video track error: %v", err))
 	}
-	if _, err := pc.AddTrack(audioTrack); err != nil {
-		panic(fmt.Errorf("add audio track error: %v", err))
+	if _, err := pc.AddTrack(leftAudioTrack); err != nil {
+		panic(fmt.Errorf("add left audio track error: %v", err))
+	}
+	if _, err := pc.AddTrack(rightAudioTrack); err != nil {
+		panic(fmt.Errorf("add right audio track error: %v", err))
 	}
 	// 创建数据通道，用于发送客户端操作、心跳，接收服务端事件（重启、下线）
 	dataChannel, err := pc.CreateDataChannel("control-channel", nil)
@@ -99,12 +107,14 @@ func (cf *ConnectionFactory) NewConnection(userId int64, g *Instance) (*Connecti
 	}
 
 	conn := &Connection{
-		pc:          pc,
-		videoTrack:  videoTrack,
-		audioTrack:  audioTrack,
-		dataChannel: dataChannel,
-		userId:      userId,
-		mutex:       &sync.Mutex{},
+		pc:         pc,
+		videoTrack: videoTrack,
+		//audioTrack:      audioTrack,
+		leftAudioTrack:  leftAudioTrack,
+		rightAudioTrack: rightAudioTrack,
+		dataChannel:     dataChannel,
+		userId:          userId,
+		mutex:           &sync.Mutex{},
 	}
 	// 本地获取到ICE候选地址
 	pc.OnICECandidate(func(candidate *webrtc.ICECandidate) {

@@ -2,34 +2,40 @@ package game
 
 import (
 	"context"
-	"github.com/go-kratos/kratos/v2/log"
+	"fmt"
 	"github.com/pion/webrtc/v3"
 	"github.com/pion/webrtc/v3/pkg/media"
 	"time"
 )
 
-func (g *Instance) AudioSampleListener(ctx context.Context, logger *log.Helper) {
+func (g *Instance) ListenAudioChan(ctx context.Context, left bool) {
 	// 每5毫秒发送一次，根据采样率计算buffer大小
-	buffer := make([]float32, 0, g.audioSampleRate*5/1000)
+	buffer := make([]float32, 0, int64(float64(g.audioSampleRate)*5.0/1000.0))
+	audioChan := g.rightAudioChan
+	audioEncoder := g.audioEncoder1
+	if left {
+		audioChan = g.leftAudioChan
+		audioEncoder = g.audioEncoder0
+	}
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case s := <-g.audioSampleChan:
+		case s := <-audioChan:
 			buffer = append(buffer, s)
 			if len(buffer) == cap(buffer) {
-				g.sendAudioSamples(buffer, logger)
+				data, err := audioEncoder.Encode(buffer)
+				if err != nil {
+					fmt.Println("encode error:", err)
+				}
+				g.sendAudioSamples(data, left)
 				buffer = buffer[:0]
 			}
 		}
 	}
 }
 
-func (g *Instance) sendAudioSamples(buffer []float32, logger *log.Helper) {
-	data, err := g.audioEncoder.Encode(buffer)
-	if err != nil {
-		logger.Error("encode audio samples error: ", err)
-	}
+func (g *Instance) sendAudioSamples(data []byte, left bool) {
 	sample := media.Sample{Data: data, Timestamp: time.Now(), Duration: time.Millisecond * 5}
 	g.mutex.RLock()
 	defer g.mutex.RUnlock()
@@ -37,9 +43,16 @@ func (g *Instance) sendAudioSamples(buffer []float32, logger *log.Helper) {
 		if conn.pc.ConnectionState() != webrtc.PeerConnectionStateConnected {
 			continue
 		}
-		err := conn.audioTrack.WriteSample(sample)
-		if err != nil {
-			logger.Errorf("write sample error: %v", err)
+		if left {
+			err := conn.leftAudioTrack.WriteSample(sample)
+			if err != nil {
+				fmt.Println("write sample error:", err)
+			}
+		} else {
+			err := conn.rightAudioTrack.WriteSample(sample)
+			if err != nil {
+				fmt.Println("write sample error:", err)
+			}
 		}
 	}
 }

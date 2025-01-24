@@ -68,14 +68,14 @@ type GB struct {
 	wramBank  uint8 // SVBK(0xFF70, 0..7, CGB only)
 }
 
-func New(model Model, audioBuffer io.Writer) *GB {
+func New(model Model, leftAudioChan, rightAudioChan chan float32) *GB {
 	g := &GB{
 		model:    model,
 		wramBank: 1,
 	}
 	g.cpu = cpu.New(g.IsCGB(), g)
 	g.ppu = ppu.New(g.cpu)
-	g.apu = apu.New(audioBuffer)
+	g.apu = apu.New(leftAudioChan, rightAudioChan)
 	g.wramBank = 1
 	return g
 }

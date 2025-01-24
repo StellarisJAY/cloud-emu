@@ -68,18 +68,21 @@ type Instance struct {
 	game            string
 	videoEncoder    codec.IVideoEncoder
 	audioSampleRate int
-	audioEncoder    codec.IAudioEncoder
-	audioSampleChan chan float32          // audioSampleChan 音频输出channel
-	messageChan     chan *Message         // 消息接收通道，单线程处理多个客户端发送的消息
-	Cancel          context.CancelFunc    // 消息接收和音频接收取消函数
-	connections     map[int64]*Connection // 连接列表
-	mutex           *sync.RWMutex         // 连接列表mutex
-	createTime      time.Time             // 实例创建时间
-	lastFrameTime   time.Time
-	DoneChan        chan struct{}
-	emulatorId      int64
-	gameId          int64
-	controllerMap   map[int]int64
+	audioEncoder0   codec.IAudioEncoder
+	audioEncoder1   codec.IAudioEncoder
+
+	messageChan    chan *Message         // 消息接收通道，单线程处理多个客户端发送的消息
+	Cancel         context.CancelFunc    // 消息接收和音频接收取消函数
+	connections    map[int64]*Connection // 连接列表
+	mutex          *sync.RWMutex         // 连接列表mutex
+	createTime     time.Time             // 实例创建时间
+	lastFrameTime  time.Time
+	DoneChan       chan struct{}
+	emulatorId     int64
+	gameId         int64
+	controllerMap  map[int]int64
+	leftAudioChan  chan float32
+	rightAudioChan chan float32
 }
 
 // MakeGameInstance 创建初始的游戏实例，其中运行dummy模拟器，该模拟器只输出一个提示玩家选择游戏的单帧画面（后期考虑动画）
@@ -94,16 +97,17 @@ func MakeGameInstance(roomId, emulatorId, gameId int64, emulatorCode string, gam
 		emulatorId:      emulatorId,
 		gameId:          gameId,
 		EmulatorCode:    emulatorCode,
-		audioSampleChan: make(chan float32, DefaultAudioSampleRate/200),
 		audioSampleRate: DefaultAudioSampleRate,
+		leftAudioChan:   make(chan float32, DefaultAudioSampleRate),
+		rightAudioChan:  make(chan float32, DefaultAudioSampleRate),
 		DoneChan:        make(chan struct{}),
 		controllerMap:   make(map[int]int64),
 	}
 
 	// 创建dummy模拟器，输出静止介绍画面
-	options, err := emulator.MakeBaseEmulatorOptions("gopher.gif", gameData, 0, instance.audioSampleChan, func(frame emulator.IFrame) {
+	options, err := emulator.MakeBaseEmulatorOptions("gopher.gif", gameData, 0, func(frame emulator.IFrame) {
 		instance.RenderCallback(frame, log.NewHelper(log.DefaultLogger))
-	})
+	}, instance.leftAudioChan, instance.rightAudioChan)
 	e, err := emulator.MakeEmulator(emulatorCode, options)
 	if err != nil {
 		return nil, err
@@ -114,12 +118,17 @@ func MakeGameInstance(roomId, emulatorId, gameId int64, emulatorCode string, gam
 	if err != nil {
 		return nil, err
 	}
-	audioEncoder, err := codec.NewAudioEncoder(DefaultAudioSampleRate)
+	audioEncoder0, err := codec.NewAudioEncoder(DefaultAudioSampleRate)
+	if err != nil {
+		return nil, err
+	}
+	audioEncoder1, err := codec.NewAudioEncoder(DefaultAudioSampleRate)
 	if err != nil {
 		return nil, err
 	}
 	instance.videoEncoder = videoEncoder
-	instance.audioEncoder = audioEncoder
+	instance.audioEncoder0 = audioEncoder0
+	instance.audioEncoder1 = audioEncoder1
 	instance.e = e
 	if err := e.Start(); err != nil {
 		return nil, err
