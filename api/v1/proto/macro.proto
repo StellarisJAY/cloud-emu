@@ -20,7 +20,7 @@ service Macro {
   }
   rpc DeleteMacro(DeleteMacroRequest) returns (DeleteMacroResponse) {
     option (google.api.http) = {
-      delete: "/v1/macros"
+      delete: "/api/v1/macros/{macroId}"
     };
   }
   rpc ApplyMacro(ApplyMacroRequest) returns (ApplyMacroResponse) {

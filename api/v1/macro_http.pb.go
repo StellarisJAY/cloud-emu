@@ -35,7 +35,7 @@ func RegisterMacroHTTPServer(s *http.Server, srv MacroHTTPServer) {
 	r := s.Route("/")
 	r.GET("/api/v1/macros", _Macro_ListMacros0_HTTP_Handler(srv))
 	r.POST("/api/v1/macros", _Macro_CreateMacro0_HTTP_Handler(srv))
-	r.DELETE("/v1/macros", _Macro_DeleteMacro0_HTTP_Handler(srv))
+	r.DELETE("/api/v1/macros/{macroId}", _Macro_DeleteMacro0_HTTP_Handler(srv))
 	r.POST("/api/v1/macros/apply", _Macro_ApplyMacro0_HTTP_Handler(srv))
 }
 
@@ -84,6 +84,9 @@ func _Macro_DeleteMacro0_HTTP_Handler(srv MacroHTTPServer) func(ctx http.Context
 	return func(ctx http.Context) error {
 		var in DeleteMacroRequest
 		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
 			return err
 		}
 		http.SetOperation(ctx, OperationMacroDeleteMacro)
@@ -164,7 +167,7 @@ func (c *MacroHTTPClientImpl) CreateMacro(ctx context.Context, in *CreateMacroRe
 
 func (c *MacroHTTPClientImpl) DeleteMacro(ctx context.Context, in *DeleteMacroRequest, opts ...http.CallOption) (*DeleteMacroResponse, error) {
 	var out DeleteMacroResponse
-	pattern := "/v1/macros"
+	pattern := "/api/v1/macros/{macroId}"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationMacroDeleteMacro))
 	opts = append(opts, http.PathTemplate(pattern))

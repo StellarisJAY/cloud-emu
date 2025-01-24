@@ -552,6 +552,12 @@ export default {
           this.destroyScreenButtons();
           this.initScreenButtons(msgObj["data"]["EmulatorType"]);
           this.setKeyboardControls(msgObj["data"]["EmulatorType"], false);
+          const ev = new CustomEvent("emulator_restart", {
+            detail: {
+              emulatorType: msgObj["data"]["EmulatorType"],
+            }
+          });
+          dispatchEvent(ev);
           break;
         default:
           break
