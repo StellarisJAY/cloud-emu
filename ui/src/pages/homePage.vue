@@ -8,7 +8,7 @@
                 <a-menu-item key="4">个人</a-menu-item>
                 <a-menu-item key="6" v-if="isAdmin">游戏列表</a-menu-item>
                 <a-menu-item key="7" v-if="isAdmin">模拟器</a-menu-item>
-              <a-menu-item key="8" v-if="isAdmin">宏设置</a-menu-item>
+              <a-menu-item key="8">宏设置</a-menu-item>
                 <a-menu-item key="5" @click="logout">注销</a-menu-item>
             </a-menu>
         </a-layout-header>
