@@ -22,7 +22,8 @@ type BaseEmulatorAdapter struct {
 	width  int // 模拟器原始分辨率W
 	height int // 模拟器原始分辨率H
 
-	stepFunc func() // 推进一帧画面的函数
+	stepFunc      func() // 推进一帧画面的函数
+	audioConsumer func([]float32)
 }
 
 func newBaseEmulatorAdapter(width, height int, options IEmulatorOptions) BaseEmulatorAdapter {
@@ -37,6 +38,7 @@ func newBaseEmulatorAdapter(width, height int, options IEmulatorOptions) BaseEmu
 		width:         width,
 		height:        height,
 		stepFunc:      func() {},
+		audioConsumer: options.AudioConsumer(),
 	}
 }
 

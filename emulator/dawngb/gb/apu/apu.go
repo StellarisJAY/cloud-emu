@@ -20,6 +20,7 @@ package apu
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 import (
+	"encoding/binary"
 	"github.com/StellrisJAY/cloud-emu/emulator/dawngb/gb/apu/psg"
 	"io"
 )
@@ -30,17 +31,14 @@ type APU struct {
 	*psg.PSG
 	sampleWriter io.Writer
 
-	samples        [547 * 2]int16 // [[left, right]...], 547 = 32768 / 60
-	sampleCount    uint16
-	leftAudioChan  chan float32
-	rightAudioChan chan float32
+	samples     [547 * 2]int16 // [[left, right]...], 547 = 32768 / 60
+	sampleCount uint16
 }
 
-func New(leftAudioChan, rightAudioChan chan float32) *APU {
+func New(writer io.Writer) *APU {
 	return &APU{
-		PSG:            psg.New(psg.MODEL_GB),
-		leftAudioChan:  leftAudioChan,
-		rightAudioChan: rightAudioChan,
+		PSG:          psg.New(psg.MODEL_GB),
+		sampleWriter: writer,
 	}
 }
 
@@ -72,11 +70,6 @@ func (a *APU) Run(cycles8MHz int64) {
 }
 
 func (a *APU) FlushSamples() {
-	//binary.Write(a.sampleWriter, binary.LittleEndian, a.samples[:a.sampleCount*2])
-	for i := uint16(0); i < a.sampleCount; i++ {
-		left, right := float32(a.samples[i*2])/32768.0, float32(a.samples[i*2+1])/32768.0
-		a.leftAudioChan <- left
-		a.rightAudioChan <- right
-	}
+	_ = binary.Write(a.sampleWriter, binary.LittleEndian, a.samples[:a.sampleCount*2])
 	a.sampleCount = 0
 }

@@ -19,7 +19,11 @@ package nes
 //LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
-import "encoding/gob"
+import (
+	"encoding/binary"
+	"encoding/gob"
+	"io"
+)
 
 const frameCounterRate = CPUFrequency / 240.0
 
@@ -76,6 +80,7 @@ type APU struct {
 	frameValue  byte
 	frameIRQ    bool
 	filterChain FilterChain
+	buffer      io.Writer
 }
 
 func NewAPU(console *Console) *APU {
@@ -86,6 +91,7 @@ func NewAPU(console *Console) *APU {
 	apu.pulse2.channel = 2
 	apu.framePeriod = 4
 	apu.dmc.cpu = console.CPU
+	apu.buffer = console.audioBuffer
 	return &apu
 }
 
@@ -134,10 +140,11 @@ func (apu *APU) Step() {
 
 func (apu *APU) sendSample() {
 	output := apu.filterChain.Step(apu.output())
-	select {
-	case apu.channel <- output:
-	default:
-	}
+	//select {
+	//case apu.channel <- output:
+	//default:
+	//}
+	_ = binary.Write(apu.buffer, binary.LittleEndian, output)
 }
 
 func (apu *APU) output() float32 {

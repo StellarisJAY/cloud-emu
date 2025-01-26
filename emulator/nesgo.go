@@ -1,15 +1,19 @@
 package emulator
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"github.com/StellrisJAY/cloud-emu/emulator/nes"
 	"github.com/StellrisJAY/cloud-emu/emulator/nes/bus"
 	"github.com/StellrisJAY/cloud-emu/emulator/nes/config"
+	"io"
 )
 
 type NesEmulatorAdapter struct {
 	BaseEmulatorAdapter
-	e *nes.Emulator
+	e           *nes.Emulator
+	audioBuffer *bytes.Buffer
 }
 
 func init() {
@@ -25,19 +29,21 @@ func init() {
 }
 
 func makeNESEmulatorAdapter(options IEmulatorOptions) (IEmulator, error) {
-	e, err := makeNESEmulator(options)
+	buffer := bytes.NewBuffer([]byte{})
+	e, err := makeNESEmulator(options, buffer)
 	if err != nil {
 		return nil, err
 	}
 	n := &NesEmulatorAdapter{
 		e:                   e,
 		BaseEmulatorAdapter: newBaseEmulatorAdapter(256, 240, options),
+		audioBuffer:         buffer,
 	}
 	n.stepFunc = n.step
 	return n, nil
 }
 
-func makeNESEmulator(options IEmulatorOptions) (*nes.Emulator, error) {
+func makeNESEmulator(options IEmulatorOptions, audioBuffer io.Writer) (*nes.Emulator, error) {
 	configs := config.Config{
 		Game:               options.Game(),
 		EnableTrace:        false,
@@ -46,7 +52,8 @@ func makeNESEmulator(options IEmulatorOptions) (*nes.Emulator, error) {
 		MuteApu:            false,
 		Debug:              false,
 	}
-	e, err := nes.NewEmulatorWithGameData(options.GameData(), configs, options.LeftAudioChan(), options.AudioSampleRate())
+	e, err := nes.NewEmulatorWithGameData(options.GameData(), configs,
+		options.AudioSampleRate(), audioBuffer)
 	if err != nil {
 		return nil, err
 	}
@@ -65,12 +72,27 @@ func (n *NesEmulatorAdapter) Start() error {
 func (n *NesEmulatorAdapter) step() {
 	n.e.StepOneFrame()
 	n.frameConsumer(n.e.Frame())
+	buffer := n.audioBuffer.Bytes()
+	if len(buffer) == 0 {
+		return
+	}
+	samples := make([]float32, 0, len(buffer)/4)
+	reader := bytes.NewReader(buffer)
+	for {
+		var sample float32
+		if err := binary.Read(reader, binary.LittleEndian, &sample); err != nil {
+			break
+		}
+		samples = append(samples, sample)
+	}
+	n.audioBuffer.Reset()
+	n.audioConsumer(samples)
 }
 
 // Restart 重启NES模拟器，结束旧模拟器goroutine，创建并运行新模拟器
 func (n *NesEmulatorAdapter) Restart(options IEmulatorOptions) error {
 	_ = n.Stop()
-	e, err := makeNESEmulator(options)
+	e, err := makeNESEmulator(options, n.audioBuffer)
 	if err != nil {
 		return err
 	}

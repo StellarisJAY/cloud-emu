@@ -21,7 +21,7 @@ func (g *Instance) handleRestartEmulator(request *emulatorRestartRequest) Consum
 }
 
 // 重启模拟器，如果模拟器类型相同，则直接重启，否则先停止当前模拟器再创建新模拟器
-func (g *Instance) restartEmulator(game string, gameData []byte, emulatorCode, emulatorType string, emulatorId, gameId int64) error {
+func (g *Instance) restartEmulator(game string, gameData []byte, emulatorCode, _ string, emulatorId, gameId int64) error {
 	if g.EmulatorCode == emulatorCode {
 		opts, err := g.makeEmulatorOptions(g.EmulatorCode, game, gameData)
 		if err != nil {
@@ -55,6 +55,7 @@ func (g *Instance) restartEmulator(game string, gameData []byte, emulatorCode, e
 	}
 	g.videoEncoder.Close()
 	g.videoEncoder = videoEncoder
+
 	if err := g.e.Start(); err != nil {
 		return err
 	}
@@ -96,7 +97,7 @@ func (g *Instance) onRestartSuccess(emulatorId, gameId int64, emulatorCode, emul
 	}
 	// 移除新模拟器没有的控制器权限
 	controllerInfos := g.e.ControllerInfos()
-	for k, _ := range g.controllerMap {
+	for k := range g.controllerMap {
 		exist := false
 		for _, info := range controllerInfos {
 			if info.ControllerId == k {
@@ -115,7 +116,7 @@ func (g *Instance) makeEmulatorOptions(emulatorName string, game string, gameDat
 	case emulator.CodeNesgo, emulator.CodeChip8, emulator.CodeDummy, emulator.CodeGoboy, emulator.CodeFoglemanNES, emulator.CodeMagia, emulator.CodeDawnGB:
 		return emulator.MakeBaseEmulatorOptions(game, gameData, g.audioSampleRate, func(frame emulator.IFrame) {
 			g.RenderCallback(frame, nil)
-		}, g.leftAudioChan, g.rightAudioChan)
+		}, g.AudioConsumer)
 	default:
 		return nil, emulator.ErrorEmulatorNotSupported
 	}

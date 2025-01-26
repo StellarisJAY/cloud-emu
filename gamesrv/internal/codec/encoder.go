@@ -3,7 +3,6 @@ package codec
 import (
 	"errors"
 	"github.com/StellrisJAY/cloud-emu/emulator"
-	"github.com/StellrisJAY/cloud-emu/gamesrv/internal/codec/opus"
 	"image"
 	"log"
 
@@ -71,8 +70,5 @@ func (v *VideoEncoder) Close() {
 type IAudioEncoder interface {
 	// Encode PCM to opus packet, Emulator outputs float32 PCM
 	Encode(pcm []float32) ([]byte, error)
-}
-
-func NewAudioEncoder(sampleRate int) (IAudioEncoder, error) {
-	return opus.NewEncoder(sampleRate)
+	Close()
 }

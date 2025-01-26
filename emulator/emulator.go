@@ -73,18 +73,15 @@ type IEmulatorOptions interface {
 	GameData() []byte
 	AudioSampleRate() int
 	FrameConsumer() func(frame IFrame)
-
-	LeftAudioChan() chan float32
-	RightAudioChan() chan float32
+	AudioConsumer() func([]float32)
 }
 
 type BaseEmulatorOptions struct {
 	game            string
 	gameData        []byte
 	audioSampleRate int
-	leftAudioChan   chan float32
-	rightAudioChan  chan float32
 	frameConsumer   func(frame IFrame)
+	audioConsumer   func([]float32)
 }
 
 type IEmulatorSave interface {
@@ -246,14 +243,13 @@ func (b *BaseFrame) FromRGBRaw(data [][][3]uint8, scale int) {
 }
 
 func MakeBaseEmulatorOptions(game string, gameData []byte, audioSampleRate int,
-	frameConsumer func(frame IFrame), leftAudioChan, rightAudioChan chan float32) (IEmulatorOptions, error) {
+	frameConsumer func(frame IFrame), audioConsumer func([]float32)) (IEmulatorOptions, error) {
 	return &BaseEmulatorOptions{
 		game:            game,
 		gameData:        gameData,
 		audioSampleRate: audioSampleRate,
 		frameConsumer:   frameConsumer,
-		leftAudioChan:   leftAudioChan,
-		rightAudioChan:  rightAudioChan,
+		audioConsumer:   audioConsumer,
 	}, nil
 }
 
@@ -273,12 +269,8 @@ func (b *BaseEmulatorOptions) FrameConsumer() func(frame IFrame) {
 	return b.frameConsumer
 }
 
-func (b *BaseEmulatorOptions) LeftAudioChan() chan float32 {
-	return b.leftAudioChan
-}
-
-func (b *BaseEmulatorOptions) RightAudioChan() chan float32 {
-	return b.rightAudioChan
+func (b *BaseEmulatorOptions) AudioConsumer() func([]float32) {
+	return b.audioConsumer
 }
 
 func GetSupportedEmulators() []Info {

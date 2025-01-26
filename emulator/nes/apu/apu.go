@@ -1,5 +1,10 @@
 package apu
 
+import (
+	"encoding/binary"
+	"io"
+)
+
 var (
 	pulseTable = [32]float32{}
 	tndTable   [203]float32
@@ -25,6 +30,7 @@ type BasicAPU struct {
 	outputChan       chan float32
 	sampleRate       float64
 	frameCounterRate int
+	audioBuffer      io.Writer
 }
 
 func init() {
@@ -36,13 +42,14 @@ func init() {
 	}
 }
 
-func NewBasicAPU() *BasicAPU {
+func NewBasicAPU(audioBuffer io.Writer) *BasicAPU {
 	return &BasicAPU{
-		p1: &pulse{},
-		p2: &pulse{},
-		t:  &triangle{},
-		n:  &noise{shiftRegister: 1}, //On power-up, the shift register is loaded with the value 1.
-		d:  &dmc{},
+		p1:          &pulse{},
+		p2:          &pulse{},
+		t:           &triangle{},
+		n:           &noise{shiftRegister: 1}, //On power-up, the shift register is loaded with the value 1.
+		d:           &dmc{},
+		audioBuffer: audioBuffer,
 	}
 }
 
@@ -125,10 +132,11 @@ func (a *BasicAPU) Tick() {
 	}
 	c1, c2 := int(float64(oldCycles)/a.sampleRate), int(float64(cycles)/a.sampleRate)
 	if c1 != c2 {
-		select {
-		case a.outputChan <- a.Output():
-		default:
-		}
+		//select {
+		//case a.outputChan <- a.Output():
+		//default:
+		//}
+		_ = binary.Write(a.audioBuffer, binary.LittleEndian, a.Output())
 	}
 }
 

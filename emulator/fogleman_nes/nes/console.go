@@ -23,6 +23,7 @@ import (
 	"encoding/gob"
 	"image"
 	"image/color"
+	"io"
 	"os"
 	"path"
 )
@@ -36,9 +37,10 @@ type Console struct {
 	Controller2 *Controller
 	Mapper      Mapper
 	RAM         []byte
+	audioBuffer io.Writer
 }
 
-func NewConsole(gameData []byte) (*Console, error) {
+func NewConsole(gameData []byte, audioBuffer io.Writer) (*Console, error) {
 	cartridge, err := LoadNESFile(gameData)
 	if err != nil {
 		return nil, err
@@ -47,7 +49,7 @@ func NewConsole(gameData []byte) (*Console, error) {
 	controller1 := NewController()
 	controller2 := NewController()
 	console := Console{
-		nil, nil, nil, cartridge, controller1, controller2, nil, ram}
+		nil, nil, nil, cartridge, controller1, controller2, nil, ram, audioBuffer}
 	mapper, err := NewMapper(&console)
 	if err != nil {
 		return nil, err

@@ -71,17 +71,17 @@ func NewGameServerUseCase(memberAuthRepo MemberAuthRepo, logger log.Logger, cons
 func (uc *GameServerUseCase) CreateRoomInstance(_ context.Context, params CreateRoomInstanceParams) (string, string, error) {
 	instance, err := game.MakeGameInstance(params.RoomId, params.EmulatorId, params.GameId, params.EmulatorCode, params.GameData)
 	if err != nil {
+		uc.logger.Errorf("CreateRoomInstance err: %v", err)
 		return "", "", v1.ErrorServiceError("创建游戏实例出错")
 	}
 	uid, _ := uuid.NewUUID()
 	token := uid.String()
 	if err := uc.memberAuthRepo.StoreAuthInfo(token, params.RoomId, params.Auth); err != nil {
+		uc.logger.Errorf("CreateRoomInstance err: %v", err)
 		return "", "", v1.ErrorServiceError("创建玩家token出错")
 	}
 	consumerCtx, consumerCancel := context.WithCancel(context.Background())
 	go instance.MessageHandler(consumerCtx)
-	go instance.ListenAudioChan(consumerCtx, true)
-	go instance.ListenAudioChan(consumerCtx, false)
 	instance.Cancel = consumerCancel
 	uc.mutex.Lock()
 	defer uc.mutex.Unlock()
