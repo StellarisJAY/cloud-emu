@@ -207,6 +207,8 @@ func (uc *GameSaveUseCase) LoadSave(ctx context.Context, roomId, userId int64, s
 	ri.EmulatorType = save.EmulatorType
 	ri.EmulatorCode = save.EmulatorCode
 	ri.GameId = save.GameId
+	ri.GameName = save.GameName
+	ri.EmulatorName = save.EmulatorName
 	_ = uc.roomInstanceRepo.SaveRoomInstance(ctx, ri)
 	return nil
 }
